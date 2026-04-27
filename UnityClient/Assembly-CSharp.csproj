@@ -67,15 +67,18 @@
     <Compile Include="Assets\@Scripts\Managers\GameManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\SaveManager.cs" />
     <Compile Include="Assets\@Scripts\Config\LocalizationConfig.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Api\AuthApi.cs" />
     <Compile Include="Assets\@Scripts\Managers\ResourceManager.cs" />
-    <Compile Include="Assets\@Dev\LoadingScene.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Core\RestLogger.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_Base.cs" />
     <Compile Include="Assets\@Scripts\Controllers\Player.cs" />
     <Compile Include="Assets\@Scripts\Utils\Extension.cs" />
     <Compile Include="Assets\@Scripts\Utils\Define.cs" />
     <Compile Include="Assets\@Scripts\Config\GameConfig.cs" />
     <Compile Include="Assets\@Scripts\Managers\PoolManager.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Core\ApiClient.cs" />
     <Compile Include="Assets\@Scripts\Utils\PriorityQueue.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Auth\AuthManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\IAPManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\LocalizationManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\UIManager.cs" />
@@ -83,12 +86,17 @@
     <Compile Include="Assets\@Scripts\Managers\ObjectManager.cs" />
     <Compile Include="Assets\@Scripts\Config\AdsConfig.cs" />
     <Compile Include="Assets\@Scripts\Utils\Utils.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Core\ApiConfig.cs" />
     <Compile Include="Assets\@Scripts\Managers\DataManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\EventManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\AdsManager.cs" />
     <Compile Include="Assets\@Scripts\Data\TextData.cs" />
+    <Compile Include="Assets\@Dev\LoginScene.cs" />
+    <Compile Include="Assets\@Scripts\UI\UI_LoginScene.cs" />
+    <Compile Include="Assets\@Scripts\UI\UI_Log.cs" />
     <Compile Include="Assets\@Scripts\Managers\SceneManager.cs" />
     <Compile Include="Assets\@Scripts\Scenes\BaseScene.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\AuthModels.cs" />
     <Compile Include="Assets\@Scripts\Config\IAPConfig.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_UGUI.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_Toolkit.cs" />
@@ -1287,6 +1295,10 @@
       <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="MCPForUnity.Runtime">
+      <HintPath>Library\ScriptAssemblies\MCPForUnity.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.RenderPipelines.Core.Runtime">
       <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Core.Runtime.dll</HintPath>
       <Private>False</Private>
@@ -1341,6 +1353,10 @@
     </Reference>
     <Reference Include="Unity.RenderPipelines.GPUDriven.Runtime">
       <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.GPUDriven.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MCPForUnity.Editor">
+      <HintPath>Library\ScriptAssemblies\MCPForUnity.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Timeline.Editor">

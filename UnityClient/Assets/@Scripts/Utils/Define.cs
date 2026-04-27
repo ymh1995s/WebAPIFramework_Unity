@@ -5,8 +5,9 @@ public static class Define
     public enum EScene
     {
         Unknown,
-        LoadingScene,
-        DevScene,
+        LoginScene,
+        MainScene,
+        GameScene,
     }
 
     public enum EEventType
@@ -14,6 +15,7 @@ public static class Define
         None,
         GoldChanged,
         LanguageChanged,
+        LoginSuccess,   // 로그인 성공 시 발행
     }
 
     public enum ESound
