@@ -13,6 +13,7 @@ public class UI_LoginScene : UI_UGUI, IUI_Scene
         // 버튼 바인딩
         BindButtons(typeof(Buttons));
         GetButton((int)Buttons.GuestLoginBtn).onClick.AddListener(OnClickGuestLogin);
+        GetButton((int)Buttons.GoogleLoginBtn).onClick.AddListener(OnClickGoogleLogin);
     }
 
     // 게스트 로그인 버튼 클릭 처리
@@ -28,6 +29,24 @@ public class UI_LoginScene : UI_UGUI, IUI_Scene
             onSuccess: OnLoginSuccess,
             onError:   OnLoginError
         );
+    }
+
+    // 구글 로그인 버튼 클릭 처리
+    private async void OnClickGoogleLogin()
+    {
+        RestLogger.Info("구글 로그인 시도...");
+
+        try
+        {
+            var user = await GoogleSignInProvider.SignIn();
+
+            // IdToken을 백엔드로 전송하여 JWT 발급 요청
+            AuthApi.Instance.GoogleLogin(user.IdToken, OnLoginSuccess, OnLoginError);
+        }
+        catch (System.Exception e)
+        {
+            OnLoginError($"구글 인증 실패: {e.Message}");
+        }
     }
 
     // 로그인 성공 콜백

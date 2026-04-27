@@ -23,3 +23,10 @@ public class RefreshTokenRequest
 {
     public string refreshToken;
 }
+
+// 구글 로그인 요청 모델 - Google Sign-In SDK에서 받은 IdToken 전달
+[Serializable]
+public class GoogleLoginRequest
+{
+    public string idToken;
+}

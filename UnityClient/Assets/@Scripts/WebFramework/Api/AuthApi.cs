@@ -12,6 +12,15 @@ public class AuthApi : Singleton<AuthApi>
             ApiConfig.Auth.Guest, request, onSuccess, onError);
     }
 
+    // 구글 로그인 - Google Sign-In SDK에서 받은 IdToken으로 JWT 발급 요청
+    public void GoogleLogin(string idToken,
+        Action<TokenResponse> onSuccess, Action<string> onError = null)
+    {
+        var request = new GoogleLoginRequest { idToken = idToken };
+        ApiClient.Instance.Post<GoogleLoginRequest, TokenResponse>(
+            ApiConfig.Auth.Google, request, onSuccess, onError);
+    }
+
     // Access Token 재발급
     public void Refresh(string refreshToken,
         Action<TokenResponse> onSuccess, Action<string> onError = null)
