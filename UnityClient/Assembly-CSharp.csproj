@@ -102,6 +102,8 @@
     <Compile Include="Assets\@Scripts\Managers\PoolManager.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\ApiClient.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_MainGame.cs" />
+    <Compile Include="Assets\@Scripts\UI\UI_MailPopup.cs" />
+    <Compile Include="Assets\@Scripts\UI\UI_InquiryPopup.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\NoticeModels.cs" />
     <Compile Include="Assets\@Scripts\Utils\PriorityQueue.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Auth\AuthManager.cs" />
