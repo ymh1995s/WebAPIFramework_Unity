@@ -20,6 +20,8 @@
 - `Framework.Infrastructure` — EF Core 기반 데이터 접근
 - `Framework.Admin` — Blazor Server 관리 도구
 
+> **⚠ READ-ONLY** — `../Framework/*` 백엔드는 **읽기 전용**이다. 컨트롤러/엔티티/DTO/마이그레이션 등 어떠한 서버 측 코드도 GameClient 작업 중에는 수정·추가·삭제하지 않는다. 백엔드 부재 항목은 클라이언트 측 우회 또는 요구사항 축소로 해결한다.
+
 ## 프레임워크 방향
 
 - 씬 관리, UI, 리소스, 사운드, 네트워크 등 공통 시스템을 재사용 가능한 구조로 구축

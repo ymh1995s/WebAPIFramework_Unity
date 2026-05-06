@@ -71,6 +71,7 @@
     <Compile Include="Assets\@Scripts\Managers\SoundManager.cs" />
     <Compile Include="Assets\@Scripts\Controllers\ObjectBase.cs" />
     <Compile Include="Assets\@Scripts\Managers\GameManager.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Core\JsonHelper.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\Impl\BaseObject.cs" />
     <Compile Include="Assets\@Scripts\Managers\SaveManager.cs" />
     <Compile Include="Assets\@Scripts\Config\LocalizationConfig.cs" />
@@ -81,6 +82,7 @@
     <Compile Include="Assets\@Scripts\UI\UI_Base.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\Impl\NativeFuture.cs" />
     <Compile Include="Assets\@Scripts\Controllers\Player.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Core\ApiError.cs" />
     <Compile Include="Assets\@Scripts\Utils\Extension.cs" />
     <Compile Include="Assets\@Scripts\Utils\Define.cs" />
     <Compile Include="Assets\@Scripts\Config\GameConfig.cs" />
@@ -108,6 +110,7 @@
     <Compile Include="Assets\@Dev\LoginScene.cs" />
     <Compile Include="Assets\@Scripts\Data\TextData.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Auth\GoogleSignInProvider.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\CommonModels.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInStatusCode.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_LoginScene.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_Log.cs" />

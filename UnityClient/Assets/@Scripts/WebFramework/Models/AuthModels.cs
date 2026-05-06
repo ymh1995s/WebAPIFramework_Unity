@@ -13,7 +13,7 @@ public class TokenResponse
 {
     public string accessToken;
     public string refreshToken;
-    public int    playerId;
+    public string playerId;
     public bool   isNewPlayer;
 }
 

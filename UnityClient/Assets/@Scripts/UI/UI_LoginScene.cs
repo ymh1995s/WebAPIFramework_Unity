@@ -45,7 +45,14 @@ public class UI_LoginScene : UI_UGUI, IUI_Scene
         }
         catch (System.Exception e)
         {
-            OnLoginError($"구글 인증 실패: {e.Message}");
+            // 구글 SDK 자체 오류는 ApiError로 래핑하여 공통 오류 처리
+            OnLoginError(new ApiError
+            {
+                Status        = 0,
+                Title         = "구글 인증 실패",
+                Detail        = e.Message,
+                IsNetworkError = false,
+            });
         }
     }
 
@@ -60,9 +67,9 @@ public class UI_LoginScene : UI_UGUI, IUI_Scene
         SceneManager.Instance.LoadScene(Define.EScene.MainScene);
     }
 
-    // 로그인 실패 콜백
-    private void OnLoginError(string error)
+    // 로그인 실패 콜백 — ApiError.UserMessage를 사용하여 사용자 친화적 메시지 표시
+    private void OnLoginError(ApiError error)
     {
-        RestLogger.Error($"로그인 실패: {error}");
+        RestLogger.Error($"로그인 실패: {error.UserMessage}");
     }
 }

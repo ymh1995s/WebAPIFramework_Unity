@@ -3,8 +3,8 @@ using UnityEngine;
 // 인증 토큰 및 세션 관리 싱글톤
 public class AuthManager : Singleton<AuthManager>
 {
-    // 현재 로그인한 플레이어 ID
-    public int    PlayerId     { get; private set; }
+    // 현재 로그인한 플레이어 PublicId (Guid 문자열 — 내부 int Id 아님)
+    public string PlayerId     { get; private set; }
 
     // JWT Access Token (API 요청 헤더에 자동 첨부)
     public string AccessToken  { get; private set; }
@@ -22,7 +22,7 @@ public class AuthManager : Singleton<AuthManager>
     public void LoadSavedToken()
     {
         RefreshToken = PlayerPrefs.GetString("RefreshToken", string.Empty);
-        PlayerId     = PlayerPrefs.GetInt("PlayerId", 0);
+        PlayerId     = PlayerPrefs.GetString("PlayerId", string.Empty);
     }
 
     // 로그인 성공 후 토큰 저장
@@ -35,14 +35,14 @@ public class AuthManager : Singleton<AuthManager>
 
         // RefreshToken과 PlayerId를 기기에 영구 저장
         PlayerPrefs.SetString("RefreshToken", RefreshToken);
-        PlayerPrefs.SetInt("PlayerId", PlayerId);
+        PlayerPrefs.SetString("PlayerId", PlayerId);
         PlayerPrefs.Save();
     }
 
     // 로그아웃 - 모든 토큰 초기화
     public void Clear()
     {
-        PlayerId     = 0;
+        PlayerId     = string.Empty;
         AccessToken  = string.Empty;
         RefreshToken = string.Empty;
         IsNewPlayer  = false;
