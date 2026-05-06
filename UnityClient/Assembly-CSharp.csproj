@@ -91,6 +91,7 @@
     <Compile Include="Assets\@Scripts\Controllers\Player.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\ApiError.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_UpdatePopup.cs" />
+    <Compile Include="Assets\@Scripts\Scenes\Scene_Bootstrap.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\RankingApi.cs" />
     <Compile Include="Assets\@Scripts\Utils\Extension.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\DailyLoginModels.cs" />
@@ -112,13 +113,13 @@
     <Compile Include="Assets\@Scripts\UI\UI_ErrorPopup.cs" />
     <Compile Include="Assets\@Scripts\Managers\Singleton.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\RankingModels.cs" />
+    <Compile Include="Assets\@Scripts\UI\UI_WithdrawPopup.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_TermsPopup.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\VersionModels.cs" />
     <Compile Include="Assets\@Scripts\Managers\ObjectManager.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\Future.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_InGame.cs" />
     <Compile Include="Assets\@Scripts\Config\AdsConfig.cs" />
-    <Compile Include="Assets\@Scripts\UI\UI_WithdrawPopup.cs" />
     <Compile Include="Assets\@Scripts\Utils\Utils.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\ApiConfig.cs" />
     <Compile Include="Assets\@Scripts\Managers\DataManager.cs" />
@@ -141,6 +142,7 @@
     <Compile Include="Assets\@Scripts\WebFramework\Models\ShoutModels.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\AuthModels.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\NoticeApi.cs" />
+    <Compile Include="Assets\@Scripts\Bootstrap\BootstrapFlow.cs" />
     <Compile Include="Assets\@Scripts\Config\IAPConfig.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_UGUI.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_Toolkit.cs" />
