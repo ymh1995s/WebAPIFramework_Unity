@@ -1,0 +1,164 @@
+using System;
+using UnityEngine;
+
+/// <summary>
+/// 팝업 표시를 한 곳에서 관리하는 정적 서비스 클래스.
+/// UIManager.ShowPopupUI 를 직접 호출하는 대신 이 클래스를 경유하여
+/// 팝업 생성·콜백 설정을 일관된 방식으로 처리한다.
+/// </summary>
+public static class PopupService
+{
+    // 서버 점검 팝업이 이미 표시되었는지 추적하는 플래그
+    // — 여러 API 요청이 동시에 503을 받아도 팝업이 중복 표시되지 않도록 방지
+    static bool _maintenanceShown;
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 오류 팝업
+    // ─────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 오류 메시지를 표시하는 팝업을 열고 반환한다.
+    /// 확인 버튼을 누르면 게임을 재시작(RestartGame)한다.
+    /// </summary>
+    /// <param name="message">사용자에게 표시할 오류 메시지</param>
+    public static UI_ErrorPopup ShowError(string message)
+    {
+        // 팝업 인스턴스 생성 및 텍스트·콜백 설정
+        var p = UIManager.Instance.ShowPopupUI<UI_ErrorPopup>();
+        p.SetText(message);
+        p.OnOk = RestartGame;
+        return p;
+    }
+
+    /// <summary>
+    /// ApiError 객체를 받아 사용자 친화적 메시지로 오류 팝업을 표시한다.
+    /// UserMessage 가 없으면 기본 문구를 사용한다.
+    /// </summary>
+    /// <param name="error">API 호출에서 반환된 오류 정보</param>
+    public static UI_ErrorPopup ShowError(ApiError error)
+        => ShowError(error?.UserMessage ?? "알 수 없는 오류가 발생했습니다.");
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 공지 팝업
+    // ─────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 서버 공지사항을 표시하는 팝업을 열고 반환한다.
+    /// 확인 버튼을 누르면 팝업을 닫는다.
+    /// </summary>
+    /// <param name="message">공지 내용</param>
+    public static UI_AnnouncementPopup ShowAnnouncement(string message)
+    {
+        var p = UIManager.Instance.ShowPopupUI<UI_AnnouncementPopup>();
+        p.SetText(message);
+        // 확인 시 팝업만 닫음 — 씬 전환 등 추가 처리 없음
+        p.OnConfirm = () => UIManager.Instance.ClosePopupUI();
+        return p;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 서버 점검 팝업
+    // ─────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 서버 점검 안내 팝업을 열고 반환한다.
+    /// 이미 표시 중이면 null 을 반환하여 중복 표시를 방지한다.
+    /// </summary>
+    /// <param name="message">점검 안내 메시지</param>
+    /// <param name="onConfirm">확인 버튼 콜백 (앱 종료 등)</param>
+    public static UI_ServerMaintenancePopup ShowMaintenance(string message, Action onConfirm)
+    {
+        // 이미 점검 팝업이 표시된 경우 중복 생성 방지
+        if (_maintenanceShown) return null;
+
+        _maintenanceShown = true;
+        var p = UIManager.Instance.ShowPopupUI<UI_ServerMaintenancePopup>();
+        p.SetText(message);
+        p.OnConfirm = onConfirm;
+        return p;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 업데이트 팝업
+    // ─────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 클라이언트 강제 업데이트 안내 팝업을 열고 반환한다.
+    /// 확인 버튼 콜백에서 스토어 링크 이동 등을 처리한다.
+    /// </summary>
+    /// <param name="latestVersion">서버가 요구하는 최신 버전 문자열 (예: "1.2.3")</param>
+    /// <param name="onConfirm">확인 버튼 콜백 (스토어 이동 등)</param>
+    public static UI_UpdatePopup ShowUpdate(string latestVersion, Action onConfirm)
+    {
+        var p = UIManager.Instance.ShowPopupUI<UI_UpdatePopup>();
+        // 버전 정보를 포함한 안내 문구를 자동 생성
+        p.SetText($"새 버전({latestVersion})이 있습니다. 업데이트 후 이용해주세요.");
+        p.OnConfirm = onConfirm;
+        return p;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 약관 동의 팝업
+    // ─────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 이용약관 동의 팝업을 열고 반환한다.
+    /// 동의(AgreeBtn) 시 PlayerPrefs 저장 후 onConfirm 호출,
+    /// 거부(DisAgreeBtn) 시 앱을 종료한다.
+    /// </summary>
+    /// <param name="onConfirm">약관 동의 후 실행할 콜백 (로그인 진행 등)</param>
+    public static UI_TermsPopup ShowTerms(Action onConfirm)
+    {
+        var p = UIManager.Instance.ShowPopupUI<UI_TermsPopup>();
+        p.OnAgree = onConfirm;
+        return p;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 선택(Ok/Cancel) 팝업
+    // ─────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 확인/취소 선택지를 제공하는 팝업을 열고 반환한다.
+    /// 각 버튼 콜백에서 팝업을 닫은 후 인자로 받은 액션을 실행한다.
+    /// </summary>
+    /// <param name="message">선택 안내 메시지</param>
+    /// <param name="onOk">확인 버튼 콜백</param>
+    /// <param name="onCancel">취소 버튼 콜백</param>
+    public static UI_WithdrawPopup ShowSelect(string message, Action onOk, Action onCancel)
+    {
+        var p = UIManager.Instance.ShowPopupUI<UI_WithdrawPopup>();
+        p.SetText(message);
+        p.OnOk = onOk;
+        p.OnCancel = onCancel;
+        return p;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 유틸리티
+    // ─────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 서버 점검 팝업 중복 방지 플래그를 초기화한다.
+    /// BootstrapScene 진입 시 반드시 호출하여 재접속 후 팝업이 정상 표시되도록 한다.
+    /// </summary>
+    public static void ClearMaintenanceFlag() => _maintenanceShown = false;
+
+    /// <summary>
+    /// 게임을 재시작한다.
+    /// 에디터에서는 플레이 모드를 종료하고, 빌드에서는 BootstrapScene 으로 이동한다.
+    /// UI 스택을 먼저 정리하여 씬 전환 중 참조 오류를 방지한다.
+    /// </summary>
+    private static void RestartGame()
+    {
+#if UNITY_EDITOR
+        // 에디터 환경: 플레이 모드 종료로 재시작 시뮬레이션
+        UIManager.Instance.Clear();
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        // 빌드 환경: BootstrapScene 으로 씬 전환하여 초기화 흐름 재실행
+        UIManager.Instance.Clear();
+        SceneManager.Instance.LoadScene(Define.EScene.BootstrapScene);
+#endif
+    }
+}

@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 1092604196646196583}
   - component: {fileID: 8106571182123922195}
   m_Layer: 0
-  m_Name: UI_SelectPopup
+  m_Name: UI_WithdrawPopup
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
