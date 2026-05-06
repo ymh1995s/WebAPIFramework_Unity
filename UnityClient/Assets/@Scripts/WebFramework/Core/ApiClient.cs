@@ -92,14 +92,29 @@ public class ApiClient : Singleton<ApiClient>
     }
 
     // ====================================================
+    // GET (최상위 배열 응답 전용)
+    // ====================================================
+
+    // 백엔드가 최상위 JSON 배열([...])을 반환하는 GET 요청 — JsonHelper로 파싱
+    public async void GetList<T>(string endpoint,
+        Action<List<T>> onSuccess, Action<ApiError> onError = null)
+    {
+        await SendInternal<List<T>>("GET", ApiConfig.BaseUrl + endpoint, null,
+            onSuccess, onError, isRetry: false,
+            customParser: body => JsonHelper.FromJsonList<T>(body));
+    }
+
+    // ====================================================
     // 내부 공통 전송 로직
     // ====================================================
 
     // isRetry: 401 갱신 후 재시도 여부 — true이면 401 발생 시 즉시 onError (무한 루프 방지)
+    // customParser: null이면 JsonUtility.FromJson<TRes> 사용, 지정 시 커스텀 파서로 응답 파싱
     private async Task SendInternal<TRes>(
         string method, string url, string jsonBody,
         Action<TRes> onSuccess, Action<ApiError> onError,
-        bool isRetry)
+        bool isRetry,
+        Func<string, TRes> customParser = null)
     {
         RestLogger.Info($"[REQ] {method} {url}");
 
@@ -136,14 +151,14 @@ public class ApiClient : Singleton<ApiClient>
             RestLogger.Warn($"[429] Rate Limit — {waitSec}초 대기 후 재시도");
             await Task.Delay(waitSec * 1000);
             // isRetry=true로 재시도 → 429 반복 시 아래 4xx/5xx 분기로 처리됨
-            await SendInternal<TRes>(method, url, jsonBody, onSuccess, onError, isRetry: true);
+            await SendInternal<TRes>(method, url, jsonBody, onSuccess, onError, isRetry: true, customParser);
             return;
         }
 
         // 401 미인증 — 토큰 갱신 후 1회 재시도
         if (statusCode == 401)
         {
-            await Handle401<TRes>(method, url, jsonBody, onSuccess, onError, isRetry);
+            await Handle401<TRes>(method, url, jsonBody, onSuccess, onError, isRetry, customParser);
             return;
         }
 
@@ -159,7 +174,8 @@ public class ApiClient : Singleton<ApiClient>
 
             try
             {
-                TRes result = JsonUtility.FromJson<TRes>(body);
+                // customParser가 지정된 경우 사용 (예: 최상위 배열 응답), 없으면 기본 JsonUtility 사용
+                TRes result = customParser != null ? customParser(body) : JsonUtility.FromJson<TRes>(body);
                 onSuccess?.Invoke(result);
             }
             catch (Exception ex)
@@ -182,7 +198,8 @@ public class ApiClient : Singleton<ApiClient>
     private async Task Handle401<TRes>(
         string method, string url, string jsonBody,
         Action<TRes> onSuccess, Action<ApiError> onError,
-        bool isRetry)
+        bool isRetry,
+        Func<string, TRes> customParser = null)
     {
         // 재시도 요청이 또 401을 받았거나, refresh 흐름 중에 401이 발생한 경우
         if (isRetry || _inRefreshFlow)
@@ -225,7 +242,8 @@ public class ApiClient : Singleton<ApiClient>
         }
 
         // 새 토큰으로 원 요청 1회 재시도 (isRetry=true — 재시도 중 401이면 즉시 종료)
-        await SendInternal<TRes>(method, url, jsonBody, onSuccess, onError, isRetry: true);
+        // customParser를 그대로 전달하여 재시도 시에도 동일한 파싱 방식 유지
+        await SendInternal<TRes>(method, url, jsonBody, onSuccess, onError, isRetry: true, customParser);
     }
 
     // 실제 RefreshToken 갱신 HTTP 요청 수행 — ApiClient.Post를 우회하여 인터셉터 중복 방지

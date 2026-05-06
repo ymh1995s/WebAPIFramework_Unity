@@ -30,3 +30,17 @@ public class GoogleLoginRequest
 {
     public string idToken;
 }
+
+// 구글 계정 연동 요청 모델 - 게스트 계정에 구글 계정을 연결할 때 사용
+[Serializable]
+public class LinkGoogleRequest
+{
+    public string idToken;
+}
+
+// 구글 계정 충돌 해소 요청 모델 - 409 GOOGLE_ACCOUNT_CONFLICT 발생 시 기존 계정으로 전환
+[Serializable]
+public class ResolveGoogleConflictRequest
+{
+    public string idToken;
+}

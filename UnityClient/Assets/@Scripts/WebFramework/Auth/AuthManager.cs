@@ -15,14 +15,26 @@ public class AuthManager : Singleton<AuthManager>
     // 신규 플레이어 여부
     public bool   IsNewPlayer  { get; private set; }
 
+    // 구글 계정 연동 여부 — 백엔드 응답에 해당 필드 없어 클라이언트 PlayerPrefs로 직접 추적
+    public bool IsGoogleLinked { get; private set; }
+
     // 로그인 상태 여부 - RefreshToken 존재로 판단
     public bool IsLoggedIn => !string.IsNullOrEmpty(RefreshToken);
 
-    // 앱 시작 시 PlayerPrefs에서 저장된 토큰 복원
+    // 앱 시작 시 PlayerPrefs에서 저장된 토큰 및 상태 복원
     public void LoadSavedToken()
     {
-        RefreshToken = PlayerPrefs.GetString("RefreshToken", string.Empty);
-        PlayerId     = PlayerPrefs.GetString("PlayerId", string.Empty);
+        RefreshToken   = PlayerPrefs.GetString("RefreshToken", string.Empty);
+        PlayerId       = PlayerPrefs.GetString("PlayerId", string.Empty);
+        IsGoogleLinked = PlayerPrefs.GetInt("IsGoogleLinked", 0) == 1;
+    }
+
+    // 구글 계정 연동 상태 갱신 — 연동/해제 흐름에서 호출처가 명시적으로 호출
+    public void SetGoogleLinked(bool linked)
+    {
+        IsGoogleLinked = linked;
+        PlayerPrefs.SetInt("IsGoogleLinked", linked ? 1 : 0);
+        PlayerPrefs.Save();
     }
 
     // 로그인 성공 후 토큰 저장
@@ -49,6 +61,8 @@ public class AuthManager : Singleton<AuthManager>
 
         PlayerPrefs.DeleteKey("RefreshToken");
         PlayerPrefs.DeleteKey("PlayerId");
+        PlayerPrefs.DeleteKey("IsGoogleLinked");
+        IsGoogleLinked = false;
         PlayerPrefs.Save();
     }
 }

@@ -30,4 +30,39 @@ public class AuthApi : Singleton<AuthApi>
         ApiClient.Instance.Post<RefreshTokenRequest, TokenResponse>(
             ApiConfig.Auth.Refresh, request, onSuccess, onError);
     }
+
+    // 로그아웃 - 서버 측 RefreshToken 무효화 요청
+    public void Logout(string refreshToken,
+        Action<EmptyResponse> onSuccess, Action<ApiError> onError = null)
+    {
+        var request = new RefreshTokenRequest { refreshToken = refreshToken };
+        ApiClient.Instance.Post<RefreshTokenRequest, EmptyResponse>(
+            ApiConfig.Auth.Logout, request, onSuccess, onError);
+    }
+
+    // 구글 계정 연동 - 게스트 계정에 구글 IdToken으로 계정 연결
+    public void LinkGoogle(string idToken,
+        Action<EmptyResponse> onSuccess, Action<ApiError> onError = null)
+    {
+        var request = new LinkGoogleRequest { idToken = idToken };
+        ApiClient.Instance.Post<LinkGoogleRequest, EmptyResponse>(
+            ApiConfig.Auth.LinkGoogle, request, onSuccess, onError);
+    }
+
+    // 구글 계정 충돌 해소 - 409 GOOGLE_ACCOUNT_CONFLICT 발생 시 기존 구글 계정으로 전환
+    public void ResolveGoogleConflict(string idToken,
+        Action<TokenResponse> onSuccess, Action<ApiError> onError = null)
+    {
+        var request = new ResolveGoogleConflictRequest { idToken = idToken };
+        ApiClient.Instance.Post<ResolveGoogleConflictRequest, TokenResponse>(
+            ApiConfig.Auth.ResolveGoogle, request, onSuccess, onError);
+    }
+
+    // 회원 탈퇴 - 계정 삭제 요청 (복구 불가)
+    public void Withdraw(
+        Action<EmptyResponse> onSuccess, Action<ApiError> onError = null)
+    {
+        ApiClient.Instance.Delete<EmptyResponse>(
+            ApiConfig.Auth.Withdraw, onSuccess, onError);
+    }
 }

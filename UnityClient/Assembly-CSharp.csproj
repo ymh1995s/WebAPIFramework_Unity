@@ -66,6 +66,9 @@
     <Analyzer Include="D:\UnityEditor\6000.2.7f2\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\@Scripts\WebFramework\Api\DailyLoginApi.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Api\MailApi.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Api\InquiryApi.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInUser.cs" />
     <Compile Include="Assets\@Scripts\Data\ItemData.cs" />
     <Compile Include="Assets\@Scripts\Managers\SoundManager.cs" />
@@ -74,28 +77,38 @@
     <Compile Include="Assets\@Scripts\WebFramework\Core\JsonHelper.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\Impl\BaseObject.cs" />
     <Compile Include="Assets\@Scripts\Managers\SaveManager.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\InquiryModels.cs" />
     <Compile Include="Assets\@Scripts\Config\LocalizationConfig.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_StageSelect.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Api\VersionApi.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\AuthApi.cs" />
     <Compile Include="Assets\@Scripts\Managers\ResourceManager.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\RestLogger.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Api\ShoutApi.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_Base.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\Impl\NativeFuture.cs" />
     <Compile Include="Assets\@Scripts\Controllers\Player.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\ApiError.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Api\RankingApi.cs" />
     <Compile Include="Assets\@Scripts\Utils\Extension.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\DailyLoginModels.cs" />
     <Compile Include="Assets\@Scripts\Utils\Define.cs" />
     <Compile Include="Assets\@Scripts\Config\GameConfig.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignIn.cs" />
     <Compile Include="Assets\@Scripts\Managers\PoolManager.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\ApiClient.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_MainGame.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\NoticeModels.cs" />
     <Compile Include="Assets\@Scripts\Utils\PriorityQueue.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Auth\AuthManager.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Api\StageApi.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\StageModels.cs" />
     <Compile Include="Assets\@Scripts\Managers\IAPManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\LocalizationManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\UIManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\Singleton.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\RankingModels.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\VersionModels.cs" />
     <Compile Include="Assets\@Scripts\Managers\ObjectManager.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\Future.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_InGame.cs" />
@@ -109,6 +122,7 @@
     <Compile Include="Assets\@Scripts\Managers\AdsManager.cs" />
     <Compile Include="Assets\@Dev\LoginScene.cs" />
     <Compile Include="Assets\@Scripts\Data\TextData.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\MailModels.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Auth\GoogleSignInProvider.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\CommonModels.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInStatusCode.cs" />
@@ -117,7 +131,9 @@
     <Compile Include="Assets\@Scripts\Managers\SceneManager.cs" />
     <Compile Include="Assets\@Scripts\Scenes\BaseScene.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\Impl\SignInHelperObject.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\ShoutModels.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\AuthModels.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Api\NoticeApi.cs" />
     <Compile Include="Assets\@Scripts\Config\IAPConfig.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_UGUI.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_Toolkit.cs" />

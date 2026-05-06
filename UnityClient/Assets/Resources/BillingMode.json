@@ -1,1 +1,4 @@
-{"androidStore":"GooglePlay"}
+{
+  "_comment": "Unity IAP(인앱결제) 패키지가 자동 생성한 안드로이드 결제 스토어 설정 파일. androidStore 값으로 GooglePlay/AmazonAppStore/UDP 중 결제 채널을 지정한다. 이 프로젝트에서는 현재 IAP 기능 미사용 — 패키지 제거 시 이 파일도 함께 삭제.",
+  "androidStore": "GooglePlay"
+}
