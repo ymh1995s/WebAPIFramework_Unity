@@ -56,6 +56,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Analyzer Include="C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\Extensions\Microsoft\Visual Studio Tools for Unity\Analyzers\Microsoft.Unity.Analyzers.dll" />
+    <Analyzer Include="C:\Users\user\Documents\WebAPIFramework\GameClient\UnityClient\Assets\Settings\MobileDependencyResolver\Editor\Google.VersionHandler.dll" />
+    <Analyzer Include="C:\Users\user\Documents\WebAPIFramework\GameClient\UnityClient\Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.VersionHandlerImpl.dll" />
+    <Analyzer Include="C:\Users\user\Documents\WebAPIFramework\GameClient\UnityClient\Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.IOSResolver.dll" />
+    <Analyzer Include="C:\Users\user\Documents\WebAPIFramework\GameClient\UnityClient\Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.JarResolver.dll" />
+    <Analyzer Include="C:\Users\user\Documents\WebAPIFramework\GameClient\UnityClient\Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.PackageManagerResolver.dll" />
     <Analyzer Include="D:\UnityEditor\6000.2.7f2\Editor\Data\Tools\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="D:\UnityEditor\6000.2.7f2\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="D:\UnityEditor\6000.2.7f2\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
@@ -65,18 +70,18 @@
     <Compile Include="Assets\@Scripts\Editor\SaveManagerEditor.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\MobileDependencyResolver\Editor\Google.VersionHandler.dll" />
-    <None Include="Assets\MobileDependencyResolver\Editor\1.2.185\Google.IOSResolver.dll" />
-    <None Include="Assets\MobileDependencyResolver\Editor\1.2.185\Google.VersionHandlerImpl.dll" />
-    <None Include="Assets\GoogleSignIn\Editor\GoogleSignInDependencies.xml" />
-    <None Include="Assets\GoogleSignIn\Editor\m2repository\com\google\signin\google-signin-support\maven-metadata.xml" />
-    <None Include="Assets\MobileDependencyResolver\Editor\1.2.185\Google.JarResolver.dll" />
-    <None Include="Assets\LevelPlay\Editor\ISUnityAdsAdapterDependencies.xml" />
-    <None Include="Assets\GoogleSignIn\Editor\google-signin-plugin_v1.0.4.txt" />
-    <None Include="Assets\LevelPlay\Editor\IronSourceSDKDependencies.xml" />
-    <None Include="Assets\GoogleSignIn\Editor\GoogleSignInSupportDependencies.xml" />
-    <None Include="Assets\MobileDependencyResolver\Editor\mobile-dependency-resolver_version-1.2.185_manifest.txt" />
-    <None Include="Assets\MobileDependencyResolver\Editor\1.2.185\Google.PackageManagerResolver.dll" />
+    <None Include="Assets\Settings\MobileDependencyResolver\Editor\Google.VersionHandler.dll" />
+    <None Include="Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.IOSResolver.dll" />
+    <None Include="Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.VersionHandlerImpl.dll" />
+    <None Include="Assets\Settings\GoogleSignIn\Editor\GoogleSignInDependencies.xml" />
+    <None Include="Assets\Settings\GoogleSignIn\Editor\m2repository\com\google\signin\google-signin-support\maven-metadata.xml" />
+    <None Include="Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.JarResolver.dll" />
+    <None Include="Assets\Settings\LevelPlay\Editor\ISUnityAdsAdapterDependencies.xml" />
+    <None Include="Assets\Settings\GoogleSignIn\Editor\google-signin-plugin_v1.0.4.txt" />
+    <None Include="Assets\Settings\LevelPlay\Editor\IronSourceSDKDependencies.xml" />
+    <None Include="Assets\Settings\GoogleSignIn\Editor\GoogleSignInSupportDependencies.xml" />
+    <None Include="Assets\Settings\MobileDependencyResolver\Editor\mobile-dependency-resolver_version-1.2.185_manifest.txt" />
+    <None Include="Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.PackageManagerResolver.dll" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -600,11 +605,11 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Google.VersionHandler">
-      <HintPath>Assets\MobileDependencyResolver\Editor\Google.VersionHandler.dll</HintPath>
+      <HintPath>Assets\Settings\MobileDependencyResolver\Editor\Google.VersionHandler.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Google.IOSResolver">
-      <HintPath>Assets\MobileDependencyResolver\Editor\1.2.185\Google.IOSResolver.dll</HintPath>
+      <HintPath>Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.IOSResolver.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Collections.LowLevel.ILSupport">
@@ -616,7 +621,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Google.VersionHandlerImpl">
-      <HintPath>Assets\MobileDependencyResolver\Editor\1.2.185\Google.VersionHandlerImpl.dll</HintPath>
+      <HintPath>Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.VersionHandlerImpl.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Plastic.Antlr3.Runtime">
@@ -624,7 +629,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Google.JarResolver">
-      <HintPath>Assets\MobileDependencyResolver\Editor\1.2.185\Google.JarResolver.dll</HintPath>
+      <HintPath>Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.JarResolver.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="OnigwrapPlastic">
@@ -672,7 +677,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Google.PackageManagerResolver">
-      <HintPath>Assets\MobileDependencyResolver\Editor\1.2.185\Google.PackageManagerResolver.dll</HintPath>
+      <HintPath>Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.PackageManagerResolver.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Android.Types">

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/user/Documents/WebAPIFramework/.claude/agents/**)",
+      "Bash(ls -la \"c:/Users/user/Documents/WebAPIFramework/GameClient/UnityClient/.claude/\" 2>&1; echo \"---\"; ls -la \"c:/Users/user/Documents/WebAPIFramework/GameClient/.claude/\" 2>&1)",
+      "Read(//c/Users/user/Documents/WebAPIFramework/GameClient/**)"
+    ]
+  }
+}
