@@ -7,7 +7,7 @@ public static class BootstrapFlow
     // 점검 이벤트 중복 구독 방지 플래그
     static bool _subscribed;
 
-    // 부팅 흐름 시작 — Scene_Bootstrap.Start의 LoadAll 콜백에서 호출
+    // 부팅 흐름 시작 — Bootstrap_Scene.Start의 LoadAll 콜백에서 호출
     public static async void Run()
     {
         // 씬 재진입 시 점검 팝업 플래그 초기화

@@ -70,6 +70,7 @@
     <Compile Include="Assets\@Scripts\WebFramework\Api\MailApi.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\InquiryApi.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInUser.cs" />
+    <Compile Include="Assets\@Scripts\Scenes\Bootstrap_Scene.cs" />
     <Compile Include="Assets\@Scripts\Data\ItemData.cs" />
     <Compile Include="Assets\@Scripts\Managers\SoundManager.cs" />
     <Compile Include="Assets\@Scripts\Controllers\ObjectBase.cs" />
@@ -91,7 +92,6 @@
     <Compile Include="Assets\@Scripts\Controllers\Player.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\ApiError.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_UpdatePopup.cs" />
-    <Compile Include="Assets\@Scripts\Scenes\Scene_Bootstrap.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\RankingApi.cs" />
     <Compile Include="Assets\@Scripts\Utils\Extension.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\DailyLoginModels.cs" />
