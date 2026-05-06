@@ -35,8 +35,8 @@ public class UI_TermsPopup : UI_UGUI, IUI_Popup
         // 동의 버튼: PlayerPrefs 저장 + 팝업 닫기 + 콜백 실행
         GetButton((int)Buttons.AgreeBtn).onClick.AddListener(OnClickAgree);
 
-        // 거부 버튼: 앱 종료 (약관 미동의 시 서비스 이용 불가)
-        GetButton((int)Buttons.DisAgreeBtn).onClick.AddListener(() => Application.Quit());
+        // 거부 버튼: 앱 종료 (약관 미동의 시 서비스 이용 불가, 에디터에서는 로그만 출력)
+        GetButton((int)Buttons.DisAgreeBtn).onClick.AddListener(OnClickDisAgree);
     }
 
     /// <summary>
@@ -51,5 +51,15 @@ public class UI_TermsPopup : UI_UGUI, IUI_Popup
 
         UIManager.Instance.ClosePopupUI();
         OnAgree?.Invoke();
+    }
+
+    // 거부 버튼 클릭 처리 — 약관 미동의 시 앱 종료 (에디터에서는 디버그 로그만 출력)
+    private void OnClickDisAgree()
+    {
+#if UNITY_EDITOR
+        Debug.Log("[약관 비동의] 에디터 환경에서는 게임을 종료하지 않습니다.");
+#else
+        Application.Quit();
+#endif
     }
 }

@@ -118,6 +118,10 @@ public class UI_MainGame : UI_UGUI
         try
         {
             var user = await GoogleSignInProvider.SignIn();
+
+            // 에디터 환경 등에서 null 반환 시 조용히 중단
+            if (user == null) return;
+
             AuthApi.Instance.LinkGoogle(
                 user.IdToken,
                 onSuccess: _ =>

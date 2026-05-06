@@ -112,9 +112,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 942526637833493893}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 512ce9b81fef5fd4cbafe7dc7de65653, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UI_ConfirmPopup
+  m_Script: {fileID: 11500000, guid: 436ffc2282750f34e9f9c28431c438b5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::UI_WithdrawPopup
 --- !u!1 &1246794090560775452
 GameObject:
   m_ObjectHideFlags: 0

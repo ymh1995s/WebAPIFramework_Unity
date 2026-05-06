@@ -56,11 +56,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Analyzer Include="C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\Extensions\Microsoft\Visual Studio Tools for Unity\Analyzers\Microsoft.Unity.Analyzers.dll" />
-    <Analyzer Include="C:\Users\user\Documents\WebAPIFramework\GameClient\UnityClient\Assets\Settings\MobileDependencyResolver\Editor\Google.VersionHandler.dll" />
-    <Analyzer Include="C:\Users\user\Documents\WebAPIFramework\GameClient\UnityClient\Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.VersionHandlerImpl.dll" />
-    <Analyzer Include="C:\Users\user\Documents\WebAPIFramework\GameClient\UnityClient\Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.IOSResolver.dll" />
-    <Analyzer Include="C:\Users\user\Documents\WebAPIFramework\GameClient\UnityClient\Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.JarResolver.dll" />
-    <Analyzer Include="C:\Users\user\Documents\WebAPIFramework\GameClient\UnityClient\Assets\Settings\MobileDependencyResolver\Editor\1.2.185\Google.PackageManagerResolver.dll" />
     <Analyzer Include="D:\UnityEditor\6000.2.7f2\Editor\Data\Tools\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="D:\UnityEditor\6000.2.7f2\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="D:\UnityEditor\6000.2.7f2\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />

@@ -112,9 +112,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 191017493617958079}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 512ce9b81fef5fd4cbafe7dc7de65653, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UI_ConfirmPopup
+  m_Script: {fileID: 11500000, guid: c4903b1c01f18864c8672f10c4b5836f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::UI_UpdatePopup
 --- !u!1 &2376483116929534605
 GameObject:
   m_ObjectHideFlags: 0

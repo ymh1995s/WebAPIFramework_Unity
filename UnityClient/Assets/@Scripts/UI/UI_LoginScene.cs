@@ -35,6 +35,9 @@ public class UI_LoginScene : UI_UGUI, IUI_Scene
         {
             var user = await GoogleSignInProvider.SignIn();
 
+            // 에디터 환경 등에서 null 반환 시 조용히 중단
+            if (user == null) return;
+
             // 409 충돌 해소 시 재사용하기 위해 IdToken 보관
             _pendingGoogleIdToken = user.IdToken;
 
