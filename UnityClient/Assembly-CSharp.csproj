@@ -81,7 +81,6 @@
     <Compile Include="Assets\@Scripts\WebFramework\Models\InquiryModels.cs" />
     <Compile Include="Assets\@Scripts\Config\LocalizationConfig.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_StageSelect.cs" />
-    <Compile Include="Assets\@Scripts\Managers\StageSession.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\VersionApi.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\AuthApi.cs" />
     <Compile Include="Assets\@Scripts\Managers\ResourceManager.cs" />
@@ -97,8 +96,10 @@
     <Compile Include="Assets\@Scripts\UI\UI_InquiryPopup.cs" />
     <Compile Include="Assets\@Scripts\Utils\Extension.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\DailyLoginModels.cs" />
+    <Compile Include="Assets\@Scripts\UI\UI_RewardPopup.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_AnnouncementPopup.cs" />
     <Compile Include="Assets\@Scripts\Utils\Define.cs" />
+    <Compile Include="Assets\@Scripts\Managers\StageSession.cs" />
     <Compile Include="Assets\@Scripts\Config\GameConfig.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_MailPopup.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignIn.cs" />

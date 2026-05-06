@@ -115,6 +115,24 @@ public static class PopupService
     }
 
     // ─────────────────────────────────────────────────────────────────────
+    // 보상 팝업
+    // ─────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 스테이지 클리어 보상 팝업을 열고 반환한다.
+    /// 확인 버튼 콜백에서 씬 전환 등을 처리한다.
+    /// </summary>
+    /// <param name="message">보상 내용 메시지</param>
+    /// <param name="onConfirm">확인 버튼 콜백</param>
+    public static UI_RewardPopup ShowReward(string message, Action onConfirm)
+    {
+        var p = UIManager.Instance.ShowPopupUI<UI_RewardPopup>();
+        p.SetText(message);
+        p.OnConfirm = onConfirm;
+        return p;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
     // 선택(Ok/Cancel) 팝업
     // ─────────────────────────────────────────────────────────────────────
 
