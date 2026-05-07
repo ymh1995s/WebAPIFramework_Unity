@@ -62,18 +62,57 @@ public class UI_MailPopup : UI_UGUI, IUI_Popup
         var sb = new System.Text.StringBuilder();
         foreach (var mail in _mails)
         {
-            // 수령 여부 태그
-            string tag = mail.isClaimed ? "[수령완료]" : "[미수령]";
+            // 수령 완료된 메일은 목록에 표시하지 않음
+            if (mail.isClaimed) continue;
+
+            // 미수령 태그
+            string tag = "[미수령]";
             sb.AppendLine($"{tag} {mail.title}");
             sb.AppendLine($"  {mail.body}");
             sb.AppendLine($"  만료: {mail.expiresAt}");
+
+            // 보상 정보 줄 구성 — 아이템·경험치 유무에 따라 분기
+            sb.AppendLine($"  {BuildRewardText(mail)}");
             sb.AppendLine();
         }
 
-        GetText((int)Texts.Text).text = sb.ToString().TrimEnd();
+        // 미수령 메일이 하나도 없으면 빈 화면 대신 안내 문구 표시
+        string result = sb.ToString().TrimEnd();
+        GetText((int)Texts.Text).text = string.IsNullOrEmpty(result) ? "메일이 없습니다." : result;
     }
 
-    // 미수령 메일 전부 순차 수령 — 마지막 요청 완료 후 목록 갱신
+    // 단일 메일의 보상 텍스트를 생성한다
+    // 아이템이 있으면 "보상: Gold×100, Gems×5" 형태,
+    // 경험치만 있으면 "경험치: N", 둘 다 없으면 "보상 없음"
+    private string BuildRewardText(MailDto mail)
+    {
+        bool hasItems = mail.mailItems != null && mail.mailItems.Length > 0;
+        bool hasExp   = mail.exp > 0;
+
+        if (!hasItems && !hasExp)
+            return "보상 없음";
+
+        var parts = new System.Collections.Generic.List<string>();
+
+        if (hasItems)
+        {
+            var itemParts = new System.Collections.Generic.List<string>();
+            foreach (var item in mail.mailItems)
+            {
+                // itemName이 null이거나 비어 있으면 ID로 대체
+                string name = string.IsNullOrEmpty(item.itemName) ? $"아이템({item.itemId})" : item.itemName;
+                itemParts.Add($"{name}×{item.quantity}");
+            }
+            parts.Add($"보상: {string.Join(", ", itemParts)}");
+        }
+
+        if (hasExp)
+            parts.Add($"경험치: {mail.exp}");
+
+        return string.Join(" / ", parts);
+    }
+
+    // 미수령 메일 전부 순차 수령 — 수령 성공 시 즉시 목록에서 제거하고 화면 갱신
     private void OnClickReceiveAll()
     {
         if (_mails == null) return;
@@ -85,23 +124,21 @@ public class UI_MailPopup : UI_UGUI, IUI_Popup
             return;
         }
 
-        // 남은 요청 수를 추적하여 모두 완료된 시점에 목록 갱신
-        int remaining = unclaimed.Count;
-
         foreach (var mail in unclaimed)
         {
-            int mailId = mail.id;
+            // 루프 변수 캡처를 위해 로컬 복사
+            var capturedMail = mail;
             MailApi.Instance.Claim(
-                mailId,
+                capturedMail.id,
                 onSuccess: _ =>
                 {
-                    remaining--;
-                    if (remaining == 0) LoadMails();
+                    // 수령 완료된 메일을 리스트에서 즉시 제거하고 화면 반영
+                    _mails.Remove(capturedMail);
+                    RefreshDisplay();
                 },
                 onError: err =>
                 {
-                    remaining--;
-                    if (remaining == 0) LoadMails();
+                    // 실패한 메일은 리스트에 그대로 유지하고 오류만 표시
                     PopupService.ShowError(err);
                 }
             );
