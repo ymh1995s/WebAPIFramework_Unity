@@ -97,11 +97,12 @@ public class UI_MainGame : UI_UGUI
         );
     }
 
-    // ─── 인벤토리 (미구현) ─────────────────────────────────────────────────
+    // ─── 인벤토리 ──────────────────────────────────────────────────────────
 
+    // 인벤토리 팝업 표시
     private void OnClickInventory()
     {
-        PopupService.ShowAnnouncement("인벤토리 기능은 준비 중입니다.");
+        UIManager.Instance.ShowPopupUI<UI_InventoryPopup>();
     }
 
     // ─── 구글 연동 ─────────────────────────────────────────────────────────

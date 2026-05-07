@@ -9,7 +9,8 @@ public class UIManager : Singleton<UIManager>
     {
         get
         {
-            return Utils.GetRootTransform(ref _root, "@UI_Root");
+            // UIManager 자식으로 생성 → UIManager가 DDOL이므로 @UI_Root도 DDOL 상속
+            return Utils.GetRootTransform(ref _root, "@UI_Root", this.transform);
         }
     }
 
@@ -73,8 +74,10 @@ public class UIManager : Singleton<UIManager>
         if (string.IsNullOrEmpty(name))
             name = typeof(T).Name;
 
-        if (_popups.TryGetValue(name, out UI_Base popup) == false)
+        // 씬 전환으로 파괴된 캐시 참조를 감지하여 재생성
+        if (_popups.TryGetValue(name, out UI_Base popup) == false || popup == null)
         {
+            if (popup == null) _popups.Remove(name);
             GameObject go = ResourceManager.Instance.Instantiate(name);
             popup = Utils.GetOrAddComponent<T>(go);
             _popups[name] = popup;
@@ -113,6 +116,13 @@ public class UIManager : Singleton<UIManager>
             return;
 
         UI_Base popup = _popupStack.Pop();
+        if (popup == null)
+        {
+            // 외부 Destroy 등으로 파괴된 팝업 참조 — 스택 제거 후 종료
+            Debug.LogWarning("[UIManager] ClosePopupUI: 파괴된 팝업 참조가 스택에서 발견됨");
+            _popupOrder--;
+            return;
+        }
         if (popup is UI_Toolkit toolkitUI)
 			toolkitUI.GetComponent<UIDocument>().rootVisualElement.visible = false;
         else
@@ -141,10 +151,14 @@ public class UIManager : Singleton<UIManager>
     public void Clear()
     {
         CloseAllPopupUI();
+        _popupStack.Clear();   // CloseAllPopupUI 후 잔류 참조 완전 정리
+
         _popups.Clear();
 
         Root.DestroyChildren();
 
+        _popupRoot = null;     // 팝업 루트 재생성 강제
+        _popupOrder = 100;     // 정렬 순서 초기화
         _sceneUI = null;
     }
 }

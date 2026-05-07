@@ -27,6 +27,8 @@ public class SceneManager : Singleton<SceneManager>
 
     public void LoadScene(Define.EScene sceneType)
     {
+        // 씬 전환 직전 UI 스택·캐시 정리 — 파괴된 팝업 참조 잔류 방지
+        UIManager.Instance.Clear();
         string sceneName = sceneType.ToString();
         UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
         _currentScene = null;

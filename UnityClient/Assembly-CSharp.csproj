@@ -102,6 +102,8 @@
     <Compile Include="Assets\@Scripts\WebFramework\Core\ApiClient.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_MainGame.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\NoticeModels.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\InventoryModels.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Api\InventoryApi.cs" />
     <Compile Include="Assets\@Scripts\Utils\PriorityQueue.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Auth\AuthManager.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\StageApi.cs" />
@@ -132,6 +134,7 @@
     <Compile Include="Assets\@Scripts\WebFramework\Auth\GoogleSignInProvider.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\CommonModels.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInStatusCode.cs" />
+    <Compile Include="Assets\@Scripts\UI\UI_InventoryPopup.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_LoginScene.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_Log.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_ServerMaintenancePopup.cs" />

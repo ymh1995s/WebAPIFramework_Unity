@@ -67,4 +67,10 @@ public static class ApiConfig
     {
         public const string Active = "/api/shouts/active";
     }
+
+    // 인벤토리 엔드포인트
+    public static class Inventory
+    {
+        public const string GetInventory = "/api/items/inventory"; // GET
+    }
 }
