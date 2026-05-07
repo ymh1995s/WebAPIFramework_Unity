@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// 문의 팝업 UI — 문의 목록 조회 및 새 문의 제출 기능을 제공한다
-// 현재 프리팹에 InputField가 없어 제출 기능은 미구현 (준비 중 안내만 표시)
+// 문의 팝업 UI — 문의 목록 조회 및 고정 메시지로 문의 제출 기능을 제공한다
 public class UI_InquiryPopup : UI_UGUI, IUI_Popup
 {
     // 프리팹 자식 TMP Text 이름
@@ -22,10 +21,10 @@ public class UI_InquiryPopup : UI_UGUI, IUI_Popup
         GetButton((int)Buttons.InquiryBtn).onClick.AddListener(OnClickInquiry);
     }
 
-    protected override void Start()
+    protected override void OnEnable()
     {
-        base.Start();
-        // 팝업 열릴 때 문의 목록 로드
+        base.OnEnable();
+        // 팝업이 활성화될 때마다 최신 문의 목록 로드 (재오픈 시에도 갱신)
         LoadInquiries();
     }
 
@@ -72,10 +71,19 @@ public class UI_InquiryPopup : UI_UGUI, IUI_Popup
         GetText((int)Texts.Text).text = sb.ToString().TrimEnd();
     }
 
-    // 문의 제출 — 현재 프리팹에 InputField가 없어 준비 중 안내
+    // 고정 메시지로 문의를 제출한다 — 프리팹에 InputField가 없으므로 고정 문구 사용
     private void OnClickInquiry()
     {
-        PopupService.ShowAnnouncement("문의 입력 UI는 준비 중입니다.");
+        const string fixedMessage = "문의합니다. 처리 부탁드립니다.";
+        InquiryApi.Instance.Submit(
+            fixedMessage,
+            onSuccess: _ =>
+            {
+                PopupService.ShowAnnouncement("문의가 접수되었습니다.");
+                LoadInquiries();
+            },
+            onError: err => PopupService.ShowError(err)
+        );
     }
 
     private void OnClickExit()

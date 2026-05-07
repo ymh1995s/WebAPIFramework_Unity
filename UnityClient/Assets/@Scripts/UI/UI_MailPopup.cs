@@ -24,10 +24,10 @@ public class UI_MailPopup : UI_UGUI, IUI_Popup
         GetButton((int)Buttons.ReceiveAllBtn).onClick.AddListener(OnClickReceiveAll);
     }
 
-    protected override void Start()
+    protected override void OnEnable()
     {
-        base.Start();
-        // 팝업 열릴 때 메일 목록 로드
+        base.OnEnable();
+        // 팝업이 활성화될 때마다 최신 메일 목록 로드 (재오픈 시에도 갱신)
         LoadMails();
     }
 
