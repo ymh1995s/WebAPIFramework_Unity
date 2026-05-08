@@ -69,6 +69,15 @@ public class ApiError
             // 파싱 실패는 무시 - RawBody만 보관
         }
 
+        // ProblemDetails 파싱 후 title이 없으면 JSON 문자열 응답 추출 시도
+        // 예: StatusCode(403, "정지된 계정입니다.") 처럼 단순 문자열을 반환하는 경우
+        if (string.IsNullOrEmpty(error.Title) && string.IsNullOrEmpty(error.Detail))
+        {
+            string trimmed = body.Trim();
+            if (trimmed.Length >= 2 && trimmed[0] == '"' && trimmed[trimmed.Length - 1] == '"')
+                error.Detail = trimmed.Substring(1, trimmed.Length - 2);
+        }
+
         return error;
     }
 

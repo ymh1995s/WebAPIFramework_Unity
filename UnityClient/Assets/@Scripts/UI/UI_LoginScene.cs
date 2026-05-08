@@ -96,10 +96,13 @@ public class UI_LoginScene : UI_UGUI, IUI_Scene
         SceneManager.Instance.LoadScene(Define.EScene.MainScene);
     }
 
-    // 로그인 오류 공통 처리 — 팝업 표시
+    // 로그인 오류 공통 처리 — 밴 계정은 ShowBanned, 그 외는 ShowError
     private void OnLoginError(ApiError error)
     {
         RestLogger.Error($"로그인 실패: {error.UserMessage}");
-        PopupService.ShowError(error);
+        if (error.ErrorCode == "AUTH_BANNED")
+            PopupService.ShowBanned(error.UserMessage ?? "정지된 계정입니다.");
+        else
+            PopupService.ShowError(error);
     }
 }

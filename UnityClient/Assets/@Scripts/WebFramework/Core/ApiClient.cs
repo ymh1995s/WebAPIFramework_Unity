@@ -155,9 +155,16 @@ public class ApiClient : Singleton<ApiClient>
             return;
         }
 
-        // 401 미인증 — 토큰 갱신 후 1회 재시도
+        // 401 미인증 — 밴 계정이면 갱신 없이 즉시 에러 반환, 그 외는 토큰 갱신 후 재시도
         if (statusCode == 401)
         {
+            var err401 = ApiError.FromHttp(statusCode, body, isNetwork: false);
+            if (err401.ErrorCode == "AUTH_BANNED")
+            {
+                // 밴 계정은 토큰 갱신 루프 진입 없이 onError 직행
+                onError?.Invoke(err401);
+                return;
+            }
             await Handle401<TRes>(method, url, jsonBody, onSuccess, onError, isRetry, customParser);
             return;
         }

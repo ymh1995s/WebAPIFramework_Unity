@@ -163,6 +163,7 @@ public static class BootstrapFlow
 
         bool completed = false;
         bool success   = false;
+        bool banned    = false;
 
         AuthApi.Instance.Refresh(
             AuthManager.Instance.RefreshToken,
@@ -175,9 +176,18 @@ public static class BootstrapFlow
             },
             onError: err =>
             {
-                // 토큰 만료 등 갱신 실패 — 저장된 토큰 초기화 후 로그인 화면으로
-                Debug.LogWarning($"[Bootstrap] 자동 로그인 실패: {err.UserMessage}");
                 AuthManager.Instance.Clear();
+                if (err.ErrorCode == "AUTH_BANNED")
+                {
+                    // 밴 계정 안내 팝업 — OK 클릭 시 게임 재시작
+                    banned = true;
+                    PopupService.ShowBanned(err.UserMessage ?? "정지된 계정입니다.");
+                }
+                else
+                {
+                    // 토큰 만료 등 갱신 실패 — 조용히 로그인 화면으로 이동
+                    Debug.LogWarning($"[Bootstrap] 자동 로그인 실패: {err.UserMessage}");
+                }
                 completed = true;
             }
         );
@@ -191,8 +201,14 @@ public static class BootstrapFlow
             UnsubscribeMaintenanceEvent();
             SceneManager.Instance.LoadScene(Define.EScene.MainScene);
         }
+        else if (banned)
+        {
+            // 밴 팝업 표시 중 — LoginScene 전환 없이 종료 (팝업 OK → RestartGame)
+            UnsubscribeMaintenanceEvent();
+        }
 
-        return success;
+        // banned 반환 시 true → Run()의 ProceedToLogin() 호출 방지
+        return success || banned;
     }
 
     // [4] 약관 동의 여부에 따라 팝업 또는 즉시 LoginScene 진입

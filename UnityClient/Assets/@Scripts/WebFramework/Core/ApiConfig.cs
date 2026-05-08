@@ -2,7 +2,7 @@
 public static class ApiConfig
 {
     // 개발 서버 기본 URL (배포 시 실제 주소로 변경)
-    public const string BaseUrl = "http://192.168.219.101:5058";
+    public const string BaseUrl = "http://localhost:5058";
 
     // 인증 관련 엔드포인트 (/api prefix 포함 — 이전 버전의 prefix 누락 버그 수정)
     public static class Auth

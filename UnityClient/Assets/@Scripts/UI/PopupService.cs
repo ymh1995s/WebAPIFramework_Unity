@@ -5,6 +5,7 @@ using UnityEngine;
 /// 팝업 표시를 한 곳에서 관리하는 정적 서비스 클래스.
 /// UIManager.ShowPopupUI 를 직접 호출하는 대신 이 클래스를 경유하여
 /// 팝업 생성·콜백 설정을 일관된 방식으로 처리한다.
+/// 단순 확인 팝업은 모두 UI_ConfirmPopup 을 재사용한다.
 /// </summary>
 public static class PopupService
 {
@@ -21,12 +22,12 @@ public static class PopupService
     /// 확인 버튼을 누르면 게임을 재시작(RestartGame)한다.
     /// </summary>
     /// <param name="message">사용자에게 표시할 오류 메시지</param>
-    public static UI_ErrorPopup ShowError(string message)
+    public static UI_ConfirmPopup ShowError(string message)
     {
         // 팝업 인스턴스 생성 및 텍스트·콜백 설정
-        var p = UIManager.Instance.ShowPopupUI<UI_ErrorPopup>();
+        var p = UIManager.Instance.ShowPopupUI<UI_ConfirmPopup>();
         p.SetText(message);
-        p.OnOk = RestartGame;
+        p.OnConfirm = RestartGame;
         return p;
     }
 
@@ -35,7 +36,7 @@ public static class PopupService
     /// UserMessage 가 없으면 기본 문구를 사용한다.
     /// </summary>
     /// <param name="error">API 호출에서 반환된 오류 정보</param>
-    public static UI_ErrorPopup ShowError(ApiError error)
+    public static UI_ConfirmPopup ShowError(ApiError error)
         => ShowError(error?.UserMessage ?? "알 수 없는 오류가 발생했습니다.");
 
     // ─────────────────────────────────────────────────────────────────────
@@ -44,15 +45,15 @@ public static class PopupService
 
     /// <summary>
     /// 서버 공지사항을 표시하는 팝업을 열고 반환한다.
-    /// 확인 버튼을 누르면 팝업을 닫는다.
+    /// 확인 버튼을 누르면 팝업을 닫는다 (UI_ConfirmPopup 내부에서 ClosePopupUI 처리).
     /// </summary>
     /// <param name="message">공지 내용</param>
-    public static UI_AnnouncementPopup ShowAnnouncement(string message)
+    public static UI_ConfirmPopup ShowAnnouncement(string message)
     {
-        var p = UIManager.Instance.ShowPopupUI<UI_AnnouncementPopup>();
+        var p = UIManager.Instance.ShowPopupUI<UI_ConfirmPopup>();
         p.SetText(message);
-        // 확인 시 팝업만 닫음 — 씬 전환 등 추가 처리 없음
-        p.OnConfirm = () => UIManager.Instance.ClosePopupUI();
+        // 확인 시 팝업만 닫음 — OnConfirm = null 이면 ClosePopupUI 호출 후 콜백 생략
+        p.OnConfirm = null;
         return p;
     }
 
@@ -66,13 +67,13 @@ public static class PopupService
     /// </summary>
     /// <param name="message">점검 안내 메시지</param>
     /// <param name="onConfirm">확인 버튼 콜백 (앱 종료 등)</param>
-    public static UI_ServerMaintenancePopup ShowMaintenance(string message, Action onConfirm)
+    public static UI_ConfirmPopup ShowMaintenance(string message, Action onConfirm)
     {
         // 이미 점검 팝업이 표시된 경우 중복 생성 방지
         if (_maintenanceShown) return null;
 
         _maintenanceShown = true;
-        var p = UIManager.Instance.ShowPopupUI<UI_ServerMaintenancePopup>();
+        var p = UIManager.Instance.ShowPopupUI<UI_ConfirmPopup>();
         p.SetText(message);
         p.OnConfirm = onConfirm;
         return p;
@@ -84,16 +85,53 @@ public static class PopupService
 
     /// <summary>
     /// 클라이언트 강제 업데이트 안내 팝업을 열고 반환한다.
-    /// 확인 버튼 콜백에서 스토어 링크 이동 등을 처리한다.
+    /// 확인 버튼 라벨을 "업데이트"로 변경하고, 콜백에서 스토어 링크 이동 등을 처리한다.
     /// </summary>
     /// <param name="latestVersion">서버가 요구하는 최신 버전 문자열 (예: "1.2.3")</param>
     /// <param name="onConfirm">확인 버튼 콜백 (스토어 이동 등)</param>
-    public static UI_UpdatePopup ShowUpdate(string latestVersion, Action onConfirm)
+    public static UI_ConfirmPopup ShowUpdate(string latestVersion, Action onConfirm)
     {
-        var p = UIManager.Instance.ShowPopupUI<UI_UpdatePopup>();
+        var p = UIManager.Instance.ShowPopupUI<UI_ConfirmPopup>();
         // 버전 정보를 포함한 안내 문구를 자동 생성
         p.SetText($"새 버전({latestVersion})이 있습니다. 업데이트 후 이용해주세요.");
+        // 업데이트 팝업은 버튼 라벨을 "업데이트"로 변경
+        p.SetButtonLabel("업데이트");
         p.OnConfirm = onConfirm;
+        return p;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 보상 팝업
+    // ─────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 스테이지 클리어 보상 팝업을 열고 반환한다.
+    /// 확인 버튼 콜백에서 씬 전환 등을 처리한다.
+    /// </summary>
+    /// <param name="message">보상 내용 메시지</param>
+    /// <param name="onConfirm">확인 버튼 콜백</param>
+    public static UI_ConfirmPopup ShowReward(string message, Action onConfirm)
+    {
+        var p = UIManager.Instance.ShowPopupUI<UI_ConfirmPopup>();
+        p.SetText(message);
+        p.OnConfirm = onConfirm;
+        return p;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 밴(계정 정지) 팝업
+    // ─────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 계정 정지 안내 팝업을 열고 반환한다.
+    /// 확인 버튼을 누르면 게임을 재시작(RestartGame)한다.
+    /// </summary>
+    /// <param name="message">정지 사유 메시지</param>
+    public static UI_ConfirmPopup ShowBanned(string message)
+    {
+        var p = UIManager.Instance.ShowPopupUI<UI_ConfirmPopup>();
+        p.SetText(message);
+        p.OnConfirm = RestartGame;
         return p;
     }
 
@@ -111,24 +149,6 @@ public static class PopupService
     {
         var p = UIManager.Instance.ShowPopupUI<UI_TermsPopup>();
         p.OnAgree = onConfirm;
-        return p;
-    }
-
-    // ─────────────────────────────────────────────────────────────────────
-    // 보상 팝업
-    // ─────────────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// 스테이지 클리어 보상 팝업을 열고 반환한다.
-    /// 확인 버튼 콜백에서 씬 전환 등을 처리한다.
-    /// </summary>
-    /// <param name="message">보상 내용 메시지</param>
-    /// <param name="onConfirm">확인 버튼 콜백</param>
-    public static UI_RewardPopup ShowReward(string message, Action onConfirm)
-    {
-        var p = UIManager.Instance.ShowPopupUI<UI_RewardPopup>();
-        p.SetText(message);
-        p.OnConfirm = onConfirm;
         return p;
     }
 
