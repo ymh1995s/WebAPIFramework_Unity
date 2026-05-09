@@ -124,6 +124,7 @@
     <Compile Include="Assets\@Scripts\WebFramework\Core\ApiConfig.cs" />
     <Compile Include="Assets\@Scripts\Managers\DataManager.cs" />
     <Compile Include="Assets\@Scripts\Scenes\GameScene.cs" />
+    <Compile Include="Assets\@Scripts\Managers\AppLifecycleManager.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\Impl\GoogleSignInImpl.cs" />
     <Compile Include="Assets\@Scripts\Managers\EventManager.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInConfiguration.cs" />
