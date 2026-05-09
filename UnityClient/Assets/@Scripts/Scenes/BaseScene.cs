@@ -8,4 +8,7 @@ public class BaseScene : MonoBehaviour
     {
         // TODO
     }
+
+    // 뒤로가기 입력 시 BackButtonHandler가 호출 — 씬별로 오버라이드
+    public virtual void OnBackButton() { }
 }

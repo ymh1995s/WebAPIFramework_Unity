@@ -26,4 +26,24 @@ public class LoginScene : BaseScene
         DataManager.Instance.LoadData();
         // 씬 전환은 UI_LoginScene에서 로그인 성공 후 처리
     }
+
+    // 뒤로가기 — 게임 종료 확인 팝업 표시
+    public override void OnBackButton()
+    {
+        PopupService.ShowSelect(
+            "게임을 종료하시겠습니까?",
+            onOk: QuitApplication,
+            onCancel: null
+        );
+    }
+
+    // 플랫폼별 앱 종료
+    static void QuitApplication()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
 }

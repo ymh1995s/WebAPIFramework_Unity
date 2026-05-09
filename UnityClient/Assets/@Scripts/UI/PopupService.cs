@@ -139,17 +139,28 @@ public static class PopupService
     // 약관 동의 팝업
     // ─────────────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// 이용약관 동의 팝업을 열고 반환한다.
-    /// 동의(AgreeBtn) 시 PlayerPrefs 저장 후 onConfirm 호출,
-    /// 거부(DisAgreeBtn) 시 앱을 종료한다.
-    /// </summary>
-    /// <param name="onConfirm">약관 동의 후 실행할 콜백 (로그인 진행 등)</param>
-    public static UI_TermsPopup ShowTerms(Action onConfirm)
+    // 이용약관 동의 팝업 — ShowSelect 재사용, 동의 시 PlayerPrefs 저장 후 콜백 실행
+    public static UI_WithdrawPopup ShowTerms(Action onConfirm)
     {
-        var p = UIManager.Instance.ShowPopupUI<UI_TermsPopup>();
-        p.OnAgree = onConfirm;
-        return p;
+        return ShowSelect(
+            "서비스 이용을 위해 이용약관에 동의해주세요.\n\n동의하지 않으시면 앱이 종료됩니다.",
+            onOk: () =>
+            {
+                // 약관 동의 여부 로컬 저장 — 재실행 시 팝업 생략용
+                PlayerPrefs.SetInt("TermsAccepted", 1);
+                PlayerPrefs.Save();
+                onConfirm?.Invoke();
+            },
+            onCancel: () =>
+            {
+#if UNITY_EDITOR
+                // 에디터에서는 종료 대신 로그만 출력
+                Debug.Log("[약관 비동의] 에디터 환경에서는 게임을 종료하지 않습니다.");
+#else
+                Application.Quit();
+#endif
+            }
+        );
     }
 
     // ─────────────────────────────────────────────────────────────────────
