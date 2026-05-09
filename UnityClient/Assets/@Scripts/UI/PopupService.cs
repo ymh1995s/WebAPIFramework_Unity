@@ -61,6 +61,9 @@ public static class PopupService
     // 서버 점검 팝업
     // ─────────────────────────────────────────────────────────────────────
 
+    // 표시 중인 점검 팝업 참조 — HideMaintenance 에서 닫을 때 사용
+    static UI_ConfirmPopup _maintenancePopup;
+
     /// <summary>
     /// 서버 점검 안내 팝업을 열고 반환한다.
     /// 이미 표시 중이면 null 을 반환하여 중복 표시를 방지한다.
@@ -76,7 +79,47 @@ public static class PopupService
         var p = UIManager.Instance.ShowPopupUI<UI_ConfirmPopup>();
         p.SetText(message);
         p.OnConfirm = onConfirm;
+        _maintenancePopup = p;
         return p;
+    }
+
+    /// <summary>
+    /// 버튼 없는 점검 안내 팝업을 열고 반환한다.
+    /// 자동 재시도 흐름에서 사용 — 점검 해제 시 HideMaintenance 로 닫는다.
+    /// </summary>
+    /// <param name="message">점검 안내 메시지</param>
+    public static UI_ConfirmPopup ShowMaintenance(string message)
+    {
+        // 이미 점검 팝업이 표시된 경우 중복 생성 방지
+        if (_maintenanceShown) return null;
+
+        _maintenanceShown = true;
+        var p = UIManager.Instance.ShowPopupUI<UI_ConfirmPopup>();
+        p.SetText(message);
+        // 버튼 없는 팝업 — 자동 재시도 성공 시 HideMaintenance 로 프로그래밍 방식으로 닫음
+        p.SetButtonActive(false);
+        p.OnConfirm = null;
+        _maintenancePopup = p;
+        return p;
+    }
+
+    /// <summary>
+    /// 현재 표시 중인 점검 팝업을 프로그래밍 방식으로 닫는다.
+    /// 자동 재시도 성공 후 부팅 흐름을 재개하기 전에 호출한다.
+    /// 팝업이 없으면 무시한다.
+    /// </summary>
+    public static void HideMaintenance()
+    {
+        if (_maintenancePopup == null) return;
+
+        // UIManager 스택 최상단이 점검 팝업인 경우에만 ClosePopupUI 호출
+        // — 다른 팝업이 최상단에 쌓여 있으면 닫지 않고 참조만 해제
+        var top = UIManager.Instance.GetLastPopupUI<UI_ConfirmPopup>();
+        if (top == _maintenancePopup)
+            UIManager.Instance.ClosePopupUI();
+
+        _maintenancePopup = null;
+        _maintenanceShown  = false;
     }
 
     // ─────────────────────────────────────────────────────────────────────

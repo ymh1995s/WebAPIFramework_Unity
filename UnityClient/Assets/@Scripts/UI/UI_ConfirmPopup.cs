@@ -40,6 +40,10 @@ public class UI_ConfirmPopup : UI_UGUI, IUI_Popup
         // 이중 클릭 방지 플래그 초기화 — 이전 확인 클릭 상태가 다음 팝업에 잔존하는 버그 방지
         _confirmed = false;
 
+        // 버튼 활성 상태 복원 — ShowMaintenance에서 SetButtonActive(false)로 숨긴 채 닫힌 뒤
+        // 인스턴스가 재사용될 때 확인 버튼이 없는 상태로 남는 버그 방지
+        SetButtonActive(true);
+
         // 버튼 라벨을 기본값으로 복원 — ShowUpdate 등에서 변경된 라벨이 잔존하는 버그 방지
         // Awake 바인딩 완료 이후 OnEnable이 호출되므로 GetButton 호출은 안전
         SetButtonLabel("확인");
@@ -48,6 +52,10 @@ public class UI_ConfirmPopup : UI_UGUI, IUI_Popup
     // 팝업 본문 메시지 설정
     public void SetText(string message)
         => GetText((int)Texts.Text).text = message;
+
+    // 확인 버튼 GameObject 활성/비활성화 — 버튼 없는 팝업(점검 안내 등)에서 사용
+    public void SetButtonActive(bool active)
+        => GetButton((int)Buttons.ConfirmBtn).gameObject.SetActive(active);
 
     // 확인 버튼 라벨 변경 — 기본 "확인", ShowUpdate는 "업데이트" 등으로 변경
     public void SetButtonLabel(string label)

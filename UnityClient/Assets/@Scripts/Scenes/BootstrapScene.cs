@@ -16,6 +16,9 @@ public class BootstrapScene : BaseScene
         // BackButtonHandler를 앱 시작 시점에 생성 — DDOL Singleton이므로 이후 씬에서도 유지
         _ = BackButtonHandler.Instance;
 
+        // FadeManager를 앱 시작 시점에 생성 — DDOL Singleton이므로 이후 씬 전환에서도 유지
+        _ = FadeManager.Instance;
+
         ResourceManager.Instance.LoadAll(
             onProgress: null,
             onComplete: () => BootstrapFlow.Run()

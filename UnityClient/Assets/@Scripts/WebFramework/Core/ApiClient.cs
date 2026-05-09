@@ -315,6 +315,13 @@ public class ApiClient : Singleton<ApiClient>
         onError?.Invoke(ApiError.Maintenance);
     }
 
+    // 점검 플래그 초기화 — 씬 재진입 또는 부팅 흐름 재실행 시 호출
+    // 점검 해제 후 재점검 시 MaintenanceDetected 이벤트가 재발행될 수 있도록 리셋
+    public static void ResetMaintenanceFlag()
+    {
+        _maintenanceShown = false;
+    }
+
     // ====================================================
     // 유틸리티
     // ====================================================

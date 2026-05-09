@@ -65,7 +65,6 @@
     <Compile Include="Assets\@Scripts\WebFramework\Api\MailApi.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\InquiryApi.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInUser.cs" />
-    <Compile Include="Assets\@Scripts\Scenes\Bootstrap_Scene.cs" />
     <Compile Include="Assets\@Scripts\Data\ItemData.cs" />
     <Compile Include="Assets\@Scripts\Managers\SoundManager.cs" />
     <Compile Include="Assets\@Scripts\Controllers\ObjectBase.cs" />
@@ -80,10 +79,12 @@
     <Compile Include="Assets\@Scripts\WebFramework\Api\AuthApi.cs" />
     <Compile Include="Assets\@Scripts\Managers\ResourceManager.cs" />
     <Compile Include="Assets\@Scripts\UI\PopupService.cs" />
+    <Compile Include="Assets\@Scripts\Managers\FadeManager.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\RestLogger.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\ShoutApi.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_Base.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\Impl\NativeFuture.cs" />
+    <Compile Include="Assets\@Scripts\Scenes\LoadingScene.cs" />
     <Compile Include="Assets\@Scripts\Controllers\Player.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\ApiError.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\RankingApi.cs" />
@@ -101,6 +102,7 @@
     <Compile Include="Assets\@Scripts\UI\UI_MainGame.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\NoticeModels.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\InventoryModels.cs" />
+    <Compile Include="Assets\@Scripts\UI\UI_LoadingScene.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\InventoryApi.cs" />
     <Compile Include="Assets\@Scripts\Utils\PriorityQueue.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Auth\AuthManager.cs" />
@@ -113,6 +115,7 @@
     <Compile Include="Assets\@Scripts\WebFramework\Models\RankingModels.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_WithdrawPopup.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\VersionModels.cs" />
+    <Compile Include="Assets\@Scripts\Scenes\BootstrapScene.cs" />
     <Compile Include="Assets\@Scripts\Managers\ObjectManager.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\Future.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_InGame.cs" />

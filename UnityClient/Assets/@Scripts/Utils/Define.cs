@@ -11,6 +11,7 @@ public static class Define
         GameScene,
         BootstrapScene,    // 앱 부팅 최초 진입 씬 (버전체크/자동로그인)
         StageSelectScene,  // 스테이지 목록 씬
+        LoadingScene,      // 씬 전환 중 로딩 화면 (페이드 인/아웃 전용)
     }
 
     // 전역 이벤트 식별자 열거형 — EventManager.TriggerEvent 인자로 사용
