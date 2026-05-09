@@ -105,6 +105,7 @@
     <Compile Include="Assets\@Scripts\UI\UI_LoadingScene.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\InventoryApi.cs" />
     <Compile Include="Assets\@Scripts\Utils\PriorityQueue.cs" />
+    <Compile Include="Assets\@Scripts\UI\SafeAreaFitter.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Auth\AuthManager.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\StageApi.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\StageModels.cs" />

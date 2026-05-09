@@ -406,6 +406,7 @@ GameObject:
   - component: {fileID: 6613251300493340703}
   - component: {fileID: 8749669398002236871}
   - component: {fileID: 6829031943559123153}
+  - component: {fileID: 9876543210000000002}
   m_Layer: 0
   m_Name: UI_InquiryPopup
   m_TagString: Untagged
@@ -508,6 +509,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa71de897bd44ed0a8f499adb32b79ff, type: 3}
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::UI_InquiryPopup
+--- !u!114 &9876543210000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4403843429973121800}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2ef8262b66e9f84086fb38ce074edc6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  _applyTop: 1
+  _applyBottom: 1
+  _applyLeft: 1
+  _applyRight: 1
 --- !u!1 &5785971126970678236
 GameObject:
   m_ObjectHideFlags: 0
