@@ -4,6 +4,9 @@ using UnityEngine;
 // 메인 씬 UI — 모든 기능 버튼을 바인딩하고 각 흐름(랭킹/메일/문의/계정/씬 전환)을 처리한다
 public class UI_MainGame : UI_UGUI
 {
+    // 앱 세션 동안 DailyLogin 호출 여부 — static으로 씬 재진입 시에도 유지
+    static bool _dailyLoginChecked;
+
     // 씬 내 TMP Text 자식 오브젝트 이름 — StatusText로 계정 상태를 표시
     enum Texts   { StatusText }
 
@@ -41,6 +44,25 @@ public class UI_MainGame : UI_UGUI
         base.Start();
         // 씬 진입 시 계정 상태 표시
         RefreshStatus();
+        // 세션 최초 메인씬 진입 시 일일 출석 처리
+        ProcessDailyLogin();
+    }
+
+    // 세션당 1회 DailyLogin API 호출 — 이미 호출했으면 즉시 반환
+    private void ProcessDailyLogin()
+    {
+        if (_dailyLoginChecked) return;
+        _dailyLoginChecked = true;
+
+        DailyLoginApi.Instance.Process(
+            onSuccess: res =>
+            {
+                // 오늘 첫 로그인 시에만 안내 팝업 표시
+                if (res.rewarded)
+                    PopupService.ShowAnnouncement("오늘의 출석 보상이 우편함에 도착했습니다.\n메일함에서 수령해주세요.");
+            },
+            onError: _ => { /* 자동 호출이므로 에러 무음 처리 */ }
+        );
     }
 
     // 상태 텍스트를 PlayerId + 구글 연동 여부로 갱신
