@@ -32,6 +32,29 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 
 ---
 
+## [법적 의무] 탈퇴 고지 텍스트 관리
+
+**위치**: `UI_MainGame.cs` `OnClickWithdraw()` 팝업 메시지 문자열 (하드코딩)
+
+**법적 근거**: 개인정보보호법 §22 / Google Play User Data Policy / Apple App Store Review 5.1.1(v)
+**상세 기준**: `CLIENT_GUIDE.md` 10번 + 부록 A 의무 동작 체크리스트
+
+**고지 항목 5개** — 서버 `PlayerWithdrawalCleaner.PurgeGameDataAsync` 처리 범위에서 도출:
+
+| # | 고지 내용 | 서버 처리 |
+|---|---|---|
+| 1 | 인게임 프로필·보유 아이템·스테이지 진행도 영구 삭제 | `PlayerProfile`, `PlayerItem`, `StageClear` hard delete |
+| 2 | 우편함 및 미수령 보상 전부 소실 | `Mail`, `MailItem` hard delete |
+| 3 | 결제로 획득한 아이템·보상 소실 (결제 이력 자체는 법적 의무로 5년 보관) | `IapPurchase` 보존(전자상거래법), 아이템은 `PlayerItem` 삭제 |
+| 4 | 재가입 시 기존 데이터 복구 불가 | 모든 게임 데이터 즉시 hard delete |
+| 5 | 개인정보(기기 ID·구글 계정·닉네임) 즉시 익명화 | `DeviceId`/`GoogleId` → null, 닉네임 → `"탈퇴유저-{id}"` |
+
+**변경 트리거**: 서버 `WithdrawAsync` 처리 범위 변경(새 테이블 추가·삭제) 시 이 텍스트도 동반 업데이트 필수.
+
+**하드코딩 의도**: 법적 고지 텍스트를 JSON/설정 파일로 분리하면 실수 수정·누락 위험이 높아짐 — 의도적 코드 변경(코드 리뷰 경유)만 허용.
+
+---
+
 ## [미구현] 프레임워크 공통 시스템 (2026-05-09)
 
 > 아래 5개 항목은 모바일 게임 프레임워크로서 모든 프로젝트에 공통 적용되는 필수 기반 시스템이다.
