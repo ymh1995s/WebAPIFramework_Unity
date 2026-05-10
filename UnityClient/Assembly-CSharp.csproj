@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\@Scripts\WebFramework\Api\DailyLoginApi.cs" />
+    <Compile Include="Assets\@Scripts\UI\UI_HUDShout.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\MailApi.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\InquiryApi.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInUser.cs" />
@@ -112,6 +113,7 @@
     <Compile Include="Assets\@Scripts\Managers\IAPManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\LocalizationManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\UIManager.cs" />
+    <Compile Include="Assets\@Scripts\Managers\ShoutManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\Singleton.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\RankingModels.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_WithdrawPopup.cs" />

@@ -9,6 +9,18 @@ public class MainScene : BaseScene
         SceneType = Define.EScene.MainScene;
     }
 
+    void Start()
+    {
+        // 메인씬 진입 — 외침 폴링 시작 (즉시 1회 조회 + 5분 주기 폴링)
+        ShoutManager.Instance.Begin();
+    }
+
+    void OnDestroy()
+    {
+        // 메인씬 이탈 — 외침 폴링 중단 및 HUD 숨김
+        ShoutManager.Instance.End();
+    }
+
     // 뒤로가기 — 종료 확인 팝업 표시
     public override void OnBackButton()
     {

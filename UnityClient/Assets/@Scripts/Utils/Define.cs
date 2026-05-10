@@ -54,3 +54,10 @@ public static class Define
 		Work
 	}
 }
+
+// PlayerPrefs 키 상수 — 매직 스트링 제거 및 키 중복 방지
+public static class PlayerPrefsKey
+{
+    // 마지막으로 본 공지 ID — 동일 공지 재표시 차단용
+    public const string LastSeenNoticeId = "LastSeenNoticeId";
+}

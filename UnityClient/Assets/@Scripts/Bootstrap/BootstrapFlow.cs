@@ -197,7 +197,7 @@ public static class BootstrapFlow
                 }
 
                 // 이미 확인한 공지 — 스킵
-                int lastSeenId = PlayerPrefs.GetInt("LastSeenNoticeId", 0);
+                int lastSeenId = PlayerPrefs.GetInt(PlayerPrefsKey.LastSeenNoticeId, 0);
                 if (notice.id == lastSeenId)
                 {
                     completed = true;
@@ -206,7 +206,7 @@ public static class BootstrapFlow
 
                 // 신규 공지 — 팝업 표시 후 확인 ID 저장
                 PopupService.ShowAnnouncement(notice.content);
-                PlayerPrefs.SetInt("LastSeenNoticeId", notice.id);
+                PlayerPrefs.SetInt(PlayerPrefsKey.LastSeenNoticeId, notice.id);
                 PlayerPrefs.Save();
                 completed = true;
             },
