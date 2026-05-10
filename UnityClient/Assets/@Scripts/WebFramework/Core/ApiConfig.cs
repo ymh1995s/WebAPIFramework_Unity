@@ -68,9 +68,13 @@ public static class ApiConfig
         public const string Active = "/api/shouts/active";
     }
 
-    // 인벤토리 엔드포인트
-    public static class Inventory
+    // 아이템 엔드포인트 — 인벤토리 조회 및 아이템 사용 포함
+    public static class Item
     {
-        public const string GetInventory = "/api/items/inventory"; // GET
+        // 인벤토리 조회 — GET /api/items/inventory (백엔드가 최상위 배열 반환)
+        public const string GetInventory = "/api/items/inventory";
+
+        // 아이템 사용 — POST /api/items/{0}/use ({0} = itemId)
+        public const string Use = "/api/items/{0}/use";
     }
 }

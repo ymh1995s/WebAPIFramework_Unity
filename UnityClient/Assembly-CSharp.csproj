@@ -66,6 +66,7 @@
     <Compile Include="Assets\@Scripts\WebFramework\Api\InquiryApi.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInUser.cs" />
     <Compile Include="Assets\@Scripts\Data\ItemData.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Api\ItemApi.cs" />
     <Compile Include="Assets\@Scripts\Managers\SoundManager.cs" />
     <Compile Include="Assets\@Scripts\Controllers\ObjectBase.cs" />
     <Compile Include="Assets\@Scripts\Managers\GameManager.cs" />
@@ -103,7 +104,6 @@
     <Compile Include="Assets\@Scripts\WebFramework\Models\NoticeModels.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\InventoryModels.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_LoadingScene.cs" />
-    <Compile Include="Assets\@Scripts\WebFramework\Api\InventoryApi.cs" />
     <Compile Include="Assets\@Scripts\Utils\PriorityQueue.cs" />
     <Compile Include="Assets\@Scripts\UI\SafeAreaFitter.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Auth\AuthManager.cs" />
@@ -138,6 +138,7 @@
     <Compile Include="Assets\@Scripts\Scenes\StageSelectScene.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\CommonModels.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInStatusCode.cs" />
+    <Compile Include="Assets\@Scripts\UI\UI_InventoryPopup.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_LoginScene.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_Log.cs" />
     <Compile Include="Assets\@Scripts\Managers\SceneManager.cs" />

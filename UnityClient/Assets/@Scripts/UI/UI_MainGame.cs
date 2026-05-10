@@ -121,28 +121,10 @@ public class UI_MainGame : UI_UGUI
 
     // ─── 인벤토리 ──────────────────────────────────────────────────────────
 
-    // 인벤토리 API 호출 후 결과를 공지 팝업으로 표시
+    // 인벤토리 팝업 표시 — UI_InventoryPopup에서 목록 조회 및 아이템 사용 처리
     private void OnClickInventory()
     {
-        InventoryApi.Instance.GetInventory(
-            onSuccess: items =>
-            {
-                if (items == null || items.Count == 0)
-                {
-                    PopupService.ShowAnnouncement("보유 아이템이 없습니다.");
-                    return;
-                }
-
-                var sb = new System.Text.StringBuilder();
-                foreach (var item in items)
-                {
-                    string typeLabel = item.itemType == "currency" ? "[재화]" : "[소모품]";
-                    sb.AppendLine($"{typeLabel} {item.itemName}: {item.quantity}개");
-                }
-                PopupService.ShowAnnouncement(sb.ToString().TrimEnd());
-            },
-            onError: err => PopupService.ShowError(err)
-        );
+        UIManager.Instance.ShowPopupUI<UI_InventoryPopup>();
     }
 
     // ─── 구글 연동 ─────────────────────────────────────────────────────────
