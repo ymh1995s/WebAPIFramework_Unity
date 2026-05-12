@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UnityEngine;
 
 // 로그인 씬 UI — 게스트/구글 로그인 버튼 처리 및 409 충돌 해소 흐름 포함
@@ -20,11 +21,19 @@ public class UI_LoginScene : UI_UGUI, IUI_Scene
     }
 
     // 게스트 로그인 버튼 클릭 처리
-    private void OnClickGuestLogin()
+    private async void OnClickGuestLogin()
     {
         string deviceId = SystemInfo.deviceUniqueIdentifier;
         RestLogger.Info($"게스트 로그인 시도 | DeviceId: {deviceId[..8]}...");
-        AuthApi.Instance.GuestLogin(deviceId, onSuccess: OnLoginSuccess, onError: OnLoginError);
+
+        var result = await AuthApi.GuestLoginAsync(deviceId);
+        if (!result.IsSuccess)
+        {
+            OnLoginError(result.Error);
+            return;
+        }
+
+        OnLoginSuccess(result.Value);
     }
 
     // 구글 로그인 버튼 클릭 처리
@@ -42,7 +51,28 @@ public class UI_LoginScene : UI_UGUI, IUI_Scene
             _pendingGoogleIdToken = user.IdToken;
 
             // IdToken을 백엔드로 전송하여 JWT 발급 요청
-            AuthApi.Instance.GoogleLogin(user.IdToken, OnLoginSuccess, OnGoogleLoginError);
+            var result = await AuthApi.GoogleLoginAsync(user.IdToken);
+            if (!result.IsSuccess)
+            {
+                var error = result.Error;
+                if (error.ErrorCode == "GOOGLE_ACCOUNT_CONFLICT")
+                {
+                    // 이미 다른 기기/계정에 연결된 구글 계정 — 전환 여부 확인
+                    // 409 충돌 해소 흐름은 별도 async 메서드로 처리
+                    PopupService.ShowSelect(
+                        "이미 다른 구글 계정으로 가입된 기기입니다.\n해당 구글 계정으로 전환하시겠습니까?",
+                        onOk:     OnResolveConflict,
+                        onCancel: null
+                    );
+                }
+                else
+                {
+                    OnLoginError(error);
+                }
+                return;
+            }
+
+            OnLoginSuccess(result.Value);
         }
         catch (System.Exception e)
         {
@@ -57,32 +87,17 @@ public class UI_LoginScene : UI_UGUI, IUI_Scene
         }
     }
 
-    // 구글 로그인 전용 오류 처리 — 409 충돌은 전환 팝업, 그 외는 공통 오류 처리
-    private void OnGoogleLoginError(ApiError error)
-    {
-        if (error.ErrorCode == "GOOGLE_ACCOUNT_CONFLICT")
-        {
-            // 이미 다른 기기/계정에 연결된 구글 계정 — 전환 여부 확인
-            PopupService.ShowSelect(
-                "이미 다른 구글 계정으로 가입된 기기입니다.\n해당 구글 계정으로 전환하시겠습니까?",
-                onOk:     OnResolveConflict,
-                onCancel: null
-            );
-        }
-        else
-        {
-            OnLoginError(error);
-        }
-    }
-
     // 409 충돌 해소 — 기존 구글 계정으로 전환 요청
-    private void OnResolveConflict()
+    private async void OnResolveConflict()
     {
-        AuthApi.Instance.ResolveGoogleConflict(
-            _pendingGoogleIdToken,
-            onSuccess: OnLoginSuccess,
-            onError:   OnLoginError
-        );
+        var result = await AuthApi.ResolveGoogleConflictAsync(_pendingGoogleIdToken);
+        if (!result.IsSuccess)
+        {
+            OnLoginError(result.Error);
+            return;
+        }
+
+        OnLoginSuccess(result.Value);
     }
 
     // 로그인 성공 공통 처리
