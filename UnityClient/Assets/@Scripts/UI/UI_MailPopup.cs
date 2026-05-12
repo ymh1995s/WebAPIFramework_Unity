@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 // 메일함 팝업 UI — 메일 목록 조회 및 전체 보상 수령 기능을 제공한다
@@ -24,30 +25,29 @@ public class UI_MailPopup : UI_UGUI, IUI_Popup
         GetButton((int)Buttons.ReceiveAllBtn).onClick.AddListener(OnClickReceiveAll);
     }
 
-    protected override void OnEnable()
+    protected override async void OnEnable()
     {
         base.OnEnable();
         // 팝업이 활성화될 때마다 최신 메일 목록 로드 (재오픈 시에도 갱신)
-        LoadMails();
+        await LoadMailsAsync();
     }
 
     // 메일 목록 API 호출 및 텍스트 갱신
-    private void LoadMails()
+    private async Task LoadMailsAsync()
     {
         GetText((int)Texts.Text).text = "메일 불러오는 중...";
 
-        MailApi.Instance.GetList(
-            onSuccess: mails =>
-            {
-                _mails = mails;
-                RefreshDisplay();
-            },
-            onError: err =>
-            {
-                GetText((int)Texts.Text).text = "메일 불러오기 실패";
-                PopupService.ShowError(err);
-            }
-        );
+        var result = await MailApi.GetListAsync();
+        if (!result.IsSuccess)
+        {
+            GetText((int)Texts.Text).text = "메일 불러오기 실패";
+            PopupService.ShowError(result.Error);
+            return;
+        }
+
+        // 성공 — 목록 캐시 갱신 후 화면 반영
+        _mails = result.Value;
+        RefreshDisplay();
     }
 
     // 메일 목록을 텍스트로 포맷하여 표시
@@ -113,7 +113,7 @@ public class UI_MailPopup : UI_UGUI, IUI_Popup
     }
 
     // 미수령 메일 전부 순차 수령 — 수령 성공 시 즉시 목록에서 제거하고 화면 갱신
-    private void OnClickReceiveAll()
+    private async void OnClickReceiveAll()
     {
         if (_mails == null) return;
 
@@ -124,24 +124,20 @@ public class UI_MailPopup : UI_UGUI, IUI_Popup
             return;
         }
 
+        // 미수령 메일을 순차적으로 수령 — 병렬 대신 순차 처리로 서버 부하 방지
         foreach (var mail in unclaimed)
         {
-            // 루프 변수 캡처를 위해 로컬 복사
-            var capturedMail = mail;
-            MailApi.Instance.Claim(
-                capturedMail.id,
-                onSuccess: _ =>
-                {
-                    // 수령 완료된 메일을 리스트에서 즉시 제거하고 화면 반영
-                    _mails.Remove(capturedMail);
-                    RefreshDisplay();
-                },
-                onError: err =>
-                {
-                    // 실패한 메일은 리스트에 그대로 유지하고 오류만 표시
-                    PopupService.ShowError(err);
-                }
-            );
+            var result = await MailApi.ClaimAsync(mail.id);
+            if (!result.IsSuccess)
+            {
+                // 실패한 메일은 리스트에 그대로 유지하고 오류만 표시
+                PopupService.ShowError(result.Error);
+                continue;
+            }
+
+            // 수령 완료된 메일을 리스트에서 즉시 제거하고 화면 반영
+            _mails.Remove(mail);
+            RefreshDisplay();
         }
     }
 

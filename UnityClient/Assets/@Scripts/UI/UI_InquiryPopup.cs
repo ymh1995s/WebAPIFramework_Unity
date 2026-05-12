@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 // 문의 팝업 UI — 문의 목록 조회 및 고정 메시지로 문의 제출 기능을 제공한다
@@ -21,29 +22,28 @@ public class UI_InquiryPopup : UI_UGUI, IUI_Popup
         GetButton((int)Buttons.InquiryBtn).onClick.AddListener(OnClickInquiry);
     }
 
-    protected override void OnEnable()
+    protected override async void OnEnable()
     {
         base.OnEnable();
         // 팝업이 활성화될 때마다 최신 문의 목록 로드 (재오픈 시에도 갱신)
-        LoadInquiries();
+        await LoadInquiriesAsync();
     }
 
     // 문의 목록 API 호출 및 텍스트 갱신
-    private void LoadInquiries()
+    private async Task LoadInquiriesAsync()
     {
         GetText((int)Texts.Text).text = "문의 내역 불러오는 중...";
 
-        InquiryApi.Instance.GetList(
-            onSuccess: inquiries =>
-            {
-                RefreshDisplay(inquiries);
-            },
-            onError: err =>
-            {
-                GetText((int)Texts.Text).text = "문의 내역 불러오기 실패";
-                PopupService.ShowError(err);
-            }
-        );
+        var result = await InquiryApi.GetListAsync();
+        if (!result.IsSuccess)
+        {
+            GetText((int)Texts.Text).text = "문의 내역 불러오기 실패";
+            PopupService.ShowError(result.Error);
+            return;
+        }
+
+        // 성공 — 목록 화면 반영
+        RefreshDisplay(result.Value);
     }
 
     // 문의 목록을 텍스트로 포맷하여 표시 — 각 문의마다 개행
@@ -72,18 +72,20 @@ public class UI_InquiryPopup : UI_UGUI, IUI_Popup
     }
 
     // 고정 메시지로 문의를 제출한다 — 프리팹에 InputField가 없으므로 고정 문구 사용
-    private void OnClickInquiry()
+    private async void OnClickInquiry()
     {
         const string fixedMessage = "문의합니다. 처리 부탁드립니다.";
-        InquiryApi.Instance.Submit(
-            fixedMessage,
-            onSuccess: _ =>
-            {
-                PopupService.ShowAnnouncement("문의가 접수되었습니다.");
-                LoadInquiries();
-            },
-            onError: err => PopupService.ShowError(err)
-        );
+
+        var result = await InquiryApi.SubmitAsync(fixedMessage);
+        if (!result.IsSuccess)
+        {
+            PopupService.ShowError(result.Error);
+            return;
+        }
+
+        // 제출 성공 — 공지 표시 후 목록 갱신
+        PopupService.ShowAnnouncement("문의가 접수되었습니다.");
+        await LoadInquiriesAsync();
     }
 
     private void OnClickExit()

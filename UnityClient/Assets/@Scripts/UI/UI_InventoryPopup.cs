@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
@@ -36,30 +37,29 @@ public class UI_InventoryPopup : UI_UGUI, IUI_Popup
         GetButton((int)Buttons.UseBtn).onClick.AddListener(OnClickUse);
     }
 
-    protected override void OnEnable()
+    protected override async void OnEnable()
     {
         base.OnEnable();
         // 팝업이 활성화될 때마다 최신 인벤토리 로드 (재오픈 시에도 갱신)
-        LoadInventory();
+        await LoadInventoryAsync();
     }
 
     // 인벤토리 API 호출 및 텍스트 갱신
-    private void LoadInventory()
+    private async Task LoadInventoryAsync()
     {
         GetText((int)Texts.Text).text = "인벤토리 불러오는 중...";
 
-        ItemApi.Instance.GetInventory(
-            onSuccess: items =>
-            {
-                _items = items;
-                RefreshDisplay();
-            },
-            onError: err =>
-            {
-                GetText((int)Texts.Text).text = "인벤토리 불러오기 실패";
-                PopupService.ShowError(err);
-            }
-        );
+        var result = await ItemApi.GetInventoryAsync();
+        if (!result.IsSuccess)
+        {
+            GetText((int)Texts.Text).text = "인벤토리 불러오기 실패";
+            PopupService.ShowError(result.Error);
+            return;
+        }
+
+        // 성공 — 목록 캐시 갱신 후 화면 반영
+        _items = result.Value;
+        RefreshDisplay();
     }
 
     // 인벤토리 목록을 텍스트로 포맷하여 표시
@@ -83,7 +83,7 @@ public class UI_InventoryPopup : UI_UGUI, IUI_Popup
     }
 
     // 아이템 사용 버튼 클릭 — InputField에서 itemId 파싱 후 유효성 검사 → API 호출
-    private void OnClickUse()
+    private async void OnClickUse()
     {
         // InputField가 없으면 안내 후 중단
         if (_itemIdInput == null)
@@ -117,46 +117,46 @@ public class UI_InventoryPopup : UI_UGUI, IUI_Popup
         // 멱등성 키 생성 — 요청마다 새 UUID 사용
         string clientRequestId = Guid.NewGuid().ToString();
 
-        ItemApi.Instance.Use(
-            itemId,
-            clientRequestId,
-            onSuccess: _ =>
-            {
-                // 200 성공 — 토스트 안내 후 인벤토리 갱신
-                PopupService.ShowToast("아이템을 사용했습니다.");
-                LoadInventory();
-            },
-            onError: err => HandleUseError(err)
-        );
+        var result = await ItemApi.UseAsync(itemId, clientRequestId);
+        if (!result.IsSuccess)
+        {
+            // 오류 처리 — 상태 코드별 분기 후 인벤토리 갱신
+            await HandleUseErrorAsync(result.Error);
+            return;
+        }
+
+        // 200 성공 — 토스트 안내 후 인벤토리 갱신
+        PopupService.ShowToast("아이템을 사용했습니다.");
+        await LoadInventoryAsync();
     }
 
     // 아이템 사용 오류 처리 — 상태 코드별 분기
-    private void HandleUseError(ApiError err)
+    private async Task HandleUseErrorAsync(ApiError err)
     {
         switch (err.Status)
         {
             case 400:
                 // 수량 부족 또는 아이템 없음
                 PopupService.ShowError(err);
-                LoadInventory();
+                await LoadInventoryAsync();
                 break;
 
             case 409:
                 // 멱등 충돌 — 사용자 비노출, 로그만 기록 후 인벤토리 갱신
                 Debug.LogWarning("[Item] 멱등 충돌 - 중복 요청");
-                LoadInventory();
+                await LoadInventoryAsync();
                 break;
 
             case 422:
                 // 보상 테이블 오류
                 PopupService.ShowError(err);
-                LoadInventory();
+                await LoadInventoryAsync();
                 break;
 
             default:
                 // 500 및 기타 오류
                 PopupService.ShowError(err);
-                LoadInventory();
+                await LoadInventoryAsync();
                 break;
         }
     }
