@@ -74,6 +74,11 @@
 
 - WebFramework 내에서 새 매니저가 필요하면 `Singleton<T>`를 상속하여 기존 패턴을 따른다.
 
+> 개발 가이드:
+> - Api 호출 패턴 / 신규 도메인 추가 절차 → `DEVELOPER_GUIDE.md`
+> - 패턴 채택 근거 박제 → `DEVNOTES.md` `[설계 결정]` 섹션
+> - 백엔드 엔드포인트 명세 → `../CLIENT_GUIDE.md`
+
 ---
 
 # Unity Agents

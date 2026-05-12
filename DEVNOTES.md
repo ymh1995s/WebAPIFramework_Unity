@@ -201,3 +201,26 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 **변경 트리거**: 서버 `WithdrawAsync` 처리 범위 변경(새 테이블 추가·삭제) 시 이 텍스트도 동반 업데이트 필수.
 
 **하드코딩 의도**: 법적 고지 텍스트를 JSON/설정 파일로 분리하면 실수 수정·누락 위험이 높아짐 — 의도적 코드 변경(코드 리뷰 경유)만 허용.
+
+---
+
+## [설계 결정]
+
+### WebFramework Api 레이어 — async/await + ApiResult<T> + static class (2026-05-12)
+
+기존 콜백 패턴(`Action<T> onSuccess, Action<ApiError> onError`) + `Singleton<MonoBehaviour>` 상속을 폐기. 호출부 가독성 + 신규 도메인 추가 비용 + 안티패턴 청산을 동시 달성.
+
+**채택안**: A(async/await + `ApiResult<T>`) + B'(Api 정적 클래스). 옵션 C(Endpoint 객체)는 URL 경로 치환 컴파일타임 표현 한계 + AOT/IL2CPP 깊은 제네릭 정적 인스턴스 우려로 거부.
+
+- **반환 타입**: 모든 Api 메서드는 `Task<ApiResult<TRes>>` 반환. `ApiResult<T>`는 `readonly struct` — `IsSuccess`/`Value`/`Error(=ApiError)` + `Ok`/`Fail` 정적 팩토리
+- **클래스 형태**: `XxxApi`는 `public static class`. 무상태/무라이프사이클이므로 MonoBehaviour Singleton 폐기 (안티패턴 청산 — 빈 GameObject 10개 + `.Instance.` 잡음 + 가짜 라이프사이클 신호 제거)
+- **호출부 규칙**: UI 이벤트 핸들러/Start/OnEnable 진입점만 `async void`. 내부 헬퍼는 `async Task`
+- **인터셉터 보존**: 401 자동 토큰 갱신, 503 점검, 429 백오프는 `ApiClient` 내부가 자동 처리 — 호출부에서 별도 처리 금지
+- **Singleton 잔존**: `ApiClient`, `AuthManager`는 코루틴/세마포어/PlayerPrefs 영속화를 실제 사용 — 그대로 `Singleton<T>` 유지. **상태·라이프사이클이 있는 매니저만 Singleton 정당**
+- **WebFramework 외 매니저**: 동일 기준 적용 — `MonoBehaviour` 기능을 실제 사용하지 않으면 `static class`로 작성
+
+**왜 Task인가 (Awaitable 아님)**: `UnityWebRequest.SendWebRequest().GetAwaiter()`는 Task awaitable과 자연스럽게 통합. `Task.Delay`(429 백오프), `SemaphoreSlim.WaitAsync`(401 동시성), 외부 SDK(Google Sign-In `Task<GoogleSignInUser>`) 와의 호환. 게임 로직/부팅 흐름은 Unity 권장인 `Awaitable<T>`를 써도 무방 — 경계에서 `await someTask` 식 혼용 가능
+
+**근거 커밋**: `e8d2e30` (Step 1) → `4c19e43` (Step 2) → `bf1991d`/`e48e3a4`/`a4570fd` (Step 3 A·B·C) → `c591df0` (Step 4)
+
+**개발자 가이드**: 호출 패턴·신규 도메인 추가 절차·ApiClient 메서드 매핑은 `DEVELOPER_GUIDE.md` 참조.
