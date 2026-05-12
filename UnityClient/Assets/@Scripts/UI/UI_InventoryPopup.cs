@@ -26,12 +26,11 @@ public class UI_InventoryPopup : UI_UGUI, IUI_Popup
         BindTexts(typeof(Texts));
         BindButtons(typeof(Buttons));
 
-        // InputField를 이름으로 직접 탐색 (enum 바인딩 불가)
-        var inputTransform = transform.Find("BackGround/ItemIdInput");
-        if (inputTransform != null)
-            _itemIdInput = inputTransform.GetComponent<TMP_InputField>();
-        else
-            Debug.LogWarning("[UI_InventoryPopup] ItemIdInput 을 찾지 못했습니다. 프리팹 자식 이름을 확인하세요.");
+        // InputField를 자식 트리에서 탐색 (SafeAreaPanel 등 중간 부모가 있어도 안전)
+        // UI_UGUI 베이스는 InputField 바인딩 헬퍼가 없으므로 직접 탐색
+        _itemIdInput = GetComponentInChildren<TMP_InputField>(true);
+        if (_itemIdInput == null)
+            Debug.LogWarning("[UI_InventoryPopup] TMP_InputField 자식을 찾지 못했습니다. 프리팹 구성을 확인하세요.");
 
         GetButton((int)Buttons.ExitBtn).onClick.AddListener(OnClickExit);
         GetButton((int)Buttons.UseBtn).onClick.AddListener(OnClickUse);
@@ -104,13 +103,6 @@ public class UI_InventoryPopup : UI_UGUI, IUI_Popup
         if (target == null)
         {
             PopupService.ShowToast("보유하지 않은 아이템입니다.");
-            return;
-        }
-
-        // 재화(currency)는 사용 불가
-        if (target.itemType == "currency")
-        {
-            PopupService.ShowToast("재화는 사용할 수 없습니다.");
             return;
         }
 

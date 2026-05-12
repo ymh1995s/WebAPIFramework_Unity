@@ -115,7 +115,8 @@ public class UI_LoginScene : UI_UGUI, IUI_Scene
     private void OnLoginError(ApiError error)
     {
         RestLogger.Error($"로그인 실패: {error.UserMessage}");
-        if (error.ErrorCode == "AUTH_BANNED")
+        // IsBanned 프로퍼티로 판정 — ErrorCode 정규화 여부와 무관하게 403+정지 키워드도 포괄
+        if (error.IsBanned)
             PopupService.ShowBanned(error.UserMessage ?? "정지된 계정입니다.");
         else
             PopupService.ShowError(error);

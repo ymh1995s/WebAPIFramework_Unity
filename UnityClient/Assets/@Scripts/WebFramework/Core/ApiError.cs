@@ -69,17 +69,33 @@ public class ApiError
             // 파싱 실패는 무시 - RawBody만 보관
         }
 
-        // ProblemDetails 파싱 후 title이 없으면 JSON 문자열 응답 추출 시도
+        // ProblemDetails 파싱 후 Title/Detail 둘 다 비어있으면 plain text 폴백 시도
         // 예: StatusCode(403, "정지된 계정입니다.") 처럼 단순 문자열을 반환하는 경우
         if (string.IsNullOrEmpty(error.Title) && string.IsNullOrEmpty(error.Detail))
         {
             string trimmed = body.Trim();
-            if (trimmed.Length >= 2 && trimmed[0] == '"' && trimmed[trimmed.Length - 1] == '"')
-                error.Detail = trimmed.Substring(1, trimmed.Length - 2);
+            // JSON 객체·배열·HTML 응답은 오탐 방지를 위해 폴백 건너뜀 — 원본 노출 금지
+            if (trimmed.Length > 0
+                && trimmed[0] != '{'
+                && trimmed[0] != '['
+                && trimmed[0] != '<')
+            {
+                // 앞뒤 따옴표가 있으면 제거, 없으면 trimmed 그대로 사용
+                if (trimmed.Length >= 2 && trimmed[0] == '"' && trimmed[trimmed.Length - 1] == '"')
+                    error.Detail = trimmed.Substring(1, trimmed.Length - 2);
+                else
+                    error.Detail = trimmed;
+            }
         }
 
         return error;
     }
+
+    // 밴(계정 정지) 응답 판정 — ErrorCode가 정규화돼 있으면 그것 우선, 없으면 403+정지 키워드로 폴백
+    // GuestLogin 등 plain text 403 응답까지 포괄하기 위해 키워드 폴백을 병행
+    public bool IsBanned =>
+        ErrorCode == "AUTH_BANNED"
+        || (Status == 403 && !string.IsNullOrEmpty(Detail) && Detail.Contains("정지"));
 
     // 503 점검 모드 전용 싱글턴 오류 객체
     public static readonly ApiError Maintenance = new ApiError

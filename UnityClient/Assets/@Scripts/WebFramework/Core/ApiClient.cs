@@ -233,6 +233,21 @@ public class ApiClient : Singleton<ApiClient>
                 isRetry: true, customParser, onSuccess, onError);
         }
 
+        // 403 — 밴 계정은 토큰 갱신 대상 아님. ErrorCode 정규화 후 즉시 onError
+        if (statusCode == 403)
+        {
+            var err403 = ApiError.FromHttp(statusCode, body, isNetwork: false);
+            // 백엔드가 plain text로 응답해 ErrorCode가 비어있는 케이스 정규화 (GuestLogin 호환)
+            if (err403.IsBanned && string.IsNullOrEmpty(err403.ErrorCode))
+                err403.ErrorCode = "AUTH_BANNED";
+
+            if (err403.IsBanned)
+                RestLogger.Warn($"[403] 밴 계정 감지 — {err403.UserMessage}");
+
+            onError?.Invoke(err403);
+            return ApiResult<TRes>.Fail(err403);
+        }
+
         // 401 미인증 — 밴 계정이면 갱신 없이 즉시 에러 반환, 그 외는 토큰 갱신 후 재시도
         if (statusCode == 401)
         {

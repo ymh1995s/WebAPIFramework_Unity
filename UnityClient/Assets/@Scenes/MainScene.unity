@@ -631,7 +631,7 @@ GameObject:
   - component: {fileID: 474327619}
   - component: {fileID: 474327618}
   m_Layer: 5
-  m_Name: ExtraBtn (3)
+  m_Name: ShopBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2270,7 +2270,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC5EC\uBD84\uBC84\uD2BC\n"
+  m_text: " \uC0C1\uC810"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4c3a99bd15d452146b539e7e79eb391f, type: 2}
   m_sharedMaterial: {fileID: 5299449273717378878, guid: 4c3a99bd15d452146b539e7e79eb391f, type: 2}
@@ -2655,10 +2655,10 @@ RectTransform:
   - {fileID: 1738054446}
   m_Father: {fileID: 1260029107}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 250, y: -288.69348}
-  m_SizeDelta: {x: 505.69998, y: 577.387}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1659676759
 MonoBehaviour:
@@ -2677,7 +2677,7 @@ MonoBehaviour:
     m_Right: 0
     m_Top: 0
     m_Bottom: 0
-  m_ChildAlignment: 4
+  m_ChildAlignment: 1
   m_StartCorner: 0
   m_StartAxis: 0
   m_CellSize: {x: 153.7, y: 100}
@@ -2732,8 +2732,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d2ef8262b66e9f84086fb38ce074edc6, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   _applyTop: 1
   _applyBottom: 1
   _applyLeft: 1
