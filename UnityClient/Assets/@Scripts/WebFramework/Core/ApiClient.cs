@@ -9,6 +9,7 @@ using UnityEngine.Networking;
 // HTTP REST 통신 래퍼 싱글톤
 // GET / POST / PUT / DELETE 메서드 제공
 // 401 자동 토큰 갱신, 503 점검 인터셉터, 429 자동 백오프 포함
+// Task<ApiResult<T>> 반환 오버로드 추가 — 콜백 없이 await로 결과 처리 가능
 public class ApiClient : Singleton<ApiClient>
 {
     // 요청 타임아웃 — CLIENT_GUIDE 27번 권장 (DB transient retry 최대 50초 고려)
@@ -31,14 +32,15 @@ public class ApiClient : Singleton<ApiClient>
     private static bool _maintenanceShown = false;
 
     // ====================================================
-    // GET
+    // GET (콜백)
     // ====================================================
 
     // 쿼리 파라미터 없는 GET 요청
     public async void Get<TRes>(string endpoint,
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
-        await SendInternal<TRes>("GET", ApiConfig.BaseUrl + endpoint, null, onSuccess, onError, false);
+        await SendAsync<TRes>("GET", ApiConfig.BaseUrl + endpoint, null,
+            isRetry: false, customParser: null, onSuccess, onError);
     }
 
     // 쿼리 파라미터 있는 GET 요청 — 딕셔너리를 URL에 붙여 조립
@@ -46,11 +48,12 @@ public class ApiClient : Singleton<ApiClient>
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
         string url = BuildUrl(ApiConfig.BaseUrl + endpoint, query);
-        await SendInternal<TRes>("GET", url, null, onSuccess, onError, false);
+        await SendAsync<TRes>("GET", url, null,
+            isRetry: false, customParser: null, onSuccess, onError);
     }
 
     // ====================================================
-    // POST
+    // POST (콜백)
     // ====================================================
 
     // 요청 본문이 있는 POST
@@ -58,18 +61,20 @@ public class ApiClient : Singleton<ApiClient>
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
         string json = JsonUtility.ToJson(body);
-        await SendInternal<TRes>("POST", ApiConfig.BaseUrl + endpoint, json, onSuccess, onError, false);
+        await SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, json,
+            isRetry: false, customParser: null, onSuccess, onError);
     }
 
     // 요청 본문이 없는 POST (예: DailyLogin)
     public async void Post<TRes>(string endpoint,
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
-        await SendInternal<TRes>("POST", ApiConfig.BaseUrl + endpoint, null, onSuccess, onError, false);
+        await SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, null,
+            isRetry: false, customParser: null, onSuccess, onError);
     }
 
     // ====================================================
-    // PUT
+    // PUT (콜백)
     // ====================================================
 
     // 요청 본문이 있는 PUT
@@ -77,44 +82,116 @@ public class ApiClient : Singleton<ApiClient>
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
         string json = JsonUtility.ToJson(body);
-        await SendInternal<TRes>("PUT", ApiConfig.BaseUrl + endpoint, json, onSuccess, onError, false);
+        await SendAsync<TRes>("PUT", ApiConfig.BaseUrl + endpoint, json,
+            isRetry: false, customParser: null, onSuccess, onError);
     }
 
     // ====================================================
-    // DELETE
+    // DELETE (콜백)
     // ====================================================
 
     // DELETE 요청
     public async void Delete<TRes>(string endpoint,
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
-        await SendInternal<TRes>("DELETE", ApiConfig.BaseUrl + endpoint, null, onSuccess, onError, false);
+        await SendAsync<TRes>("DELETE", ApiConfig.BaseUrl + endpoint, null,
+            isRetry: false, customParser: null, onSuccess, onError);
     }
 
     // ====================================================
-    // GET (최상위 배열 응답 전용)
+    // GET 최상위 배열 응답 전용 (콜백)
     // ====================================================
 
     // 백엔드가 최상위 JSON 배열([...])을 반환하는 GET 요청 — JsonHelper로 파싱
     public async void GetList<T>(string endpoint,
         Action<List<T>> onSuccess, Action<ApiError> onError = null)
     {
-        await SendInternal<List<T>>("GET", ApiConfig.BaseUrl + endpoint, null,
-            onSuccess, onError, isRetry: false,
-            customParser: body => JsonHelper.FromJsonList<T>(body));
+        await SendAsync<List<T>>("GET", ApiConfig.BaseUrl + endpoint, null,
+            isRetry: false,
+            customParser: body => JsonHelper.FromJsonList<T>(body),
+            onSuccess, onError);
     }
+
+    // ====================================================
+    // GET (Task 반환)
+    // ====================================================
+
+    // 쿼리 파라미터 없는 GET — await로 결과 직접 수신
+    public Task<ApiResult<TRes>> GetAsync<TRes>(string endpoint)
+        => SendAsync<TRes>("GET", ApiConfig.BaseUrl + endpoint, null,
+            isRetry: false, customParser: null, onSuccess: null, onError: null);
+
+    // 쿼리 파라미터 있는 GET — await로 결과 직접 수신
+    public Task<ApiResult<TRes>> GetWithQueryAsync<TRes>(string endpoint, IDictionary<string, string> query)
+    {
+        string url = BuildUrl(ApiConfig.BaseUrl + endpoint, query);
+        return SendAsync<TRes>("GET", url, null,
+            isRetry: false, customParser: null, onSuccess: null, onError: null);
+    }
+
+    // ====================================================
+    // POST (Task 반환)
+    // ====================================================
+
+    // 요청 본문이 있는 POST — await로 결과 직접 수신
+    public Task<ApiResult<TRes>> PostAsync<TReq, TRes>(string endpoint, TReq body)
+    {
+        string json = JsonUtility.ToJson(body);
+        return SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, json,
+            isRetry: false, customParser: null, onSuccess: null, onError: null);
+    }
+
+    // 요청 본문이 없는 POST — await로 결과 직접 수신
+    public Task<ApiResult<TRes>> PostAsync<TRes>(string endpoint)
+        => SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, null,
+            isRetry: false, customParser: null, onSuccess: null, onError: null);
+
+    // ====================================================
+    // PUT (Task 반환)
+    // ====================================================
+
+    // 요청 본문이 있는 PUT — await로 결과 직접 수신
+    public Task<ApiResult<TRes>> PutAsync<TReq, TRes>(string endpoint, TReq body)
+    {
+        string json = JsonUtility.ToJson(body);
+        return SendAsync<TRes>("PUT", ApiConfig.BaseUrl + endpoint, json,
+            isRetry: false, customParser: null, onSuccess: null, onError: null);
+    }
+
+    // ====================================================
+    // DELETE (Task 반환)
+    // ====================================================
+
+    // DELETE — await로 결과 직접 수신
+    public Task<ApiResult<TRes>> DeleteAsync<TRes>(string endpoint)
+        => SendAsync<TRes>("DELETE", ApiConfig.BaseUrl + endpoint, null,
+            isRetry: false, customParser: null, onSuccess: null, onError: null);
+
+    // ====================================================
+    // GET 최상위 배열 응답 전용 (Task 반환)
+    // ====================================================
+
+    // 최상위 JSON 배열 GET — await로 결과 직접 수신
+    public Task<ApiResult<List<T>>> GetListAsync<T>(string endpoint)
+        => SendAsync<List<T>>("GET", ApiConfig.BaseUrl + endpoint, null,
+            isRetry: false,
+            customParser: body => JsonHelper.FromJsonList<T>(body),
+            onSuccess: null, onError: null);
 
     // ====================================================
     // 내부 공통 전송 로직
     // ====================================================
 
-    // isRetry: 401 갱신 후 재시도 여부 — true이면 401 발생 시 즉시 onError (무한 루프 방지)
+    // 콜백(onSuccess/onError)과 Task<ApiResult<T>> 반환을 하나의 메서드로 통합
+    // isRetry: 401 갱신 후 재시도 여부 — true이면 401 발생 시 즉시 실패 반환 (무한 루프 방지)
     // customParser: null이면 JsonUtility.FromJson<TRes> 사용, 지정 시 커스텀 파서로 응답 파싱
-    private async Task SendInternal<TRes>(
+    // onSuccess/onError가 모두 null이면 Task 반환 모드로 동작
+    private async Task<ApiResult<TRes>> SendAsync<TRes>(
         string method, string url, string jsonBody,
-        Action<TRes> onSuccess, Action<ApiError> onError,
         bool isRetry,
-        Func<string, TRes> customParser = null)
+        Func<string, TRes> customParser,
+        Action<TRes> onSuccess,
+        Action<ApiError> onError)
     {
         RestLogger.Info($"[REQ] {method} {url}");
 
@@ -129,8 +206,9 @@ public class ApiClient : Singleton<ApiClient>
             req.result == UnityWebRequest.Result.DataProcessingError)
         {
             RestLogger.Error($"[네트워크 오류] {method} {url} ← {req.error}");
-            onError?.Invoke(ApiError.FromHttp(0, null, isNetwork: true));
-            return;
+            var netErr = ApiError.FromHttp(0, null, isNetwork: true);
+            onError?.Invoke(netErr);
+            return ApiResult<TRes>.Fail(netErr);
         }
 
         RestLogger.Info($"[{statusCode}] {method} {url} ← {body}");
@@ -140,8 +218,8 @@ public class ApiClient : Singleton<ApiClient>
         // 503 점검 인터셉터
         if (statusCode == 503)
         {
-            Handle503(onError);
-            return;
+            var maintErr = Handle503(onError);
+            return ApiResult<TRes>.Fail(maintErr);
         }
 
         // 429 Rate Limit — 1회 자동 백오프 재시도
@@ -151,8 +229,8 @@ public class ApiClient : Singleton<ApiClient>
             RestLogger.Warn($"[429] Rate Limit — {waitSec}초 대기 후 재시도");
             await Task.Delay(waitSec * 1000);
             // isRetry=true로 재시도 → 429 반복 시 아래 4xx/5xx 분기로 처리됨
-            await SendInternal<TRes>(method, url, jsonBody, onSuccess, onError, isRetry: true, customParser);
-            return;
+            return await SendAsync<TRes>(method, url, jsonBody,
+                isRetry: true, customParser, onSuccess, onError);
         }
 
         // 401 미인증 — 밴 계정이면 갱신 없이 즉시 에러 반환, 그 외는 토큰 갱신 후 재시도
@@ -163,10 +241,9 @@ public class ApiClient : Singleton<ApiClient>
             {
                 // 밴 계정은 토큰 갱신 루프 진입 없이 onError 직행
                 onError?.Invoke(err401);
-                return;
+                return ApiResult<TRes>.Fail(err401);
             }
-            await Handle401<TRes>(method, url, jsonBody, onSuccess, onError, isRetry, customParser);
-            return;
+            return await Handle401<TRes>(method, url, jsonBody, isRetry, customParser, onSuccess, onError);
         }
 
         // 200~299 성공 범위
@@ -176,7 +253,7 @@ public class ApiClient : Singleton<ApiClient>
             if (string.IsNullOrEmpty(body))
             {
                 onSuccess?.Invoke(default(TRes));
-                return;
+                return ApiResult<TRes>.Ok(default(TRes));
             }
 
             try
@@ -184,17 +261,21 @@ public class ApiClient : Singleton<ApiClient>
                 // customParser가 지정된 경우 사용 (예: 최상위 배열 응답), 없으면 기본 JsonUtility 사용
                 TRes result = customParser != null ? customParser(body) : JsonUtility.FromJson<TRes>(body);
                 onSuccess?.Invoke(result);
+                return ApiResult<TRes>.Ok(result);
             }
             catch (Exception ex)
             {
                 RestLogger.Error($"JSON 파싱 실패: {ex.Message} | body: {body}");
-                onError?.Invoke(ApiError.FromHttp(statusCode, body, isNetwork: false));
+                var parseErr = ApiError.FromHttp(statusCode, body, isNetwork: false);
+                onError?.Invoke(parseErr);
+                return ApiResult<TRes>.Fail(parseErr);
             }
-            return;
         }
 
         // 그 외 4xx / 5xx 오류
-        onError?.Invoke(ApiError.FromHttp(statusCode, body, isNetwork: false));
+        var httpErr = ApiError.FromHttp(statusCode, body, isNetwork: false);
+        onError?.Invoke(httpErr);
+        return ApiResult<TRes>.Fail(httpErr);
     }
 
     // ====================================================
@@ -202,11 +283,12 @@ public class ApiClient : Singleton<ApiClient>
     // ====================================================
 
     // refresh 요청 자체가 401을 받은 경우 무한 루프 방지 — 즉시 onError + 세션 만료 이벤트
-    private async Task Handle401<TRes>(
+    private async Task<ApiResult<TRes>> Handle401<TRes>(
         string method, string url, string jsonBody,
-        Action<TRes> onSuccess, Action<ApiError> onError,
         bool isRetry,
-        Func<string, TRes> customParser = null)
+        Func<string, TRes> customParser,
+        Action<TRes> onSuccess,
+        Action<ApiError> onError)
     {
         // 재시도 요청이 또 401을 받았거나, refresh 흐름 중에 401이 발생한 경우
         if (isRetry || _inRefreshFlow)
@@ -214,8 +296,9 @@ public class ApiClient : Singleton<ApiClient>
             RestLogger.Error("[401] 토큰 갱신 실패 — 세션 만료");
             AuthManager.Instance.Clear();
             EventManager.Instance.TriggerEvent(Define.EEventType.SessionExpired);
-            onError?.Invoke(ApiError.FromHttp(401, null, isNetwork: false));
-            return;
+            var expiredErr = ApiError.FromHttp(401, null, isNetwork: false);
+            onError?.Invoke(expiredErr);
+            return ApiResult<TRes>.Fail(expiredErr);
         }
 
         // SemaphoreSlim으로 동시 갱신 요청 직렬화 — 첫 번째 요청만 실제 갱신 수행
@@ -244,13 +327,15 @@ public class ApiClient : Singleton<ApiClient>
             // 갱신 실패 — 세션 만료 처리
             AuthManager.Instance.Clear();
             EventManager.Instance.TriggerEvent(Define.EEventType.SessionExpired);
-            onError?.Invoke(ApiError.FromHttp(401, null, isNetwork: false));
-            return;
+            var failErr = ApiError.FromHttp(401, null, isNetwork: false);
+            onError?.Invoke(failErr);
+            return ApiResult<TRes>.Fail(failErr);
         }
 
         // 새 토큰으로 원 요청 1회 재시도 (isRetry=true — 재시도 중 401이면 즉시 종료)
         // customParser를 그대로 전달하여 재시도 시에도 동일한 파싱 방식 유지
-        await SendInternal<TRes>(method, url, jsonBody, onSuccess, onError, isRetry: true, customParser);
+        return await SendAsync<TRes>(method, url, jsonBody,
+            isRetry: true, customParser, onSuccess, onError);
     }
 
     // 실제 RefreshToken 갱신 HTTP 요청 수행 — ApiClient.Post를 우회하여 인터셉터 중복 방지
@@ -301,8 +386,8 @@ public class ApiClient : Singleton<ApiClient>
     // 503 점검 인터셉터
     // ====================================================
 
-    // 점검 응답 처리 — 최초 1회만 이벤트 발행하여 팝업 폭주 방지
-    private void Handle503(Action<ApiError> onError)
+    // 점검 응답 처리 — 최초 1회만 이벤트 발행하여 팝업 폭주 방지, ApiError 반환
+    private ApiError Handle503(Action<ApiError> onError)
     {
         RestLogger.Error("[503] 서버 점검 감지");
 
@@ -313,6 +398,7 @@ public class ApiClient : Singleton<ApiClient>
         }
 
         onError?.Invoke(ApiError.Maintenance);
+        return ApiError.Maintenance;
     }
 
     // 점검 플래그 초기화 — 씬 재진입 또는 부팅 흐름 재실행 시 호출

@@ -149,6 +149,7 @@
     <Compile Include="Assets\Settings\GoogleSignIn\Impl\SignInHelperObject.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\ShoutModels.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\AuthModels.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Core\ApiResult.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\NoticeApi.cs" />
     <Compile Include="Assets\@Scripts\Bootstrap\BootstrapFlow.cs" />
     <Compile Include="Assets\@Scripts\Config\IAPConfig.cs" />
