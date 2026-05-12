@@ -49,6 +49,8 @@ public static class GoogleSignInProvider
 
     // 구글 로그인 시도 → GoogleSignInUser 반환 (IdToken 포함)
     // 실패 시 NormalizeError()로 정규화된 메시지를 포함한 Exception throw
+    // 에디터/스탠드얼론 분기에서 await 경로가 제거되어 CS1998이 발생 — 의도된 플랫폼 분기이므로 억제
+#pragma warning disable CS1998
     public static async Task<GoogleSignInUser> SignIn()
     {
 #if UNITY_EDITOR || UNITY_STANDALONE
@@ -73,9 +75,12 @@ public static class GoogleSignInProvider
         }
 #endif
     }
+#pragma warning restore CS1998
 
     // Silent 로그인 (이전 로그인 세션이 있는 경우 UI 없이 자동 인증)
     // 실패 시 NormalizeError()로 정규화된 메시지를 포함한 Exception throw
+    // 에디터/스탠드얼론 분기에서 await 경로가 제거되어 CS1998이 발생 — 의도된 플랫폼 분기이므로 억제
+#pragma warning disable CS1998
     public static async Task<GoogleSignInUser> SignInSilently()
     {
 #if UNITY_EDITOR || UNITY_STANDALONE
@@ -100,6 +105,7 @@ public static class GoogleSignInProvider
         }
 #endif
     }
+#pragma warning restore CS1998
 
     // 로그아웃
     public static void SignOut()
