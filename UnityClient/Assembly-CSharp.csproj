@@ -84,6 +84,7 @@
     <Compile Include="Assets\@Scripts\Managers\FadeManager.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\RestLogger.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\ShoutApi.cs" />
+    <Compile Include="Assets\@Scripts\Scenes\LoginScene.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_Base.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\Impl\NativeFuture.cs" />
     <Compile Include="Assets\@Scripts\Scenes\LoadingScene.cs" />
@@ -95,7 +96,6 @@
     <Compile Include="Assets\@Scripts\WebFramework\Models\DailyLoginModels.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_ConfirmPopup.cs" />
     <Compile Include="Assets\@Scripts\Utils\Define.cs" />
-    <Compile Include="Assets\@Scripts\Managers\StageSession.cs" />
     <Compile Include="Assets\@Scripts\Config\GameConfig.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_MailPopup.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignIn.cs" />
@@ -107,6 +107,7 @@
     <Compile Include="Assets\@Scripts\UI\UI_LoadingScene.cs" />
     <Compile Include="Assets\@Scripts\Utils\PriorityQueue.cs" />
     <Compile Include="Assets\@Scripts\UI\SafeAreaFitter.cs" />
+    <Compile Include="Assets\@Scripts\Data\StageSession.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Auth\AuthManager.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\StageApi.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\StageModels.cs" />
@@ -133,7 +134,6 @@
     <Compile Include="Assets\@Scripts\Managers\EventManager.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInConfiguration.cs" />
     <Compile Include="Assets\@Scripts\Managers\AdsManager.cs" />
-    <Compile Include="Assets\@Dev\LoginScene.cs" />
     <Compile Include="Assets\@Scripts\Data\TextData.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\MailModels.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Auth\GoogleSignInProvider.cs" />
