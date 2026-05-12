@@ -112,6 +112,107 @@ _friends = result.Value;
 
 ---
 
+## 씬 구성 및 전환
+
+### 씬 목록 (Build Index 순)
+
+| # | 씬 | 역할 |
+|---|---|---|
+| 0 | `BootstrapScene` | 앱 진입점. `ResourceManager.LoadAll` 완료 후 `BootstrapFlow.Run()`에 흐름 위임 |
+| 1 | `LoadingScene` | **모든 일반 씬 전환의 중간 단계.** 진행률 표시 + 대상 씬 비동기 로드 |
+| 2 | `LoginScene` | 게스트/구글 로그인 UI |
+| 3 | `MainScene` | 로그인 후 홈/로비 |
+| 4 | `StageSelectScene` | 스테이지 선택 |
+| 5 | `GameScene` | 인게임 |
+
+### 부팅 흐름 — `BootstrapFlow.Run()`
+
+`BootstrapScene.Start()` → `ResourceManager.LoadAll` 콜백에서 호출. (`UnityClient/Assets/@Scripts/Bootstrap/BootstrapFlow.cs`)
+
+```
+[1] VersionApi.CheckAsync      503 점검 → 자동 재시도 폴링 / isForceUpdate → 스토어 이동 + Quit
+[2] NoticeApi.GetLatestAsync   신규 공지 팝업 (실패 무시)
+[3] AuthApi.RefreshAsync       저장된 RefreshToken으로 자동 로그인
+        ├ 성공             → MainScene
+        ├ AUTH_BANNED      → 밴 팝업 후 재시작
+        └ 실패/토큰 없음    → 다음 단계
+[4] 약관 동의 확인              → LoginScene
+```
+
+### 일반 씬 전환 — `SceneManager.Instance.LoadScene()`
+
+**모든 UI/Manager의 씬 전환은 이 메서드만 사용한다.** 페이드 + LoadingScene 경유 흐름이 표준이며, 즉시 전환은 금지(아래 참고).
+
+```csharp
+// UI 버튼 클릭 핸들러 등에서 호출 — 한 줄이면 끝
+SceneManager.Instance.LoadScene(Define.EScene.GameScene);
+```
+
+내부 시퀀스 (`SceneManager.cs:36-50` + `LoadingScene.cs:19-64`):
+
+```
+1. FadeOut 0.15s                                    검정 화면
+2. LoadingScene 진입 (PendingScene = 대상)          정적 변수로 대상 전달
+3. FadeIn 0.15s                                     로딩 UI 노출
+4. LoadSceneAsync(대상, allowActivation=false)      진행률 0~90% (Unity 제약)
+5. WaitForSeconds(0.5s)                             최소 표시 시간 (깜빡임 방지)
+6. FadeOut → ScheduleFadeIn 예약                    DDOL FadeManager가 다음 씬에서 실행
+7. allowSceneActivation = true                      대상 씬 활성화 / LoadingScene 파괴
+```
+
+### `LoadSceneImmediate()` — 사용 금지
+
+`SceneManager` 내부에서 LoadingScene 자체로 진입할 때만 쓴다. UI/Manager 코드에서 직접 호출하면 페이드/로딩 화면이 생략되어 화면이 거칠어진다.
+
+### BaseScene 상속 패턴
+
+신규 씬 스크립트는 항상 `BaseScene`을 상속하고 `Awake`에서 `SceneType`을 설정한다 — `SceneManager.CurrentSceneType`이 이 값을 참조한다.
+
+```csharp
+// 스테이지 선택 씬 — 메인에서 진입, 스테이지 선택 시 GameScene으로 전환
+public class StageSelectScene : BaseScene
+{
+    // 씬 활성화 직후 호출 — 씬 타입 등록 필수
+    protected override void Awake()
+    {
+        base.Awake();
+        SceneType = Define.EScene.StageSelectScene;
+    }
+
+    // Android 백 버튼 처리 — 메인으로 복귀
+    private void OnBack()
+    {
+        SceneManager.Instance.LoadScene(Define.EScene.MainScene);
+    }
+}
+```
+
+### 호출 매트릭스 — 어디서 어디로 가는가
+
+`SceneManager.Instance.LoadScene(...)` 호출처 정리. 모두 LoadingScene을 경유한다.
+
+| From | To | 트리거 / 호출 위치 |
+|---|---|---|
+| `BootstrapScene` | `MainScene` | 자동 로그인 성공 — `BootstrapFlow.cs:199` |
+| `BootstrapScene` | `LoginScene` | 약관 동의 후 / 자동 로그인 실패 — `BootstrapFlow.cs:212,219` |
+| 어디서나 | `LoginScene` | 세션 만료 감지 — `AppLifecycleManager.cs:70` |
+| 어디서나 | `BootstrapScene` | 재시작 트리거 (밴 OK 등) — `PopupService.cs:270` |
+| `LoginScene` | `MainScene` | 로그인 성공 — `UI_LoginScene.cs:111` |
+| `MainScene` | `LoginScene` / `StageSelectScene` | 로그아웃 / 스테이지 진입 — `UI_MainGame.cs:206,227,240` |
+| `StageSelectScene` | `GameScene` / `MainScene` | 스테이지 선택 / 뒤로가기 — `UI_StageSelect.cs:76,82` |
+| `GameScene` | `StageSelectScene` | 인게임 종료 — `GameScene.cs:17`, `UI_InGame.cs:54,60` |
+
+### 신규 씬 추가 체크리스트
+
+1. `UnityClient/Assets/@Scenes/{NewScene}.unity` 생성 (Camera + Directional Light 포함)
+2. `UnityClient/Assets/@Scripts/Scenes/{NewScene}.cs` — `BaseScene` 상속, `Awake`에서 `SceneType` 설정
+3. `Utils/Define.cs`의 `EScene` enum에 값 추가
+4. `ProjectSettings/EditorBuildSettings.asset`의 Build Settings에 등록 (`enabled: 1`)
+5. 진입/전환 트리거 코드에서 `SceneManager.Instance.LoadScene(Define.EScene.{NewScene})` 호출
+6. 씬 내 UI 스크립트는 `UI_Base`/`UI_UGUI` 상속, UIManager 경유로 표시
+
+---
+
 ## 관련 문서
 
 | 문서 | 내용 |

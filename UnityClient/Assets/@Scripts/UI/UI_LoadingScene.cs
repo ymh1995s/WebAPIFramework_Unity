@@ -2,23 +2,28 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 로딩씬 UI 컴포넌트 — Slider로 진행률 표시, TMP_Text로 퍼센트 숫자 표시
-// 자식 오브젝트에서 Slider와 TMP_Text를 자동 탐색하므로 Inspector 연결 불필요
+// 로딩씬 UI — Slider로 진행률 표시, TMP_Text로 퍼센트 숫자 표시
+// 자식 GameObject 이름이 enum 이름과 매칭되어 자동 바인딩됨
 public class UI_LoadingScene : UI_UGUI
 {
-    // 진행률 바 — 0(비어있음) ~ 1(가득참) 범위로 표시
-    private Slider _slider;
+    // 자식 Slider GameObject 이름과 매칭
+    enum Sliders { ProgressBar }
 
-    // 퍼센트 텍스트 — "0%" ~ "100%" 형태로 표시
-    private TMP_Text _text;
+    // 자식 TMP_Text GameObject 이름과 매칭
+    enum Texts { ProgressText }
+
+    // 진행률 슬라이더 캐시 — Awake에서 바인딩
+    Slider _slider;
 
     protected override void Awake()
     {
         base.Awake();
 
-        // 자식 오브젝트에서 Slider와 TMP_Text 자동 바인딩
-        _slider = GetComponentInChildren<Slider>();
-        _text = GetComponentInChildren<TMP_Text>();
+        // 자식 자동 바인딩
+        Bind<Slider>(typeof(Sliders));
+        BindTexts(typeof(Texts));
+
+        _slider = Get<Slider>((int)Sliders.ProgressBar);
 
         // 초기 상태: 0%
         SetProgress(0f);
@@ -30,7 +35,6 @@ public class UI_LoadingScene : UI_UGUI
         if (_slider != null)
             _slider.value = value;
 
-        if (_text != null)
-            _text.text = $"{Mathf.RoundToInt(value * 100)}%";
+        GetText((int)Texts.ProgressText).text = $"{Mathf.RoundToInt(value * 100)}%";
     }
 }
