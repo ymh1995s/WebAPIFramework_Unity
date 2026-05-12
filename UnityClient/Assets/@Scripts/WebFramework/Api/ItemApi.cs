@@ -1,9 +1,23 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 // 아이템 API 싱글톤 — 인벤토리 조회 및 아이템 사용 요청을 처리한다
 public class ItemApi : Singleton<ItemApi>
 {
+    // ── Task 기반 비동기 정적 메서드 (await 호출용) ──────────────────────────
+
+    // 인벤토리 조회 비동기 버전 — 보유 아이템 목록 반환
+    public static Task<ApiResult<List<PlayerItemDto>>> GetInventoryAsync()
+        => ApiClient.Instance.GetListAsync<PlayerItemDto>(ApiConfig.Item.GetInventory);
+
+    // 아이템 사용 비동기 버전 — itemId 경로 바인딩, clientRequestId로 멱등성 보장
+    public static Task<ApiResult<EmptyResponse>> UseAsync(int itemId, string clientRequestId)
+        => ApiClient.Instance.PostAsync<UseItemRequest, EmptyResponse>(
+            string.Format(ApiConfig.Item.Use, itemId),
+            new UseItemRequest { clientRequestId = clientRequestId });
+
+
     // 인벤토리 조회 — GET /api/items/inventory (백엔드가 최상위 배열 반환)
     // onSuccess: 보유 아이템 목록 반환
     // onError  : 4xx/5xx 오류 시 호출
