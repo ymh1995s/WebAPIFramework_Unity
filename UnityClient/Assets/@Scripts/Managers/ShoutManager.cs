@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -50,7 +51,7 @@ public class ShoutManager : Singleton<ShoutManager>
         EnsureHud();
 
         // 즉시 1회 Fetch 후 폴링 코루틴 시작
-        Fetch();
+        _ = FetchAsync();
         _pollCoroutine = StartCoroutine(PollCoroutine());
     }
 
@@ -89,7 +90,8 @@ public class ShoutManager : Singleton<ShoutManager>
 
             if (!_running) yield break;
 
-            Fetch();
+            // fire-and-forget — 폴링 대기는 코루틴이, API 호출은 async Task가 담당
+            _ = FetchAsync();
         }
     }
 
@@ -97,16 +99,17 @@ public class ShoutManager : Singleton<ShoutManager>
     /// ShoutApi를 통해 현재 활성 외침 목록을 조회한다.
     /// 성공 시 HandleResponse(), 실패 시 로그만 출력하고 계속 진행한다.
     /// </summary>
-    private void Fetch()
+    private async Task FetchAsync()
     {
-        ShoutApi.Instance.GetActive(
-            onSuccess: HandleResponse,
-            onError: err =>
-            {
-                // 폴링 실패는 무시 — 다음 주기에 재시도
-                Debug.LogWarning($"[ShoutManager] 외침 조회 실패: {err?.UserMessage}");
-            }
-        );
+        var result = await ShoutApi.GetActiveAsync();
+        if (!result.IsSuccess)
+        {
+            // 폴링 실패는 무시 — 다음 주기에 재시도
+            Debug.LogWarning($"[ShoutManager] 외침 조회 실패: {result.Error?.UserMessage}");
+            return;
+        }
+
+        HandleResponse(result.Value);
     }
 
     /// <summary>

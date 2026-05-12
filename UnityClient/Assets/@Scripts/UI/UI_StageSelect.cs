@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 // 스테이지 선택 씬 UI — 서버에서 진행 현황을 받아 각 스테이지 버튼의 활성 상태를 설정한다
@@ -22,22 +23,23 @@ public class UI_StageSelect : UI_UGUI
     protected override void Start()
     {
         base.Start();
-        LoadProgress();
+        _ = LoadProgressAsync();
     }
 
     // 진행 현황 API 호출 후 버튼 상태 갱신
-    private void LoadProgress()
+    private async Task LoadProgressAsync()
     {
-        StageApi.Instance.GetProgress(
-            onSuccess: progress =>
-            {
-                _progressList = progress;
-                // 정렬 순서 기준으로 Stage1~3에 순차 매핑
-                _progressList.Sort((a, b) => a.sortOrder.CompareTo(b.sortOrder));
-                RefreshButtons();
-            },
-            onError: err => PopupService.ShowError(err)
-        );
+        var result = await StageApi.GetProgressAsync();
+        if (!result.IsSuccess)
+        {
+            PopupService.ShowError(result.Error);
+            return;
+        }
+
+        _progressList = result.Value;
+        // 정렬 순서 기준으로 Stage1~3에 순차 매핑
+        _progressList.Sort((a, b) => a.sortOrder.CompareTo(b.sortOrder));
+        RefreshButtons();
     }
 
     // 진행 현황에 따라 Stage1~3 버튼 활성 여부 및 클릭 핸들러 설정
@@ -60,7 +62,7 @@ public class UI_StageSelect : UI_UGUI
             // 잠금 상태이면 버튼 비활성
             btn.interactable = !stage.isLocked;
 
-            // 이전 리스너 제거 후 재등록 — LoadProgress 재호출 시 중복 방지
+            // 이전 리스너 제거 후 재등록 — LoadProgressAsync 재호출 시 중복 방지
             btn.onClick.RemoveAllListeners();
             int stageId = stage.stageId; // 클로저 캡처용 로컬 변수
             btn.onClick.AddListener(() => OnClickStage(stageId));

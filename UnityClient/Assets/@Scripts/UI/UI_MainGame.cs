@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 
 // 메인 씬 UI — 모든 기능 버튼을 바인딩하고 각 흐름(랭킹/메일/문의/계정/씬 전환)을 처리한다
@@ -45,24 +46,25 @@ public class UI_MainGame : UI_UGUI
         // 씬 진입 시 계정 상태 표시
         RefreshStatus();
         // 세션 최초 메인씬 진입 시 일일 출석 처리
-        ProcessDailyLogin();
+        _ = ProcessDailyLoginAsync();
     }
 
     // 세션당 1회 DailyLogin API 호출 — 이미 호출했으면 즉시 반환
-    private void ProcessDailyLogin()
+    private async Task ProcessDailyLoginAsync()
     {
         if (_dailyLoginChecked) return;
         _dailyLoginChecked = true;
 
-        DailyLoginApi.Instance.Process(
-            onSuccess: res =>
-            {
-                // 오늘 첫 로그인 시에만 안내 팝업 표시
-                if (res.rewarded)
-                    PopupService.ShowAnnouncement("오늘의 출석 보상이 우편함에 도착했습니다.\n메일함에서 수령해주세요.");
-            },
-            onError: _ => { /* 자동 호출이므로 에러 무음 처리 */ }
-        );
+        var result = await DailyLoginApi.ProcessAsync();
+        if (!result.IsSuccess)
+        {
+            // 자동 호출이므로 에러 무음 처리
+            return;
+        }
+
+        // 오늘 첫 로그인 시에만 안내 팝업 표시
+        if (result.Value.rewarded)
+            PopupService.ShowAnnouncement("오늘의 출석 보상이 우편함에 도착했습니다.\n메일함에서 수령해주세요.");
     }
 
     // 상태 텍스트를 PlayerId + 구글 연동 여부로 갱신
@@ -76,16 +78,18 @@ public class UI_MainGame : UI_UGUI
     // ─── 랭킹 ──────────────────────────────────────────────────────────────
 
     // 내 랭킹 조회 후 공지 팝업으로 표시
-    private void OnClickRanking()
+    private async void OnClickRanking()
     {
-        RankingApi.Instance.GetMyRank(
-            onSuccess: rank =>
-            {
-                string msg = $"현재 순위: {rank.rank}위\n닉네임: {rank.nickname}\n최고 점수: {rank.bestScore}";
-                PopupService.ShowAnnouncement(msg);
-            },
-            onError: err => PopupService.ShowError(err)
-        );
+        var result = await RankingApi.GetMyRankAsync();
+        if (!result.IsSuccess)
+        {
+            PopupService.ShowError(result.Error);
+            return;
+        }
+
+        var rank = result.Value;
+        string msg = $"현재 순위: {rank.rank}위\n닉네임: {rank.nickname}\n최고 점수: {rank.bestScore}";
+        PopupService.ShowAnnouncement(msg);
     }
 
     // ─── 메일함 ────────────────────────────────────────────────────────────
@@ -105,18 +109,20 @@ public class UI_MainGame : UI_UGUI
     // ─── 공지 ──────────────────────────────────────────────────────────────
 
     // 서버에서 최신 공지를 가져와 팝업으로 표시
-    private void OnClickNotice()
+    private async void OnClickNotice()
     {
-        NoticeApi.Instance.GetLatest(
-            onSuccess: notice =>
-            {
-                string content = (notice == null || notice.id == 0)
-                    ? "현재 공지사항이 없습니다."
-                    : notice.content;
-                PopupService.ShowAnnouncement(content);
-            },
-            onError: err => PopupService.ShowError(err)
-        );
+        var result = await NoticeApi.GetLatestAsync();
+        if (!result.IsSuccess)
+        {
+            PopupService.ShowError(result.Error);
+            return;
+        }
+
+        var notice = result.Value;
+        string content = (notice == null || notice.id == 0)
+            ? "현재 공지사항이 없습니다."
+            : notice.content;
+        PopupService.ShowAnnouncement(content);
     }
 
     // ─── 인벤토리 ──────────────────────────────────────────────────────────
@@ -145,16 +151,16 @@ public class UI_MainGame : UI_UGUI
             // 에디터 환경 등에서 null 반환 시 조용히 중단
             if (user == null) return;
 
-            AuthApi.Instance.LinkGoogle(
-                user.IdToken,
-                onSuccess: _ =>
-                {
-                    AuthManager.Instance.SetGoogleLinked(true);
-                    RefreshStatus();
-                    PopupService.ShowAnnouncement("구글 계정 연동이 완료되었습니다.");
-                },
-                onError: err => PopupService.ShowError(err)
-            );
+            var result = await AuthApi.LinkGoogleAsync(user.IdToken);
+            if (!result.IsSuccess)
+            {
+                PopupService.ShowError(result.Error);
+                return;
+            }
+
+            AuthManager.Instance.SetGoogleLinked(true);
+            RefreshStatus();
+            PopupService.ShowAnnouncement("구글 계정 연동이 완료되었습니다.");
         }
         catch (Exception e)
         {
@@ -187,16 +193,17 @@ public class UI_MainGame : UI_UGUI
     }
 
     // 탈퇴 API 호출 후 로컬 토큰 초기화 및 LoginScene 전환
-    private void DoWithdraw()
+    private async void DoWithdraw()
     {
-        AuthApi.Instance.Withdraw(
-            onSuccess: _ =>
-            {
-                AuthManager.Instance.Clear();
-                SceneManager.Instance.LoadScene(Define.EScene.LoginScene);
-            },
-            onError: err => PopupService.ShowError(err)
-        );
+        var result = await AuthApi.WithdrawAsync();
+        if (!result.IsSuccess)
+        {
+            PopupService.ShowError(result.Error);
+            return;
+        }
+
+        AuthManager.Instance.Clear();
+        SceneManager.Instance.LoadScene(Define.EScene.LoginScene);
     }
 
     // ─── 로그아웃 ──────────────────────────────────────────────────────────
@@ -211,22 +218,19 @@ public class UI_MainGame : UI_UGUI
     }
 
     // 로그아웃 API 호출 — 서버 실패 시에도 로컬 토큰 삭제 후 LoginScene으로 이동
-    private void DoLogout()
+    private async void DoLogout()
     {
-        AuthApi.Instance.Logout(
-            AuthManager.Instance.RefreshToken,
-            onSuccess: _ =>
-            {
-                AuthManager.Instance.Clear();
-                SceneManager.Instance.LoadScene(Define.EScene.LoginScene);
-            },
-            onError: _ =>
-            {
-                // 서버 오류와 무관하게 로컬 세션 초기화
-                AuthManager.Instance.Clear();
-                SceneManager.Instance.LoadScene(Define.EScene.LoginScene);
-            }
-        );
+        var result = await AuthApi.LogoutAsync(AuthManager.Instance.RefreshToken);
+
+        // 서버 성공/실패 무관하게 로컬 세션 초기화 후 LoginScene 전환
+        AuthManager.Instance.Clear();
+        SceneManager.Instance.LoadScene(Define.EScene.LoginScene);
+
+        if (!result.IsSuccess)
+        {
+            // 실패 로그만 남기고 LoginScene으로 이동은 위에서 이미 처리
+            Debug.LogWarning($"[UI_MainGame] 로그아웃 서버 요청 실패: {result.Error?.UserMessage}");
+        }
     }
 
     // ─── 씬 전환 ───────────────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UnityEngine;
 
 // 게임 씬 UI — 클리어/실패 버튼으로 스테이지 결과를 서버에 전송하고 보상을 표시한다
@@ -27,7 +28,7 @@ public class UI_InGame : UI_UGUI
     }
 
     // 클리어 버튼 — 더미 결과 데이터로 서버에 클리어 전송 후 보상 팝업 표시
-    private void OnClickClear()
+    private async void OnClickClear()
     {
         var body = new StageClearRequest
         {
@@ -36,21 +37,21 @@ public class UI_InGame : UI_UGUI
             clearTimeMs = 30000L,
         };
 
-        StageApi.Instance.Complete(
-            StageSession.StageId,
-            body,
-            onSuccess: res =>
-            {
-                string msg = res.isFirstClear
-                    ? $"최초 클리어!\n{res.firstRewardMessage}\n경험치 +{res.expGranted}"
-                    : $"재도전 클리어!\n{res.replayRewardMessage}\n경험치 +{res.expGranted}";
+        var result = await StageApi.CompleteAsync(StageSession.StageId, body);
+        if (!result.IsSuccess)
+        {
+            PopupService.ShowError(result.Error);
+            return;
+        }
 
-                // 보상 팝업 확인 후 StageSelectScene으로 복귀
-                PopupService.ShowReward(msg, () =>
-                    SceneManager.Instance.LoadScene(Define.EScene.StageSelectScene));
-            },
-            onError: err => PopupService.ShowError(err)
-        );
+        var res = result.Value;
+        string msg = res.isFirstClear
+            ? $"최초 클리어!\n{res.firstRewardMessage}\n경험치 +{res.expGranted}"
+            : $"재도전 클리어!\n{res.replayRewardMessage}\n경험치 +{res.expGranted}";
+
+        // 보상 팝업 확인 후 StageSelectScene으로 복귀
+        PopupService.ShowReward(msg, () =>
+            SceneManager.Instance.LoadScene(Define.EScene.StageSelectScene));
     }
 
     // 실패 버튼 — StageSelectScene으로 즉시 복귀
