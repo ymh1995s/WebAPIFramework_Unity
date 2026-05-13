@@ -10,6 +10,7 @@ using UnityEngine;
 /// 활성 외침(Shout) 목록 폴링 매니저 — Singleton.
 /// 메인 씬 진입 시 Begin(), 이탈 시 End()를 호출한다.
 /// 5분(300초) 간격으로 ShoutApi를 폴링하여 HUD에 전달한다.
+/// HUD가 1회 순회를 완료하면 OnHudCompleted를 통해 본 외침 id를 PlayerPrefs에 저장한다.
 /// </summary>
 public class ShoutManager : Singleton<ShoutManager>
 {
@@ -37,8 +38,14 @@ public class ShoutManager : Singleton<ShoutManager>
     // HUD 루트 Transform — UIManager Root 하위에 생성
     Transform _hudRoot;
 
+    // 본 외침 id 캐시 — PlayerPrefs로 영속화하여 재폴링 시 제외
+    HashSet<int> _seenIds = new HashSet<int>();
+
+    // PlayerPrefs 키 — PlayerId별 분리하여 계정 전환 시 충돌 방지
+    private string SeenIdsKey() => $"ShoutSeenIds_{AuthManager.Instance.PlayerId}";
+
     /// <summary>
-    /// 메인 씬 진입 시 호출 — HUD 인스턴스 확보 후 즉시 1회 Fetch + 폴링 코루틴 시작.
+    /// 메인 씬 진입 시 호출 — 본 외침 id 로드 → HUD 인스턴스 확보 후 즉시 1회 Fetch + 폴링 코루틴 시작.
     /// 이미 실행 중이면 무시한다.
     /// </summary>
     public void Begin()
@@ -46,6 +53,9 @@ public class ShoutManager : Singleton<ShoutManager>
         // 중복 호출 방지
         if (_running) return;
         _running = true;
+
+        // 이전 세션의 본 외침 id 로드
+        LoadSeenIds();
 
         // HUD 인스턴스 확보 (없거나 씬 전환으로 파괴된 경우 재생성)
         EnsureHud();
@@ -56,7 +66,7 @@ public class ShoutManager : Singleton<ShoutManager>
     }
 
     /// <summary>
-    /// 메인 씬 이탈 시 호출 — 폴링 코루틴 중단 및 HUD 숨김.
+    /// 메인 씬 이탈 시 호출 — 폴링 코루틴 중단, 콜백 해제 및 HUD 숨김.
     /// </summary>
     public void End()
     {
@@ -69,12 +79,58 @@ public class ShoutManager : Singleton<ShoutManager>
             _pollCoroutine = null;
         }
 
-        // HUD 숨김 처리
+        // 콜백 해제 후 HUD 숨김 처리 (End() 경로에서는 OnAllShoutsCompleted 발행 불가)
         if (_hud != null)
+        {
+            _hud.OnAllShoutsCompleted = null;
             _hud.Hide();
+        }
 
         // 상태 초기화
         _activeShouts.Clear();
+    }
+
+    /// <summary>
+    /// PlayerPrefs에서 본 외침 id CSV를 읽어 _seenIds에 로드한다.
+    /// </summary>
+    private void LoadSeenIds()
+    {
+        _seenIds.Clear();
+        string csv = PlayerPrefs.GetString(SeenIdsKey(), "");
+        if (string.IsNullOrEmpty(csv)) return;
+
+        // CSV 형식 "1,5,8" 파싱
+        foreach (var token in csv.Split(','))
+        {
+            if (int.TryParse(token, out int id))
+                _seenIds.Add(id);
+        }
+    }
+
+    /// <summary>
+    /// _seenIds를 CSV로 직렬화하여 PlayerPrefs에 저장한다.
+    /// </summary>
+    private void SaveSeenIds()
+    {
+        // CSV 직렬화 후 저장
+        string csv = string.Join(",", _seenIds);
+        PlayerPrefs.SetString(SeenIdsKey(), csv);
+        PlayerPrefs.Save();
+    }
+
+    /// <summary>
+    /// UI_HUDShout가 1회 순회를 완료했을 때 호출되는 핸들러.
+    /// 표시된 외침 id를 _seenIds에 추가하고 PlayerPrefs에 영속화한다.
+    /// </summary>
+    private void OnHudCompleted()
+    {
+        if (_activeShouts == null || _activeShouts.Count == 0) return;
+
+        // 표시 완료된 외침 id를 본 목록에 추가
+        foreach (var s in _activeShouts)
+            _seenIds.Add(s.id);
+
+        SaveSeenIds();
     }
 
     /// <summary>
@@ -113,14 +169,15 @@ public class ShoutManager : Singleton<ShoutManager>
     }
 
     /// <summary>
-    /// API 응답 처리 — 만료 필터링, 동일 세트 감지, HUD 갱신.
+    /// API 응답 처리 — 만료 필터링, 본 외침 제외, 동일 세트 감지, HUD 갱신.
     /// </summary>
     /// <param name="list">서버에서 반환된 외침 목록</param>
     private void HandleResponse(List<ShoutDto> list)
     {
-        // 만료되지 않은 외침만 필터링 (UTC 비교)
+        // 만료되지 않고 아직 보지 않은 외침만 필터링
         var validShouts = list
             .Where(s => DateTime.UtcNow < ParseUtcSafe(s.expiresAt))
+            .Where(s => !_seenIds.Contains(s.id))   // 이미 본 외침 제외
             .ToList();
 
         // 유효한 외침이 없으면 HUD 숨김
@@ -139,8 +196,9 @@ public class ShoutManager : Singleton<ShoutManager>
         // 새 세트로 갱신
         _activeShouts = validShouts;
 
-        // HUD 인스턴스 확보 후 메시지 전달
+        // HUD 인스턴스 확보 후 콜백 연결 및 메시지 전달
         EnsureHud();
+        _hud.OnAllShoutsCompleted = OnHudCompleted;
         _hud.SetMessages(_activeShouts);
     }
 

@@ -10,7 +10,7 @@ using UnityEngine.UI;
 /// 메인 씬 HUD — 활성 외침(Shout) 메시지를 화면 상단에 순환 표시한다.
 /// ShoutManager.Begin()이 인스턴스를 생성·캐시하고,
 /// SetMessages()로 메시지 목록을 전달받아 4초 간격으로 회전 표시한다.
-/// 빈 목록이거나 만료되면 Hide()로 자동 숨김 처리한다.
+/// 모든 메시지를 1회 순회 완료하면 OnAllShoutsCompleted를 발행하고 Hide()한다.
 /// </summary>
 public class UI_HUDShout : UI_Base
 {
@@ -33,10 +33,18 @@ public class UI_HUDShout : UI_Base
     Coroutine _rotateCoroutine;
 
     /// <summary>
-    /// 표시할 외침 목록을 설정하고 HUD를 활성화한다.
-    /// 빈 목록이면 즉시 숨긴다.
+    /// 마지막 외침까지 모두 표시 완료된 시점에 호출된다.
+    /// ShoutManager가 본 외침 id 저장 용도로 구독한다.
+    /// Hide() 자체에서는 절대 호출하지 않음 — RotateRoutine 정상 종료 시에만 발행.
     /// </summary>
-    /// <param name="messages">표시할 외침 DTO 목록 (만료 필터링은 ShoutManager 측에서 처리)</param>
+    public Action OnAllShoutsCompleted;
+
+    /// <summary>
+    /// 표시할 외침 목록을 설정하고 HUD를 활성화한다.
+    /// 빈 목록이거나 모든 메시지가 이미 만료된 경우 즉시 숨긴다.
+    /// 메시지 개수와 무관하게 항상 RotateRoutine을 시작하여 만료 감시와 회전을 함께 처리한다.
+    /// </summary>
+    /// <param name="messages">표시할 외침 DTO 목록</param>
     public void SetMessages(List<ShoutDto> messages)
     {
         // 빈 목록이면 숨김 처리 후 즉시 반환
@@ -52,30 +60,25 @@ public class UI_HUDShout : UI_Base
 
         gameObject.SetActive(true);
 
-        // 첫 번째 메시지 즉시 표시
+        // 첫 메시지가 이미 만료됐을 수 있으므로 유효한 인덱스 탐색 후 표시
+        if (!TryAdvanceToValidIndex(_currentIdx))
+        {
+            // 모든 메시지가 이미 만료된 경우
+            Hide();
+            return;
+        }
         DisplayCurrent();
 
-        // 메시지가 2개 이상이면 회전 코루틴 시작 (이미 실행 중이면 재시작)
-        if (_messages.Count > 1)
-        {
-            if (_rotateCoroutine != null)
-                StopCoroutine(_rotateCoroutine);
-            _rotateCoroutine = StartCoroutine(RotateRoutine());
-        }
-        else
-        {
-            // 메시지 1개면 회전 불필요 — 기존 코루틴만 중단
-            if (_rotateCoroutine != null)
-            {
-                StopCoroutine(_rotateCoroutine);
-                _rotateCoroutine = null;
-            }
-        }
+        // 메시지 개수와 무관하게 코루틴 항상 시작 — 만료 감시 + 회전 + 1회 순회 종료 담당
+        if (_rotateCoroutine != null)
+            StopCoroutine(_rotateCoroutine);
+        _rotateCoroutine = StartCoroutine(RotateRoutine());
     }
 
     /// <summary>
     /// HUD를 숨기고 회전 코루틴을 중단한다.
-    /// ShoutManager.End() 또는 만료 감지 시 호출된다.
+    /// ShoutManager.End() 또는 1회 순회 완료 시 호출된다.
+    /// 이 메서드 자체에서는 OnAllShoutsCompleted를 호출하지 않는다.
     /// </summary>
     public void Hide()
     {
@@ -90,42 +93,94 @@ public class UI_HUDShout : UI_Base
     }
 
     /// <summary>
-    /// 4초 간격으로 다음 메시지로 전환하는 무한 코루틴.
-    /// 만료된 메시지는 건너뛰고, 유효한 메시지가 없으면 Hide()로 종료한다.
+    /// 1초 단위 tick으로 만료 여부를 감시하고, _rotateSeconds 누적 시 다음 메시지로 회전한다.
+    /// 모든 메시지를 1회 순회하면 OnAllShoutsCompleted를 발행하고 종료한다.
+    /// Count == 1 케이스도 동일 흐름으로 처리 — 첫 tick에서 shownCount >= Count 충족 시 종료.
     /// </summary>
     private IEnumerator RotateRoutine()
     {
+        // tick 주기: 1초마다 만료 여부 체크
+        const float TICK = 1f;
+        float elapsed = 0f;
+
+        // SetMessages에서 DisplayCurrent()를 이미 호출했으므로 첫 메시지는 표시된 것으로 카운트
+        int shownCount = 1;
+
         while (true)
         {
-            // _rotateSeconds 대기 후 다음 메시지로 전환
-            yield return new WaitForSeconds(_rotateSeconds);
+            yield return new WaitForSeconds(TICK);
+            elapsed += TICK;
 
-            // 다음 인덱스로 전진 (순환)
-            int nextIdx = (_currentIdx + 1) % _messages.Count;
+            // 현재 메시지 만료 여부 — 만료됐거나 회전 타이밍이 됐으면 처리
+            bool currentExpired = DateTime.UtcNow >= ParseUtcSafe(_messages[_currentIdx].expiresAt);
+            bool shouldRotate   = elapsed >= _rotateSeconds;
 
-            // 만료된 메시지를 스킵하며 유효한 메시지 탐색
-            int searched = 0;
-            while (searched < _messages.Count)
+            if (!currentExpired && !shouldRotate)
+                continue;
+
+            // 이미 N개 모두 표시했으면 1회 순회 완료 — 정상 종료 (콜백 발행 후 Hide)
+            if (shownCount >= _messages.Count)
             {
-                // 만료 여부 확인 (UTC 비교)
-                if (DateTime.UtcNow < ParseUtcSafe(_messages[nextIdx].expiresAt))
-                    break;  // 유효한 메시지 발견
-
-                // 만료됨 — 다음 인덱스로
-                nextIdx = (nextIdx + 1) % _messages.Count;
-                searched++;
-            }
-
-            // 모든 메시지가 만료된 경우 HUD 숨김
-            if (searched >= _messages.Count)
-            {
+                OnAllShoutsCompleted?.Invoke();
                 Hide();
                 yield break;
             }
 
-            _currentIdx = nextIdx;
+            // 다음 유효 인덱스 탐색 (만료된 것 스킵)
+            int nextIdx = (_currentIdx + 1) % _messages.Count;
+            if (!TryAdvanceFrom(nextIdx, out int validIdx))
+            {
+                // 남은 메시지가 모두 만료 — 1회 순회 처리로 간주하고 정상 종료
+                OnAllShoutsCompleted?.Invoke();
+                Hide();
+                yield break;
+            }
+
+            _currentIdx = validIdx;
             DisplayCurrent();
+            shownCount++;
+            elapsed = 0f;
         }
+    }
+
+    /// <summary>
+    /// startIdx부터 순환하며 만료되지 않은 첫 번째 인덱스를 반환한다.
+    /// </summary>
+    /// <param name="startIdx">탐색 시작 인덱스</param>
+    /// <param name="foundIdx">발견된 유효 인덱스. 없으면 -1</param>
+    /// <returns>유효한 메시지가 있으면 true</returns>
+    private bool TryAdvanceFrom(int startIdx, out int foundIdx)
+    {
+        int idx = startIdx;
+        for (int i = 0; i < _messages.Count; i++)
+        {
+            // 만료 안 된 메시지 발견
+            if (DateTime.UtcNow < ParseUtcSafe(_messages[idx].expiresAt))
+            {
+                foundIdx = idx;
+                return true;
+            }
+            idx = (idx + 1) % _messages.Count;
+        }
+
+        // 전체 순환 후에도 유효한 메시지 없음
+        foundIdx = -1;
+        return false;
+    }
+
+    /// <summary>
+    /// SetMessages 초기 진입 시 _currentIdx를 유효한 첫 번째 인덱스로 갱신한다.
+    /// </summary>
+    /// <param name="startIdx">탐색 시작 인덱스 (보통 0)</param>
+    /// <returns>유효한 메시지가 있으면 true</returns>
+    private bool TryAdvanceToValidIndex(int startIdx)
+    {
+        if (TryAdvanceFrom(startIdx, out int found))
+        {
+            _currentIdx = found;
+            return true;
+        }
+        return false;
     }
 
     /// <summary>
