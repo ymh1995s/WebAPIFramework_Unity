@@ -80,6 +80,7 @@
     <Compile Include="Assets\@Scripts\Config\LocalizationConfig.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_StageSelect.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\VersionApi.cs" />
+    <Compile Include="Assets\@Scripts\Managers\CrashReportManager.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\AuthApi.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\ShopModels.cs" />
     <Compile Include="Assets\@Scripts\Managers\ResourceManager.cs" />

@@ -1,8 +1,17 @@
+using System;
 using UnityEngine;
 
 // 인증 토큰 및 세션 관리 싱글톤
 public class AuthManager : Singleton<AuthManager>
 {
+    // 로그인 성공 이벤트 — SaveToken 호출 시 PlayerId(string)를 전달
+    // CrashReportManager 등이 구독하여 플레이어별 컨텍스트를 갱신한다
+    public static event Action<string> OnLoginSuccess;
+
+    // 로그아웃 이벤트 — Clear 호출 시 발행
+    // 구독자가 플레이어별 상태를 초기화할 수 있도록 알린다
+    public static event Action OnLogout;
+
     // 현재 로그인한 플레이어 PublicId (Guid 문자열 — 내부 int Id 아님)
     public string PlayerId     { get; private set; }
 
@@ -49,6 +58,9 @@ public class AuthManager : Singleton<AuthManager>
         PlayerPrefs.SetString("RefreshToken", RefreshToken);
         PlayerPrefs.SetString("PlayerId", PlayerId);
         PlayerPrefs.Save();
+
+        // 로그인 성공을 구독자에게 알림 — PlayerId 기반 컨텍스트 갱신 트리거
+        OnLoginSuccess?.Invoke(response.playerId);
     }
 
     // 로그아웃 - 모든 토큰 초기화
@@ -64,5 +76,8 @@ public class AuthManager : Singleton<AuthManager>
         PlayerPrefs.DeleteKey("IsGoogleLinked");
         IsGoogleLinked = false;
         PlayerPrefs.Save();
+
+        // 로그아웃을 구독자에게 알림 — 플레이어별 상태 초기화 트리거
+        OnLogout?.Invoke();
     }
 }

@@ -14,6 +14,9 @@ public static class BootstrapFlow
     // 부팅 흐름 시작 — Bootstrap_Scene.Start의 LoadAll 콜백에서 호출
     public static async void Run()
     {
+        // 크래시 수집 초기화 — 부팅 흐름 최상단에서 1회 실행하여 이후 발생하는 모든 크래시를 포착
+        CrashReportManager.Instance.Init();
+
         // 씬 재진입 시 점검 팝업 플래그 초기화
         PopupService.ClearMaintenanceFlag();
         // ApiClient의 503 중복 방지 플래그도 함께 리셋 — 재점검 시 이벤트가 재발행되도록 보장

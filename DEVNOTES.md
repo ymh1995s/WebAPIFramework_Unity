@@ -93,30 +93,20 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 
 ### Local Notification — 트랜잭션 알림 한정
 
-**목적**: 출석 리셋·우편 만료 임박·에너지 충전 완료 등 게임 내부 이벤트 알림. 외부 푸시 서버(FCM) 없이 기기 자체 예약 → 재방문율 ↑.
+**목적**: 출석 리셋·우편 만료 임박·에너지 충전 완료 등 게임 내부 이벤트 알림.
+외부 푸시 서버(FCM) 없이 기기 자체 예약 → 서버 인프라 추가 없이 재방문율 ↑.
+
 **필요 작업**
-- 패키지 `com.unity.mobile.notifications` 도입
+- 패키지 `com.unity.mobile.notifications` 도입 (Unity Package Manager)
 - iOS: `UNUserNotificationCenter.requestAuthorization` 권한 다이얼로그 (첫 등록 시)
-- Android 13+ `POST_NOTIFICATIONS` 런타임 권한 요청
-- 앱 진입 시 해당 알림 취소 (이미 받은 보상에 대한 중복 알림 방지)
+- Android 13+: `POST_NOTIFICATIONS` 런타임 권한 요청
+- 앱 진입 시 예약 알림 취소 (이미 받은 보상 중복 알림 방지)
 - 앱 내 알림 수신 토글 UI (사용자가 끌 수 있어야 함 — 마켓 권장)
-**범위 제한**: **광고성("신규 이벤트!", "할인 중!")은 보내지 말 것**. 보내려면 정보통신망법 §50 사전 동의 + §50의5 야간(21~08) 동의 + 백엔드 동의 컬럼 추가 필요.
-**우선순위**: M (가성비 큼)
-**작업량**: 1일
 
----
+**범위 제한**: 광고성 알림("신규 이벤트!", "할인 중!")은 절대 보내지 말 것.
+보내려면 정보통신망법 §50 사전 동의 + §50의5 야간(21~08) 동의 + 백엔드 동의 컬럼 추가 필요.
 
-### 크래시 가시성 (외부 SDK)
-
-**목적**: 출시 후 본인 기기 외 환경에서 발생하는 크래시 추적. 시나리오: 1.0 빌드 배포 → 특정 기기에서 즉시 종료 → 별점 1점 + 매출 0 → 재현 불가 → 패치 못 함.
-**도입 옵션**:
-- **Unity Engine Diagnostics** (권장) — Unity 6.2 빌트인. 별도 패키지/가입 불필요. Unity 계정으로 OK. 코드: `CrashReportManager.cs` 신규 + `BootstrapFlow` / `AuthManager` 각 1~2줄. **사전 조건: Project Settings → Services → Unity Cloud 프로젝트 링크 + Player Settings → Enable CrashReportingAPI 체크 필요 (현재 미연결)**
-- **Sentry Unity SDK** (무료 등급) — sentry.io 별도 계정 + DSN 발급 필요.
-- GameAnalytics 크래시 모듈
-
-**자체 백엔드 구축은 X**: `POST /api/diagnostics/crash` + Admin 페이지 노선은 인디 오버킬 (1.5일 작업 + 유지보수). 외부 SDK가 5분 + 무료.
-**우선순위**: H (출시 직후부터 가시성 필요)
-**작업량**: 5분 ~ 30분
+**우선순위**: M (가성비 큼) / **작업량**: 1일
 
 ---
 
@@ -145,6 +135,25 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 | 세션 만료 처리 | 완료 | `AppLifecycleManager.NotifySessionExpired` → 토큰 클리어 후 LoginScene 이동 |
 | 서버 시간 동기화 | 완료 | `ServerTime` static class — HTTP 응답 `Date` 헤더로 오프셋 보정. `ApiClient.SendAsync`/`DoRefresh` 삽입, `UI_HUDShout`·`ShoutManager` 호출부 치환 |
 | 429 Rate Limit 재시도 | 완료 | `bool isRetry` → `int retryCount`. 지수 백오프 5s/10s/20s, 최대 3회, 초과 시 토스트 안내. Retry-After 헤더 우선. 401/429 파라미터 독립 분리 |
+| 크래시 수집 (CrashReportManager) | 코드완료/Cloud미연결 | Unity Engine Diagnostics 빌트인. 상세 내용은 하단 별도 섹션 참고 |
+
+---
+
+## 크래시 수집 (CrashReportManager) — 활성화 대기 중
+
+`CrashReportManager` (Singleton) — 앱 부팅 시 `BootstrapFlow.Run()`에서 `Init()` 1회 호출.
+Unity Engine Diagnostics API로 크래시 자동 포착.
+로그인·로그아웃 시 `AuthManager.OnLoginSuccess` / `OnLogout` 이벤트로 PlayerId 메타데이터 실시간 갱신 → 크래시 발생 유저 특정 가능.
+
+**현재 상태**: 코드는 동작하나 Unity Cloud 미연결로 데이터가 서버에 전송되지 않음 (수집 자체가 안 됨).
+
+**활성화 방법 (Unity Editor)**:
+1. Project Settings → Services → Unity Cloud 프로젝트 링크
+2. Project Settings → Player → Other Settings → `Enable CrashReport API` 체크
+3. 이후 빌드부터 크래시 자동 수집 + Unity Dashboard에서 확인 가능
+
+**대안**: Unity Cloud 미사용 시 Sentry Unity SDK로 교체.
+sentry.io 무료 계정 + DSN 발급 후 `CrashReportManager` 코드를 Sentry 초기화 코드로 교체.
 
 ---
 
