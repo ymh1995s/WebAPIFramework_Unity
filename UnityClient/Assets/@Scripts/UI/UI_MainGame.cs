@@ -16,7 +16,8 @@ public class UI_MainGame : UI_UGUI
     {
         RankingBtn, MailBoxBtn, InquiryBtn, NotinceBtn,
         InventoryBtn, GoogleInterlockBtn, WithdrawBtn,
-        LogOutBtn, StageSelectBtn, InAppPurchaseBtn, AdsBtn
+        LogOutBtn, StageSelectBtn, InAppPurchaseBtn, AdsBtn,
+        ShopBtn
     }
 
     protected override void Awake()
@@ -38,13 +39,16 @@ public class UI_MainGame : UI_UGUI
         GetButton((int)Buttons.StageSelectBtn).onClick.AddListener(OnClickStageSelect);
         GetButton((int)Buttons.InAppPurchaseBtn).onClick.AddListener(OnClickInAppPurchase);
         GetButton((int)Buttons.AdsBtn).onClick.AddListener(OnClickAds);
+        GetButton((int)Buttons.ShopBtn).onClick.AddListener(OnClickShop);
     }
 
     protected override void Start()
     {
         base.Start();
-        // 씬 진입 시 계정 상태 표시
-        RefreshStatus();
+        // 씬 진입 시 계정 상태 표시 (인벤토리 포함 비동기)
+        _ = RefreshStatusAsync();
+        // 골드 변동 이벤트 구독 — 상점/디버그 충전 후 수치 자동 갱신
+        EventManager.Instance.AddEvent(Define.EEventType.GoldChanged, OnGoldChanged);
         // 세션 최초 메인씬 진입 시 일일 출석 처리
         _ = ProcessDailyLoginAsync();
     }
@@ -67,12 +71,39 @@ public class UI_MainGame : UI_UGUI
             PopupService.ShowAnnouncement("오늘의 출석 보상이 우편함에 도착했습니다.\n메일함에서 수령해주세요.");
     }
 
-    // 상태 텍스트를 PlayerId + 구글 연동 여부로 갱신
-    private void RefreshStatus()
+    // 상태 텍스트를 PlayerId + 구글 연동 여부 + 골드 수량으로 갱신
+    // 인벤토리 API 결과에 따라 골드 레이블을 동적으로 구성한다
+    private async Task RefreshStatusAsync()
     {
         string googleTag = AuthManager.Instance.IsGoogleLinked ? "[구글 연동]" : "[게스트]";
-        GetText((int)Texts.StatusText).text =
-            $"{googleTag}  PlayerId: {AuthManager.Instance.PlayerId}";
+        string baseText  = $"{googleTag}  PlayerId: {AuthManager.Instance.PlayerId}";
+
+        // 인벤토리 조회 — itemId=1(골드) 의 이름과 수량을 StatusText에 함께 표시
+        var invResult = await ItemApi.GetInventoryAsync();
+        if (!invResult.IsSuccess || invResult.Value == null)
+        {
+            // API 실패 시 골드 정보 생략 — 기존 형식만 유지
+            GetText((int)Texts.StatusText).text = baseText;
+            return;
+        }
+
+        // itemId=1 인 골드 아이템 탐색
+        var goldItem = invResult.Value.Find(item => item.itemId == 1);
+        string currencyLabel = goldItem != null
+            ? $"{goldItem.itemName}: {goldItem.quantity}"
+            : "골드: 0";
+
+        GetText((int)Texts.StatusText).text = $"{baseText}  {currencyLabel}";
+    }
+
+    // GoldChanged 이벤트 수신 시 상태 텍스트를 최신 수치로 갱신
+    private void OnGoldChanged() => _ = RefreshStatusAsync();
+
+    protected void OnDestroy()
+    {
+        // 씬 언로드 시 이벤트 구독 해제 — 메모리 누수 및 MissingReference 방지
+        if (EventManager.Instance != null)
+            EventManager.Instance.RemoveEvent(Define.EEventType.GoldChanged, OnGoldChanged);
     }
 
     // ─── 랭킹 ──────────────────────────────────────────────────────────────
@@ -159,7 +190,8 @@ public class UI_MainGame : UI_UGUI
             }
 
             AuthManager.Instance.SetGoogleLinked(true);
-            RefreshStatus();
+            // 구글 연동 후 상태 텍스트 갱신 (비동기 버전으로 일관성 유지)
+            _ = RefreshStatusAsync();
             PopupService.ShowAnnouncement("구글 계정 연동이 완료되었습니다.");
         }
         catch (Exception e)
@@ -238,6 +270,14 @@ public class UI_MainGame : UI_UGUI
     private void OnClickStageSelect()
     {
         SceneManager.Instance.LoadScene(Define.EScene.StageSelectScene);
+    }
+
+    // ─── 상점 ──────────────────────────────────────────────────────────────
+
+    // 상점 팝업 표시 — UI_ShopPopup에서 상품 목록 조회 및 구매 처리
+    private void OnClickShop()
+    {
+        UIManager.Instance.ShowPopupUI<UI_ShopPopup>();
     }
 
     // ─── 미구현 버튼 ───────────────────────────────────────────────────────

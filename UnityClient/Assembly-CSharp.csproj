@@ -65,7 +65,9 @@
     <Compile Include="Assets\@Scripts\UI\UI_HUDShout.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\MailApi.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\InquiryApi.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\DebugModels.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInUser.cs" />
+    <Compile Include="Assets\@Scripts\UI\UI_ShopPopup.cs" />
     <Compile Include="Assets\@Scripts\Data\ItemData.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\ItemApi.cs" />
     <Compile Include="Assets\@Scripts\Managers\SoundManager.cs" />
@@ -79,6 +81,7 @@
     <Compile Include="Assets\@Scripts\UI\UI_StageSelect.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\VersionApi.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\AuthApi.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\ShopModels.cs" />
     <Compile Include="Assets\@Scripts\Managers\ResourceManager.cs" />
     <Compile Include="Assets\@Scripts\UI\PopupService.cs" />
     <Compile Include="Assets\@Scripts\Managers\FadeManager.cs" />
@@ -115,6 +118,7 @@
     <Compile Include="Assets\@Scripts\Managers\LocalizationManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\UIManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\ShoutManager.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Api\DebugApi.cs" />
     <Compile Include="Assets\@Scripts\Managers\Singleton.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\RankingModels.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_WithdrawPopup.cs" />
@@ -137,6 +141,7 @@
     <Compile Include="Assets\@Scripts\Data\TextData.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\MailModels.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Auth\GoogleSignInProvider.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Api\ShopApi.cs" />
     <Compile Include="Assets\@Scripts\Scenes\StageSelectScene.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\CommonModels.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInStatusCode.cs" />

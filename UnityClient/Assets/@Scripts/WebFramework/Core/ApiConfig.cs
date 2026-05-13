@@ -77,4 +77,22 @@ public static class ApiConfig
         // 아이템 사용 — POST /api/items/{0}/use ({0} = itemId)
         public const string Use = "/api/items/{0}/use";
     }
+
+    // 상점 엔드포인트 — N개 구매 지원 (백엔드 ShopBuyRequest.Quantity 필드)
+    public static class Shop
+    {
+        // 활성 상품 목록 — GET /api/shop
+        public const string List = "/api/shop";
+        // 상품 구매 — POST /api/shop/{0}/buy ({0} = productId)
+        public const string Buy  = "/api/shop/{0}/buy";
+    }
+
+#if DEBUG
+    // 디버그 전용 엔드포인트 — 개발/QA 빌드 한정. 릴리즈에서 컴파일 제외됨
+    public static class Debug
+    {
+        // 보상 즉시 지급 — POST /api/debug/grant
+        public const string Grant = "/api/debug/grant";
+    }
+#endif
 }
