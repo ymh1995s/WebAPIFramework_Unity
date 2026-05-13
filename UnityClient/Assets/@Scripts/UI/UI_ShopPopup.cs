@@ -11,7 +11,7 @@ public class UI_ShopPopup : UI_UGUI, IUI_Popup
     enum Texts   { Text }
 
     // 프리팹 자식 Button 이름
-    enum Buttons { ExitBtn, UseBtn, ItemAmendDebugBtn }
+    enum Buttons { ExitBtn, BuyBtn, ItemAmendDebugBtn }
 
     // 상품 ID 입력 필드 — 이름 비교로 탐색
     TMP_InputField _itemIdInput;
@@ -44,7 +44,7 @@ public class UI_ShopPopup : UI_UGUI, IUI_Popup
         if (_itemCountInput == null) Debug.LogWarning("[UI_ShopPopup] ItemCountInput 미발견");
 
         GetButton((int)Buttons.ExitBtn).onClick.AddListener(OnClickExit);
-        GetButton((int)Buttons.UseBtn).onClick.AddListener(OnClickUse);
+        GetButton((int)Buttons.BuyBtn).onClick.AddListener(OnClickUse);
 
 #if DEBUG
         // 디버그 빌드 — 아이템 충전 버튼 활성화

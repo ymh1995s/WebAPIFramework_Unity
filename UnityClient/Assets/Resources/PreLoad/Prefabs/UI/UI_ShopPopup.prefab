@@ -1348,7 +1348,7 @@ GameObject:
   - component: {fileID: 6372829601702538969}
   - component: {fileID: 9012835147900534704}
   m_Layer: 0
-  m_Name: UseBtn
+  m_Name: BuyBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2025,7 +2025,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC0AC\uC6A9"
+  m_text: "\uAD6C\uB9E4"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4c3a99bd15d452146b539e7e79eb391f, type: 2}
   m_sharedMaterial: {fileID: 5299449273717378878, guid: 4c3a99bd15d452146b539e7e79eb391f, type: 2}
