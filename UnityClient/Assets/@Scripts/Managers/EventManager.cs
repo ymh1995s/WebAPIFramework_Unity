@@ -27,9 +27,11 @@ public class EventManager : Singleton<EventManager>
             _events[eventType].Invoke();
     }
 
-    private void OnDestroy()
+    // private이 아닌 protected override로 선언해야 Singleton 베이스의 _instance = null 처리가 실행된다
+    protected override void OnDestroy()
     {
         Clear();
+        base.OnDestroy();
     }
 
     public void Clear()

@@ -92,6 +92,7 @@
     <Compile Include="Assets\Settings\GoogleSignIn\Impl\NativeFuture.cs" />
     <Compile Include="Assets\@Scripts\Scenes\LoadingScene.cs" />
     <Compile Include="Assets\@Scripts\Controllers\Player.cs" />
+    <Compile Include="Assets\@Scripts\Bootstrap\AppResumeFlow.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\ApiError.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\RankingApi.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_InquiryPopup.cs" />

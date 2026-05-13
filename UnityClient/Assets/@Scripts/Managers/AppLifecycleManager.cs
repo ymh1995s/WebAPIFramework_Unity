@@ -23,9 +23,11 @@ public class AppLifecycleManager : Singleton<AppLifecycleManager>
     }
 
     // 세션 만료 이벤트 구독 해제 — 오브젝트 파괴 시 반드시 정리
-    private void OnDestroy()
+    // private이 아닌 protected override로 선언해야 Singleton 베이스의 _instance = null 처리가 실행된다
+    protected override void OnDestroy()
     {
         OnSessionExpired -= HandleSessionExpired;
+        base.OnDestroy();
     }
 
     // OnApplicationPause: pause=true이면 백그라운드 진입, false이면 포그라운드 복귀

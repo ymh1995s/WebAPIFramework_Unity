@@ -18,7 +18,8 @@ public class MainScene : BaseScene
     void OnDestroy()
     {
         // 메인씬 이탈 — 외침 폴링 중단 및 HUD 숨김
-        ShoutManager.Instance.End();
+        // _applicationIsQuitting = true 상태에서 Instance가 null을 반환하므로 null-conditional 연산자로 가드한다
+        ShoutManager.Instance?.End();
     }
 
     // 뒤로가기 — 종료 확인 팝업 표시
