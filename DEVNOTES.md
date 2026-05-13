@@ -89,21 +89,6 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 - `ShowInterstitialAds`만 차단, `ShowRewardedAds`는 유지 (보상 광고는 사용자 자발적)
 - `RestorePurchases` 후 재트리거 확인 (기기 변경 복구)
 
-**작업량**: 반나절
-
----
-
-### 429 Rate Limit 재시도 확장 (1회 → 최대 3회)
-
-**현재**: `ApiClient.cs:148-156` 1회 재시도 후 또 429면 그대로 `onError`. 가이드 권장은 최대 3회 + 누적 초과 시 사용자 안내.
-**필요 작업**
-- `SendInternal` 시그니처에 `int retryCount = 0` 추가
-- 429 수신 시 `Retry-After` 또는 지수 백오프(5s → 10s → 20s) 후 `retryCount + 1`로 재호출
-- `retryCount >= 3` 이면 토스트 `"요청이 많습니다. 잠시 후 다시 시도해주세요."` + `onError`
-**발생 시나리오**: 버튼 연타 / 네트워크 회복 시 큐잉 요청 동시 발사 / IAP verify 502 재시도 루프 누적
-**근거**: `../CLIENT_GUIDE.md` 25번
-**작업량**: 1~2시간
-
 ---
 
 ### Local Notification — 트랜잭션 알림 한정
@@ -124,11 +109,14 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 ### 크래시 가시성 (외부 SDK)
 
 **목적**: 출시 후 본인 기기 외 환경에서 발생하는 크래시 추적. 시나리오: 1.0 빌드 배포 → 특정 기기에서 즉시 종료 → 별점 1점 + 매출 0 → 재현 불가 → 패치 못 함.
-**도입**: **Sentry Unity SDK** (무료 등급) — 5분 통합. `Application.logMessageReceived` 자동 후킹 + stack trace + 디바이스 정보 수집 + 웹 대시보드 자동 그룹핑.
-**대안**: GameAnalytics 크래시 모듈, Unity Cloud Diagnostics
+**도입 옵션**:
+- **Unity Engine Diagnostics** (권장) — Unity 6.2 빌트인. 별도 패키지/가입 불필요. Unity 계정으로 OK. 코드: `CrashReportManager.cs` 신규 + `BootstrapFlow` / `AuthManager` 각 1~2줄. **사전 조건: Project Settings → Services → Unity Cloud 프로젝트 링크 + Player Settings → Enable CrashReportingAPI 체크 필요 (현재 미연결)**
+- **Sentry Unity SDK** (무료 등급) — sentry.io 별도 계정 + DSN 발급 필요.
+- GameAnalytics 크래시 모듈
+
 **자체 백엔드 구축은 X**: `POST /api/diagnostics/crash` + Admin 페이지 노선은 인디 오버킬 (1.5일 작업 + 유지보수). 외부 SDK가 5분 + 무료.
 **우선순위**: H (출시 직후부터 가시성 필요)
-**작업량**: 5분 ~ 30분 (DSN 등록 + Android 권한 설정)
+**작업량**: 5분 ~ 30분
 
 ---
 
@@ -156,6 +144,7 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 | 일일 출석 | 완료 | 세션당 1회 `DailyLoginApi.Process` (static `_dailyLoginChecked`), 보상 시 안내 팝업 (`UI_MainGame.ProcessDailyLogin`) |
 | 세션 만료 처리 | 완료 | `AppLifecycleManager.NotifySessionExpired` → 토큰 클리어 후 LoginScene 이동 |
 | 서버 시간 동기화 | 완료 | `ServerTime` static class — HTTP 응답 `Date` 헤더로 오프셋 보정. `ApiClient.SendAsync`/`DoRefresh` 삽입, `UI_HUDShout`·`ShoutManager` 호출부 치환 |
+| 429 Rate Limit 재시도 | 완료 | `bool isRetry` → `int retryCount`. 지수 백오프 5s/10s/20s, 최대 3회, 초과 시 토스트 안내. Retry-After 헤더 우선. 401/429 파라미터 독립 분리 |
 
 ---
 

@@ -8,15 +8,18 @@ using UnityEngine.Networking;
 
 // HTTP REST 통신 래퍼 싱글톤
 // GET / POST / PUT / DELETE 메서드 제공
-// 401 자동 토큰 갱신, 503 점검 인터셉터, 429 자동 백오프 포함
+// 401 자동 토큰 갱신, 503 점검 인터셉터, 429 지수 백오프(최대 3회) 포함
 // Task<ApiResult<T>> 반환 오버로드 추가 — 콜백 없이 await로 결과 처리 가능
 public class ApiClient : Singleton<ApiClient>
 {
     // 요청 타임아웃 — CLIENT_GUIDE 27번 권장 (DB transient retry 최대 50초 고려)
     private const int TimeoutSeconds = 60;
 
-    // 429 Retry-After 헤더 없을 때 사용하는 기본 대기 시간(초)
+    // 429 Retry-After 헤더 없을 때 사용하는 기본 대기 시간(초) — 1회 백오프 기준값
     private const int DefaultRetryAfterSeconds = 5;
+
+    // 429 최대 재시도 횟수 — 이 횟수 초과 시 토스트 출력 후 onError 반환
+    private const int MaxRateLimitRetry = 3;
 
     // ------- 401 자동 갱신 동시성 제어 -------
 
@@ -40,7 +43,7 @@ public class ApiClient : Singleton<ApiClient>
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
         await SendAsync<TRes>("GET", ApiConfig.BaseUrl + endpoint, null,
-            isRetry: false, customParser: null, onSuccess, onError);
+            retryCount: 0, customParser: null, onSuccess, onError);
     }
 
     // 쿼리 파라미터 있는 GET 요청 — 딕셔너리를 URL에 붙여 조립
@@ -49,7 +52,7 @@ public class ApiClient : Singleton<ApiClient>
     {
         string url = BuildUrl(ApiConfig.BaseUrl + endpoint, query);
         await SendAsync<TRes>("GET", url, null,
-            isRetry: false, customParser: null, onSuccess, onError);
+            retryCount: 0, customParser: null, onSuccess, onError);
     }
 
     // ====================================================
@@ -62,7 +65,7 @@ public class ApiClient : Singleton<ApiClient>
     {
         string json = JsonUtility.ToJson(body);
         await SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, json,
-            isRetry: false, customParser: null, onSuccess, onError);
+            retryCount: 0, customParser: null, onSuccess, onError);
     }
 
     // 요청 본문이 없는 POST (예: DailyLogin)
@@ -70,7 +73,7 @@ public class ApiClient : Singleton<ApiClient>
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
         await SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, null,
-            isRetry: false, customParser: null, onSuccess, onError);
+            retryCount: 0, customParser: null, onSuccess, onError);
     }
 
     // ====================================================
@@ -83,7 +86,7 @@ public class ApiClient : Singleton<ApiClient>
     {
         string json = JsonUtility.ToJson(body);
         await SendAsync<TRes>("PUT", ApiConfig.BaseUrl + endpoint, json,
-            isRetry: false, customParser: null, onSuccess, onError);
+            retryCount: 0, customParser: null, onSuccess, onError);
     }
 
     // ====================================================
@@ -95,7 +98,7 @@ public class ApiClient : Singleton<ApiClient>
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
         await SendAsync<TRes>("DELETE", ApiConfig.BaseUrl + endpoint, null,
-            isRetry: false, customParser: null, onSuccess, onError);
+            retryCount: 0, customParser: null, onSuccess, onError);
     }
 
     // ====================================================
@@ -107,7 +110,7 @@ public class ApiClient : Singleton<ApiClient>
         Action<List<T>> onSuccess, Action<ApiError> onError = null)
     {
         await SendAsync<List<T>>("GET", ApiConfig.BaseUrl + endpoint, null,
-            isRetry: false,
+            retryCount: 0,
             customParser: body => JsonHelper.FromJsonList<T>(body),
             onSuccess, onError);
     }
@@ -119,14 +122,14 @@ public class ApiClient : Singleton<ApiClient>
     // 쿼리 파라미터 없는 GET — await로 결과 직접 수신
     public Task<ApiResult<TRes>> GetAsync<TRes>(string endpoint)
         => SendAsync<TRes>("GET", ApiConfig.BaseUrl + endpoint, null,
-            isRetry: false, customParser: null, onSuccess: null, onError: null);
+            retryCount: 0, customParser: null, onSuccess: null, onError: null);
 
     // 쿼리 파라미터 있는 GET — await로 결과 직접 수신
     public Task<ApiResult<TRes>> GetWithQueryAsync<TRes>(string endpoint, IDictionary<string, string> query)
     {
         string url = BuildUrl(ApiConfig.BaseUrl + endpoint, query);
         return SendAsync<TRes>("GET", url, null,
-            isRetry: false, customParser: null, onSuccess: null, onError: null);
+            retryCount: 0, customParser: null, onSuccess: null, onError: null);
     }
 
     // ====================================================
@@ -138,13 +141,13 @@ public class ApiClient : Singleton<ApiClient>
     {
         string json = JsonUtility.ToJson(body);
         return SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, json,
-            isRetry: false, customParser: null, onSuccess: null, onError: null);
+            retryCount: 0, customParser: null, onSuccess: null, onError: null);
     }
 
     // 요청 본문이 없는 POST — await로 결과 직접 수신
     public Task<ApiResult<TRes>> PostAsync<TRes>(string endpoint)
         => SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, null,
-            isRetry: false, customParser: null, onSuccess: null, onError: null);
+            retryCount: 0, customParser: null, onSuccess: null, onError: null);
 
     // ====================================================
     // PUT (Task 반환)
@@ -155,7 +158,7 @@ public class ApiClient : Singleton<ApiClient>
     {
         string json = JsonUtility.ToJson(body);
         return SendAsync<TRes>("PUT", ApiConfig.BaseUrl + endpoint, json,
-            isRetry: false, customParser: null, onSuccess: null, onError: null);
+            retryCount: 0, customParser: null, onSuccess: null, onError: null);
     }
 
     // ====================================================
@@ -165,7 +168,7 @@ public class ApiClient : Singleton<ApiClient>
     // DELETE — await로 결과 직접 수신
     public Task<ApiResult<TRes>> DeleteAsync<TRes>(string endpoint)
         => SendAsync<TRes>("DELETE", ApiConfig.BaseUrl + endpoint, null,
-            isRetry: false, customParser: null, onSuccess: null, onError: null);
+            retryCount: 0, customParser: null, onSuccess: null, onError: null);
 
     // ====================================================
     // GET 최상위 배열 응답 전용 (Task 반환)
@@ -174,7 +177,7 @@ public class ApiClient : Singleton<ApiClient>
     // 최상위 JSON 배열 GET — await로 결과 직접 수신
     public Task<ApiResult<List<T>>> GetListAsync<T>(string endpoint)
         => SendAsync<List<T>>("GET", ApiConfig.BaseUrl + endpoint, null,
-            isRetry: false,
+            retryCount: 0,
             customParser: body => JsonHelper.FromJsonList<T>(body),
             onSuccess: null, onError: null);
 
@@ -183,15 +186,17 @@ public class ApiClient : Singleton<ApiClient>
     // ====================================================
 
     // 콜백(onSuccess/onError)과 Task<ApiResult<T>> 반환을 하나의 메서드로 통합
-    // isRetry: 401 갱신 후 재시도 여부 — true이면 401 발생 시 즉시 실패 반환 (무한 루프 방지)
-    // customParser: null이면 JsonUtility.FromJson<TRes> 사용, 지정 시 커스텀 파서로 응답 파싱
+    // retryCount   : 429 Rate Limit 재시도 횟수 — 0이 최초 호출, MaxRateLimitRetry 초과 시 토스트 출력 후 종료
+    // isFrom401Retry: 401 갱신 후 재시도 여부 — true이면 401 재발 시 즉시 세션 만료 처리 (무한 루프 방지)
+    // customParser : null이면 JsonUtility.FromJson<TRes> 사용, 지정 시 커스텀 파서로 응답 파싱
     // onSuccess/onError가 모두 null이면 Task 반환 모드로 동작
     private async Task<ApiResult<TRes>> SendAsync<TRes>(
         string method, string url, string jsonBody,
-        bool isRetry,
+        int retryCount,
         Func<string, TRes> customParser,
         Action<TRes> onSuccess,
-        Action<ApiError> onError)
+        Action<ApiError> onError,
+        bool isFrom401Retry = false)
     {
         RestLogger.Info($"[REQ] {method} {url}");
 
@@ -225,15 +230,33 @@ public class ApiClient : Singleton<ApiClient>
             return ApiResult<TRes>.Fail(maintErr);
         }
 
-        // 429 Rate Limit — 1회 자동 백오프 재시도
-        if (statusCode == 429 && !isRetry)
+        // 429 Rate Limit — 지수 백오프로 최대 3회 재시도
+        // Retry-After 헤더가 있으면 그 값, 없으면 1회=5s / 2회=10s / 3회=20s
+        if (statusCode == 429)
         {
-            int waitSec = ParseRetryAfter(req);
-            RestLogger.Warn($"[429] Rate Limit — {waitSec}초 대기 후 재시도");
+            // 최대 재시도 횟수 초과 — 사용자에게 토스트 안내 후 onError 반환
+            if (retryCount >= MaxRateLimitRetry)
+            {
+                RestLogger.Error($"[429] Rate Limit 재시도 {MaxRateLimitRetry}회 초과 — 중단");
+                PopupService.ShowToast("요청이 많습니다. 잠시 후 다시 시도해주세요.");
+                var rateLimitErr = ApiError.FromHttp(429, body, isNetwork: false);
+                onError?.Invoke(rateLimitErr);
+                return ApiResult<TRes>.Fail(rateLimitErr);
+            }
+
+            // Retry-After 헤더 우선, 없으면 지수 백오프 (5s → 10s → 20s)
+            // ParseRetryAfterRaw: null 반환 시 헤더 없음으로 판단하여 백오프 사용
+            int backoffSec    = DefaultRetryAfterSeconds * (1 << retryCount); // 5 * 2^retryCount
+            int? headerSecRaw = ParseRetryAfterRaw(req);
+            int waitSec       = headerSecRaw.HasValue ? headerSecRaw.Value : backoffSec;
+
+            RestLogger.Warn($"[429] Rate Limit — {waitSec}초 대기 후 재시도 ({retryCount + 1}/{MaxRateLimitRetry})");
             await Task.Delay(waitSec * 1000);
-            // isRetry=true로 재시도 → 429 반복 시 아래 4xx/5xx 분기로 처리됨
+
+            // retryCount + 1 로 재귀 호출 — 다음 단계 재시도 수행
+            // isFrom401Retry는 그대로 전달 — 429 재시도 중에도 401 갱신 맥락 유지
             return await SendAsync<TRes>(method, url, jsonBody,
-                isRetry: true, customParser, onSuccess, onError);
+                retryCount + 1, customParser, onSuccess, onError, isFrom401Retry);
         }
 
         // 403 — 밴 계정은 토큰 갱신 대상 아님. ErrorCode 정규화 후 즉시 onError
@@ -252,6 +275,7 @@ public class ApiClient : Singleton<ApiClient>
         }
 
         // 401 미인증 — 밴 계정이면 갱신 없이 즉시 에러 반환, 그 외는 토큰 갱신 후 재시도
+        // isFrom401Retry=true(갱신 후 재시도)가 또 401을 받은 경우 → Handle401에서 무한 루프 차단
         if (statusCode == 401)
         {
             var err401 = ApiError.FromHttp(statusCode, body, isNetwork: false);
@@ -261,7 +285,8 @@ public class ApiClient : Singleton<ApiClient>
                 onError?.Invoke(err401);
                 return ApiResult<TRes>.Fail(err401);
             }
-            return await Handle401<TRes>(method, url, jsonBody, isRetry, customParser, onSuccess, onError);
+            // isFrom401Retry를 그대로 전달 — 갱신 후 재시도인지 여부를 Handle401이 판단
+            return await Handle401<TRes>(method, url, jsonBody, isFrom401Retry, customParser, onSuccess, onError);
         }
 
         // 200~299 성공 범위
@@ -301,6 +326,8 @@ public class ApiClient : Singleton<ApiClient>
     // ====================================================
 
     // refresh 요청 자체가 401을 받은 경우 무한 루프 방지 — 즉시 onError + 세션 만료 이벤트
+    // isRetry: 갱신 후 재시도 요청이 또 401을 받았는지 여부 — true이면 무한 루프로 판단하여 즉시 종료
+    //          429의 retryCount와는 독립적으로 동작 (토큰 갱신 재시도 횟수 전용)
     private async Task<ApiResult<TRes>> Handle401<TRes>(
         string method, string url, string jsonBody,
         bool isRetry,
@@ -308,7 +335,7 @@ public class ApiClient : Singleton<ApiClient>
         Action<TRes> onSuccess,
         Action<ApiError> onError)
     {
-        // 재시도 요청이 또 401을 받았거나, refresh 흐름 중에 401이 발생한 경우
+        // 갱신 후 재시도가 또 401을 받았거나, refresh 흐름 중에 401이 발생한 경우 — 무한 루프 차단
         if (isRetry || _inRefreshFlow)
         {
             RestLogger.Error("[401] 토큰 갱신 실패 — 세션 만료");
@@ -350,10 +377,12 @@ public class ApiClient : Singleton<ApiClient>
             return ApiResult<TRes>.Fail(failErr);
         }
 
-        // 새 토큰으로 원 요청 1회 재시도 (isRetry=true — 재시도 중 401이면 즉시 종료)
+        // 새 토큰으로 원 요청 1회 재시도
+        // retryCount=0  : 401 재시도는 429 백오프 카운터와 독립 — 새 사이클로 리셋
+        // isFrom401Retry=true : 재시도 중 401이 다시 오면 SendAsync → Handle401(isRetry=true)로 즉시 종료
         // customParser를 그대로 전달하여 재시도 시에도 동일한 파싱 방식 유지
         return await SendAsync<TRes>(method, url, jsonBody,
-            isRetry: true, customParser, onSuccess, onError);
+            retryCount: 0, customParser, onSuccess, onError, isFrom401Retry: true);
     }
 
     // 실제 RefreshToken 갱신 HTTP 요청 수행 — ApiClient.Post를 우회하여 인터셉터 중복 방지
@@ -478,13 +507,14 @@ public class ApiClient : Singleton<ApiClient>
         return sb.ToString();
     }
 
-    // Retry-After 헤더를 파싱하여 대기 초 반환 — 없거나 파싱 실패 시 기본값 반환
-    private int ParseRetryAfter(UnityWebRequest req)
+    // Retry-After 헤더를 파싱하여 대기 초 반환 — 헤더 없거나 파싱 실패 시 null 반환
+    // null과 기본값(5)을 구분할 수 없는 int 반환 대신 nullable로 헤더 존재 여부를 명확히 전달
+    private int? ParseRetryAfterRaw(UnityWebRequest req)
     {
         string header = req.GetResponseHeader("Retry-After");
         if (!string.IsNullOrEmpty(header) && int.TryParse(header, out int seconds))
             return seconds;
 
-        return DefaultRetryAfterSeconds;
+        return null;
     }
 }
