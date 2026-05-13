@@ -112,7 +112,7 @@ public class UI_HUDShout : UI_Base
             elapsed += TICK;
 
             // 현재 메시지 만료 여부 — 만료됐거나 회전 타이밍이 됐으면 처리
-            bool currentExpired = DateTime.UtcNow >= ParseUtcSafe(_messages[_currentIdx].expiresAt);
+            bool currentExpired = ServerTime.UtcNow >= ParseUtcSafe(_messages[_currentIdx].expiresAt);
             bool shouldRotate   = elapsed >= _rotateSeconds;
 
             if (!currentExpired && !shouldRotate)
@@ -155,7 +155,7 @@ public class UI_HUDShout : UI_Base
         for (int i = 0; i < _messages.Count; i++)
         {
             // 만료 안 된 메시지 발견
-            if (DateTime.UtcNow < ParseUtcSafe(_messages[idx].expiresAt))
+            if (ServerTime.UtcNow < ParseUtcSafe(_messages[idx].expiresAt))
             {
                 foundIdx = idx;
                 return true;

@@ -137,6 +137,7 @@
     <Compile Include="Assets\@Scripts\UI\UI_Toast.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\Impl\GoogleSignInImpl.cs" />
     <Compile Include="Assets\@Scripts\Managers\EventManager.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Core\ServerTime.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInConfiguration.cs" />
     <Compile Include="Assets\@Scripts\Managers\AdsManager.cs" />
     <Compile Include="Assets\@Scripts\Data\TextData.cs" />

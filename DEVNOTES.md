@@ -106,16 +106,6 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 
 ---
 
-### Release 빌드 로그 차단
-
-**현재**: `IAPManager` / `AdsManager` / `BootstrapFlow` 등 게임 로직이 `Debug.Log` 직접 호출. `RestLogger`는 WebFramework 전용이라 미적용. PlayerId·토큰·API 응답이 `adb logcat`에 그대로 노출.
-**필요 작업**
-- `[Conditional("UNITY_EDITOR")]` `[Conditional("DEVELOPMENT_BUILD")]` 래퍼 클래스 `Logger.Log` 신설 — 컴파일 단계에서 호출 자체 제거(제로 코스트)
-- 게임 로직의 `Debug.Log` → `Logger.Log` 일괄 치환
-**작업량**: 클래스 작성 30분 + 치환 1시간
-
----
-
 ### Local Notification — 트랜잭션 알림 한정
 
 **목적**: 출석 리셋·우편 만료 임박·에너지 충전 완료 등 게임 내부 이벤트 알림. 외부 푸시 서버(FCM) 없이 기기 자체 예약 → 재방문율 ↑.
@@ -128,19 +118,6 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 **범위 제한**: **광고성("신규 이벤트!", "할인 중!")은 보내지 말 것**. 보내려면 정보통신망법 §50 사전 동의 + §50의5 야간(21~08) 동의 + 백엔드 동의 컬럼 추가 필요.
 **우선순위**: M (가성비 큼)
 **작업량**: 1일
-
----
-
-### 서버 시간 동기화
-
-**목적**: 기기 시간 변조 사기 방어 (출석·쿨타임·이벤트 만료 우회 차단).
-**필요 작업**
-- `WebFramework/Core/ServerTime.cs` 신설 — `static DateTime Now => DateTime.UtcNow + Offset`
-- `ApiClient.SendInternal` 응답 처리부에 `ServerTime.UpdateFromHeader(req.GetResponseHeader("Date"))` 한 줄 추가
-- 시간 의존 클라 로직(출석 체크·우편 만료 표시 등)을 `ServerTime.Now`로 일괄 치환
-**백엔드 작업**: 0 (ASP.NET Core가 모든 응답에 `Date` 헤더 자동 추가). 정밀 모드 원하면 `GET /api/server/time` 1개 신설 (선택)
-**우선순위**: M
-**작업량**: 1~2시간
 
 ---
 
@@ -178,6 +155,7 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 | 구글 계정 충돌 해소 | 완료 | 로그인 시 409 `GOOGLE_ACCOUNT_CONFLICT` → 전환 확인 팝업 → `ResolveGoogleConflict` (`UI_LoginScene`) |
 | 일일 출석 | 완료 | 세션당 1회 `DailyLoginApi.Process` (static `_dailyLoginChecked`), 보상 시 안내 팝업 (`UI_MainGame.ProcessDailyLogin`) |
 | 세션 만료 처리 | 완료 | `AppLifecycleManager.NotifySessionExpired` → 토큰 클리어 후 LoginScene 이동 |
+| 서버 시간 동기화 | 완료 | `ServerTime` static class — HTTP 응답 `Date` 헤더로 오프셋 보정. `ApiClient.SendAsync`/`DoRefresh` 삽입, `UI_HUDShout`·`ShoutManager` 호출부 치환 |
 
 ---
 

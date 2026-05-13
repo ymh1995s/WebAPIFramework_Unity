@@ -213,6 +213,9 @@ public class ApiClient : Singleton<ApiClient>
 
         RestLogger.Info($"[{statusCode}] {method} {url} ← {body}");
 
+        // 응답 Date 헤더로 서버 시간 오프셋 갱신 — 네트워크 오류 분기 통과 후 진입하므로 헤더 존재 보장
+        ServerTime.UpdateFromHeader(req.GetResponseHeader("Date"));
+
         // ---- 상태 코드별 분기 ----
 
         // 503 점검 인터셉터
@@ -376,6 +379,9 @@ public class ApiClient : Singleton<ApiClient>
         string respBody = req.downloadHandler?.text ?? string.Empty;
 
         RestLogger.Info($"[{statusCode}] POST {ApiConfig.Auth.Refresh} ← {respBody}");
+
+        // Refresh 응답 Date 헤더로 서버 시간 오프셋 갱신 — SendAsync를 우회하므로 직접 호출
+        ServerTime.UpdateFromHeader(req.GetResponseHeader("Date"));
 
         if (statusCode >= 200 && statusCode < 300 && !string.IsNullOrEmpty(respBody))
         {

@@ -176,7 +176,7 @@ public class ShoutManager : Singleton<ShoutManager>
     {
         // 만료되지 않고 아직 보지 않은 외침만 필터링
         var validShouts = list
-            .Where(s => DateTime.UtcNow < ParseUtcSafe(s.expiresAt))
+            .Where(s => ServerTime.UtcNow < ParseUtcSafe(s.expiresAt))
             .Where(s => !_seenIds.Contains(s.id))   // 이미 본 외침 제외
             .ToList();
 
