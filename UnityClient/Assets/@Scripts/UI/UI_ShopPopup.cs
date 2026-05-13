@@ -263,7 +263,7 @@ public class UI_ShopPopup : UI_UGUI, IUI_Popup
         {
             exp       = 0,
             items     = new[] { new DebugGrantItem { itemId = itemId, quantity = qty } },
-            sourceKey = "ItemAmendDebugBtn"
+            sourceKey = null  // 서버가 UUID 자동 생성 — 고정 키는 중복 차단됨
         };
 
         var result = await DebugApi.GrantAsync(req);
