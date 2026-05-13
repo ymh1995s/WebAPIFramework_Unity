@@ -168,6 +168,10 @@ public static class BootstrapFlow
     // [3] 자동 로그인 — 저장된 RefreshToken으로 Access Token 재발급 후 MainScene 진입
     static async Task<bool> TryAutoLoginAsync()
     {
+        // BootstrapScene 외에서 호출되면 씬 전환 없이 종료 (AppResumeFlow가 별도 처리)
+        if (SceneManager.Instance.CurrentSceneType != Define.EScene.BootstrapScene)
+            return false;
+
         // RefreshToken이 없으면 자동 로그인 불가
         if (!AuthManager.Instance.IsLoggedIn)
             return false;

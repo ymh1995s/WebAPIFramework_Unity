@@ -12,8 +12,8 @@ public class AppLifecycleManager : Singleton<AppLifecycleManager>
     // OnApplicationPause(false)는 앱 시작 직후에도 한 번 호출되므로 이를 걸러낸다
     private bool _firstResumeDone = false;
 
-    // BootstrapFlow 재진입 방지 플래그 — 복귀 처리 중 중복 실행을 막는다
-    private bool _resuming = false;
+    // 백그라운드 진입 시각(UTC) — 복귀 시 경과 시간 계산에 사용
+    private DateTime _pausedAtUtc;
 
     // 세션 만료 이벤트 구독 등록
     // Singleton<T>에 virtual Awake()가 없으므로 private void Awake()로 선언한다
@@ -28,11 +28,15 @@ public class AppLifecycleManager : Singleton<AppLifecycleManager>
         OnSessionExpired -= HandleSessionExpired;
     }
 
-    // OnApplicationPause: pause=false이면 포그라운드 복귀, true이면 백그라운드 진입
+    // OnApplicationPause: pause=true이면 백그라운드 진입, false이면 포그라운드 복귀
     private void OnApplicationPause(bool pause)
     {
-        // 백그라운드 진입은 처리하지 않는다
-        if (pause) return;
+        if (pause)
+        {
+            // 백그라운드 진입 시각을 기록한다
+            _pausedAtUtc = DateTime.UtcNow;
+            return;
+        }
 
         // 앱 최초 기동 직후의 Resume 호출은 무시한다
         if (!_firstResumeDone)
@@ -41,24 +45,21 @@ public class AppLifecycleManager : Singleton<AppLifecycleManager>
             return;
         }
 
-        // 로그인 상태가 아니면 부팅 흐름을 재실행하지 않는다
+        // 로그인 상태가 아니면 복귀 흐름을 실행하지 않는다
         if (!AuthManager.Instance.IsLoggedIn) return;
 
-        // 이미 복귀 처리 중이면 중복 실행하지 않는다
-        if (_resuming) return;
+        // 백그라운드 경과 시간이 임계값 미만이면 갱신을 생략한다
+        double elapsedSec = (DateTime.UtcNow - _pausedAtUtc).TotalSeconds;
+        if (elapsedSec < GameConfig.ResumeThresholdSec)
+        {
+            Debug.Log($"[AppLifecycleManager] 백그라운드 경과 {elapsedSec:F0}초 — 임계값({GameConfig.ResumeThresholdSec}초) 미만, 갱신 생략");
+            return;
+        }
 
-        // 백그라운드에서 포그라운드로 복귀한 경우 부팅 흐름을 재실행한다
-        // (토큰 갱신, 서버 점검 재확인 등 부팅 시 처리와 동일한 흐름 적용)
-        Debug.Log("[AppLifecycleManager] 앱 포그라운드 복귀 — BootstrapFlow 재실행");
-        _resuming = true;
-        try
-        {
-            BootstrapFlow.Run();
-        }
-        finally
-        {
-            _resuming = false;
-        }
+        // 임계값 이상 백그라운드에 있었으면 복귀 흐름(토큰 갱신)을 실행한다
+        // 재진입 가드는 AppResumeFlow 내부에서 관리한다
+        Debug.Log($"[AppLifecycleManager] 앱 포그라운드 복귀 — 경과 {elapsedSec:F0}초, AppResumeFlow 실행");
+        AppResumeFlow.Run();
     }
 
     // 세션 만료 이벤트 핸들러 — 인증 정보를 초기화하고 로그인 씬으로 이동하여 재인증을 유도한다

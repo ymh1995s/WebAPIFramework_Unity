@@ -10,6 +10,10 @@ public class GameConfig : ScriptableObject
     public const string ANDROID_STORE_URL = "";
     public const string IOS_STORE_URL     = "";
 
+    // 백그라운드 복귀 시 토큰 갱신을 수행할 최소 경과 시간(초)
+    // 이 임계값 미만으로 백그라운드에 있었으면 갱신을 생략한다
+    public const int ResumeThresholdSec = 60;
+
 
     [Header("Game Settings")]
     
