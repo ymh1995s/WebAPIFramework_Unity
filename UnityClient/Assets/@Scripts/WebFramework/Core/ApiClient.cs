@@ -21,6 +21,10 @@ public class ApiClient : Singleton<ApiClient>
     // 429 최대 재시도 횟수 — 이 횟수 초과 시 토스트 출력 후 onError 반환
     private const int MaxRateLimitRetry = 3;
 
+    // 토큰 제공자 — AuthManager가 ITokenProvider를 구현하고 Awake에서 자가 등록
+    // null-safe 호출(?.)로 처리하므로 미등록 상태에서도 안전하게 동작
+    public ITokenProvider TokenProvider { get; set; }
+
     // ------- 401 자동 갱신 동시성 제어 -------
 
     // 여러 요청이 동시에 401을 받아도 토큰 갱신을 1회만 수행하도록 직렬화
@@ -380,7 +384,7 @@ public class ApiClient : Singleton<ApiClient>
         if (isRetry || _inRefreshFlow)
         {
             RestLogger.Error("[401] 토큰 갱신 실패 — 세션 만료");
-            AuthManager.Instance.Clear();
+            TokenProvider?.Clear();
             EventManager.Instance.TriggerEvent(Define.EEventType.SessionExpired);
             var expiredErr = ApiError.FromHttp(401, null, isNetwork: false);
             onError?.Invoke(expiredErr);
@@ -411,7 +415,7 @@ public class ApiClient : Singleton<ApiClient>
         if (!refreshSucceeded)
         {
             // 갱신 실패 — 세션 만료 처리
-            AuthManager.Instance.Clear();
+            TokenProvider?.Clear();
             EventManager.Instance.TriggerEvent(Define.EEventType.SessionExpired);
             var failErr = ApiError.FromHttp(401, null, isNetwork: false);
             onError?.Invoke(failErr);
@@ -429,7 +433,7 @@ public class ApiClient : Singleton<ApiClient>
     // 실제 RefreshToken 갱신 HTTP 요청 수행 — ApiClient.Post를 우회하여 인터셉터 중복 방지
     private async Task<bool> DoRefresh()
     {
-        string refreshToken = AuthManager.Instance.RefreshToken;
+        string refreshToken = TokenProvider?.RefreshToken;
         if (string.IsNullOrEmpty(refreshToken))
         {
             RestLogger.Warn("[Refresh] RefreshToken 없음 — 갱신 생략");
@@ -458,7 +462,7 @@ public class ApiClient : Singleton<ApiClient>
             try
             {
                 var tokenResp = JsonUtility.FromJson<TokenResponse>(respBody);
-                AuthManager.Instance.SaveToken(tokenResp);
+                TokenProvider?.SaveToken(tokenResp);
                 RestLogger.Info("[Refresh] 토큰 갱신 성공");
                 return true;
             }
@@ -511,7 +515,7 @@ public class ApiClient : Singleton<ApiClient>
         req.timeout         = TimeoutSeconds;
 
         // JWT 자동 첨부 — AccessToken이 있으면 Authorization 헤더 추가
-        string token = AuthManager.Instance.AccessToken;
+        string token = TokenProvider?.AccessToken;
         if (!string.IsNullOrEmpty(token))
             req.SetRequestHeader("Authorization", $"Bearer {token}");
 

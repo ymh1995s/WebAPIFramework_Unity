@@ -13,7 +13,7 @@
 |---|---|
 | 완료 청크 | 9 / 9 |
 | Critical | **3건** (2건 해결, 1건 잔존) |
-| High | **11건** (4건 해결) |
+| High | **11건** (5건 해결) |
 | Medium | **19건** (2건 해결) |
 | Low / Info | **14건** |
 
@@ -277,7 +277,7 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 | H1 | A3 | `Managers/CrashReportManager.cs:37,38,77,78` | Managers→WebFramework/Auth 역방향 의존 | `AuthManager.OnLoginSuccess/OnLogout`을 `EEventType.LoginSuccess/Logout`으로 EventManager 통합 |
 | H2 | A3 | `Managers/AppLifecycleManager.cs:51,72` | Managers→WebFramework/Auth 역방향 의존 | H1과 동일 처리 + `IsLoggedIn` 추상 인터페이스 검토 |
 | H3 | A3 | `Managers/ShoutManager.cs:45,160,179` | Managers→Api/Auth/Core 역방향 다중 결합 | Managers 유지 + PlayerId EventManager 캐싱 + ServerTime 공용 정적 예외 CLAUDE.md 명시 |
-| H4 | A4·A6 | `Core/ApiClient.cs:241,342,373,391,420,473` | Core↔Auth·UI 양방향 결합 6건 | `ITokenProvider` 인터페이스 도입 + PopupService 호출 → EventManager 발행 전환 |
+| ~~H4~~ ✅ | A4·A6 | `Core/ApiClient.cs:241,342,373,391,420,473` | ~~Core↔Auth·UI 양방향 결합 6건~~ | **해결**: `ITokenProvider` 인터페이스 신규(`Core/`) + `AuthManager : ITokenProvider` 구현 + Awake 자가 등록. `ApiClient` 내 `AuthManager` 직접 참조 5곳 → `TokenProvider?.` 치환. QA 승인. |
 | ~~H5~~ ✅ | Q4-01 | `ApiClient.cs:42,50,63,72,84,97,109` | ~~async void 7개 — 예외 삼킴~~ | **해결**: `async Task` 전환 + 내부 try-catch → `HandleCallbackException` 헬퍼로 중복 제거. QA 승인. |
 | H6 ⏸ | Q4-02 | `ApiClient.cs:27,30,35` | static 3개 Domain Reload 미대응 — 토큰 갱신 데드락 | **보류** — 에디터 전용 현상(빌드·실유저 영향 0%). Domain Reload 기능을 끈 환경에서만 발현. 릴리즈 직전 필요 시 재검토. |
 | ~~H7~~ ✅ | Q9-01 | `UI_WithdrawPopup.cs:54-67` (→ UI_MainGame.DoWithdraw) | ~~이중 클릭 방지 누락~~ **해결** — `UI_Base.RunWithBusyAsync`(Layer A 글로벌 마스크) 도입, 시각 피드백까지 격상 |

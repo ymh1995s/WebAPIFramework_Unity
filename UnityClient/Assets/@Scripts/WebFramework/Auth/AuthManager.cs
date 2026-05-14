@@ -1,8 +1,8 @@
 using System;
 using UnityEngine;
 
-// 인증 토큰 및 세션 관리 싱글톤
-public class AuthManager : Singleton<AuthManager>
+// 인증 토큰 및 세션 관리 싱글톤 — ITokenProvider를 구현하여 ApiClient에 자가 등록
+public class AuthManager : Singleton<AuthManager>, ITokenProvider
 {
     // PlayerPrefs 키 — 단일 파일에서만 사용하므로 클래스 내부 const로 정의
     private const string KEY_REFRESH_TOKEN    = "RefreshToken";
@@ -34,6 +34,12 @@ public class AuthManager : Singleton<AuthManager>
 
     // 로그인 상태 여부 - RefreshToken 존재로 판단
     public bool IsLoggedIn => !string.IsNullOrEmpty(RefreshToken);
+
+    // 초기화 시 ApiClient에 자신을 ITokenProvider로 등록 — 결합을 인터페이스로 역전
+    protected virtual void Awake()
+    {
+        ApiClient.Instance.TokenProvider = this;
+    }
 
     // 앱 시작 시 PlayerPrefs에서 저장된 토큰 및 상태 복원
     public void LoadSavedToken()
