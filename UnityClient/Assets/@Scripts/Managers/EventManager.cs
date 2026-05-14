@@ -24,7 +24,8 @@ public class EventManager : Singleton<EventManager>
     public void TriggerEvent(EEventType eventType)
     {
         if (_events.ContainsKey(eventType))
-            _events[eventType].Invoke();
+            // 구독자가 모두 RemoveEvent로 해제된 경우 delegate 값이 null이 될 수 있으므로 null-conditional 호출
+            _events[eventType]?.Invoke();
     }
 
     // private이 아닌 protected override로 선언해야 Singleton 베이스의 _instance = null 처리가 실행된다

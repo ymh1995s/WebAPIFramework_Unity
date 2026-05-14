@@ -14,7 +14,7 @@
 | 완료 청크 | 9 / 9 |
 | Critical | **3건** (2건 해결, 1건 잔존) |
 | High | **11건** |
-| Medium | **19건** |
+| Medium | **19건** (1건 해결) |
 | Low / Info | **14건** |
 
 ### Top 5 즉시 조치
@@ -295,7 +295,7 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 |---|---|---|---|---|
 | M1 | A1 | `@Scripts/Bootstrap/` | 규정 외 폴더 — CLAUDE.md 명세 위반 | CLAUDE.md 폴더 목록에 `Bootstrap` 추가 (권고) |
 | M2 | A1, A7 | `Managers/SceneManager.cs:5`, `LoadingScene.cs:39` | `UnityEngine.SceneManagement.SceneManager`와 식별자 충돌 + 우회 주석 박제 | `AppSceneManager`로 개명 |
-| M3 | Q1-01, S9-M3 | `EventManager.cs:27` | TriggerEvent delegate null → NRE | `_events[eventType]?.Invoke()` |
+| ~~M3~~ ✅ | Q1-01, S9-M3 | `EventManager.cs:27` | TriggerEvent delegate null → NRE | ~~`_events[eventType]?.Invoke()`~~ **해결** |
 | M4 | Q1-05 | `DataManager.cs:53` | LoadJson textAsset null 미체크 | null 체크 + LogError 추가 |
 | M5 | Q2-01~03 | `BootstrapFlow.cs:9,12` / `AppResumeFlow.cs:10` / `StageSession.cs` | static 필드 Domain Reload 미대응 (3개) | `[RuntimeInitializeOnLoadMethod]` 리셋 추가 |
 | M6 | Q4-03 | `ApiClient.cs` 전체 | CancellationToken 미구현 — 씬 전환 MissingRef | `destroyCancellationToken` 또는 호출자 단위 CTS |
