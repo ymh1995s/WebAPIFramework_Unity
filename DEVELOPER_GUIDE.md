@@ -33,11 +33,40 @@ private async void OnClickStart()
 
 ---
 
+## 환경별 서버 설정 (NetworkConfig)
+
+환경에 따라 달라지는 값(서버 URL 등)은 `Config/NetworkConfig.cs` ScriptableObject에서 관리한다.
+
+| 심볼 / 빌드 조건 | 사용 URL 필드 |
+|---|---|
+| `UNITY_EDITOR` 또는 `DEVELOPMENT_BUILD` | `DevBaseUrl` |
+| `STAGING` Define Symbol | `StagingBaseUrl` |
+| 릴리즈 빌드 | `ProductionBaseUrl` |
+
+**환경 전환 방법**: `Build Settings > Player Settings > Scripting Define Symbols`에 `STAGING` 추가/제거.
+
+**접근 방법**: `DataManager.Instance.NetworkConfig.BaseUrl` — `ApiClient` 내부에서 자동 참조. 호출부에서 URL을 직접 다루지 말 것.
+
+**에셋 최초 생성 (클론 후 1회만)**:
+1. Unity Editor Project 창에서 `Assets/Resources/PreLoad/Config/` 폴더 우클릭
+2. `Create > Config > NetworkConfig` 선택 → `NetworkConfig.asset` 파일 생성됨
+3. 생성된 파일 선택 → Inspector에서 필드 입력:
+   - **Dev Base Url**: `http://localhost:5058` (로컬 개발 서버)
+   - **Staging Base Url**: 스테이징 서버 URL (추후)
+   - **Production Base Url**: 프로덕션 서버 URL (추후)
+4. `NetworkConfig.asset`은 git에 커밋해도 됨 (URL은 비밀값 아님)
+
+> **[CreateAssetMenu]란?** `NetworkConfig.cs`에 붙은 어트리뷰트로, Unity Editor 우클릭 메뉴에 항목을 등록해 주는 것. ScriptableObject의 인스턴스(`.asset` 파일)를 Editor UI에서 클릭 한 번으로 만들게 해주는 편의 기능.
+
+> **원칙 요약**: 서버 URL은 `NetworkConfig`에, 엔드포인트 경로(`/api/xxx`)는 `ApiConfig.cs`에, 런타임 키는 `Define.cs/PlayerPrefsKey`에.
+
+---
+
 ## 신규 도메인 추가 절차 (예: `Friend`)
 
 작업 위치 3 + 옵션 1.
 
-### 1. `WebFramework/Core/ApiConfig.cs` — 엔드포인트 경로 상수 블록
+### 1. `WebFramework/Core/ApiConfig.cs` — 엔드포인트 경로 상수 블록 (경로만, URL 없음)
 
 ```csharp
 public static class Friend

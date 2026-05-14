@@ -199,6 +199,24 @@ sentry.io 무료 계정 + DSN 발급 후 `CrashReportManager` 코드를 Sentry �
 
 ## [설계 결정]
 
+### 환경별 설정값 — NetworkConfig ScriptableObject 단일화 (2026-05-15)
+
+`ApiConfig.cs`에 하드코딩된 `http://localhost:5058`을 제거하고 `Config/NetworkConfig` ScriptableObject로 이전.
+
+**원칙**: 빌드 환경에 따라 달라지는 설정값(서버 URL, SDK 키, 피처 플래그 등)은 모두 `Config/` ScriptableObject에 모은다. 코드 리터럴·`Define.cs`·`ApiConfig.cs`에 직접 박지 않는다.
+
+**역할 분리**:
+- `NetworkConfig` — 서버 호스트 URL (Dev/Staging/Prod). `#if UNITY_EDITOR||DEVELOPMENT_BUILD` → Dev, `#elif STAGING` → Staging, `else` → Prod
+- `ApiConfig.cs` — 엔드포인트 경로 상수만 (`/api/auth/guest` 등). URL 없음
+- `Define.cs/PlayerPrefsKey` — 런타임 PlayerPrefs 키 (환경 무관 상수)
+- `AdsConfig`, `IAPConfig`, `GameConfig`, `LocalizationConfig` — 각 도메인 환경 설정
+
+**보안**: 릴리즈 빌드에서 ProductionBaseUrl이 `http://`로 시작하면 `Debug.LogError` 출력.
+
+**근거 커밋**: `9b767e0` (H11) → `bce5396` (H4) → 이 작업 (H9)
+
+---
+
 ### WebFramework Api 레이어 — async/await + ApiResult<T> + static class (2026-05-12)
 
 기존 콜백 패턴(`Action<T> onSuccess, Action<ApiError> onError`) + `Singleton<MonoBehaviour>` 상속을 폐기. 호출부 가독성 + 신규 도메인 추가 비용 + 안티패턴 청산을 동시 달성.

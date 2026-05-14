@@ -92,11 +92,29 @@
 | `ShoutManager` | HUD 외침 표시 | 프리팹 키 컨벤션 표본: `HUD_PREFAB_NAME` (클래스 내부 `private const string`) |
 | `GameManager` | 게임 전체 부트스트랩 컨텍스트 | 매니저 등록 위치 |
 
+### Config/ 카탈로그 — 환경설정값은 반드시 여기
+
+> **원칙**: 빌드 환경별로 달라지는 설정값(URL, SDK 키, 피처 플래그 등)은 모두 `Config/` ScriptableObject에 넣는다. `Define.cs`·`ApiConfig.cs`·코드 리터럴에 직접 박지 말 것.
+
+| 파일 | 내용 | 추가 시 |
+|---|---|---|
+| `NetworkConfig.cs` | **환경별 API 서버 URL** — Dev/Staging/Prod 3개 필드, `BaseUrl` 게터(`#if UNITY_EDITOR\|DEVELOPMENT_BUILD` → Dev, `#elif STAGING` → Staging, `else` → Prod). `ApiClient`가 `DataManager.Instance.NetworkConfig.BaseUrl`로 조회 | 새 서버 URL·엔드포인트 호스트 변경 시 여기 필드 추가 |
+| `AdsConfig.cs` | LevelPlay AppKey, 광고 UnitId (Dev/Prod 분리) | 광고 SDK 키 변경 시 |
+| `GameConfig.cs` | 게임 수치 설정 (에너지 최대값 등) | 게임 밸런스 수치 |
+| `IAPConfig.cs` | IAP 상품 ID | 상품 추가 시 |
+| `LocalizationConfig.cs` | 언어별 폰트·로케일 매핑 | 언어 추가 시 |
+
+**에셋 저장 경로**: `Assets/Resources/PreLoad/Config/{ConfigName}.asset` — `ResourceManager.LoadAll("PreLoad")`가 자동 캐시, `DataManager.LoadData()`에서 `LoadScriptableObject<T>()` 로 접근.
+
+**ApiConfig.cs와의 역할 분리**:
+- `ApiConfig.cs` → 엔드포인트 경로 상수만 (`/api/auth/guest` 등). URL 없음.
+- `NetworkConfig` → 서버 호스트 URL만. 경로 없음.
+
 ### Utils/ 카탈로그 — 헬퍼 추가 전에 이걸 먼저 봐라
 
 | 파일 | 내용 | 추가 시 |
 |---|---|---|
-| `Define.cs` | 모든 전역 enum (`EScene`, `EEventType`, `ESound`, `ELanguage`, `EAnimation`, `ECatState`, `EBusyScope`) + `PlayerPrefsKey` 정적 상수 | 새 enum/PlayerPrefs 키는 여기. **프리팹 키는 여기 두지 말 것 — 사용처 클래스 내부 const가 컨벤션** |
+| `Define.cs` | 모든 전역 enum (`EScene`, `EEventType`, `ESound`, `ELanguage`, `EAnimation`, `ECatState`, `EBusyScope`) + `PlayerPrefsKey` 런타임 키 상수 | 새 enum / 런타임 PlayerPrefs 키는 여기. **환경설정값(URL·SDK 키)은 여기 두지 말 것 — `NetworkConfig` 등 Config SO가 정식** |
 | `Extension.cs` | `GameObject.GetOrAddComponent<T>()`, `Transform.DestroyChildren()`, `TMP_Text.SetLocalizedText(templateID)` | 새 확장 메서드는 여기. `static class Extension`에 메서드만 추가 |
 | `Utils.cs` | 정적 헬퍼: `GetOrAddComponent`, `FindChildGameObject`, `FindChildComponent`, `GetRootTransform` | 새 정적 헬퍼는 여기 |
 | `PriorityQueue.cs` | 우선순위 큐 자료구조 | 자료구조 신설 시 여기 |

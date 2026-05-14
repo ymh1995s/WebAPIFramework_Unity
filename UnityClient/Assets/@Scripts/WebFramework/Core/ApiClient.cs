@@ -48,7 +48,7 @@ public class ApiClient : Singleton<ApiClient>
     {
         try
         {
-            await SendAsync<TRes>("GET", ApiConfig.BaseUrl + endpoint, null,
+            await SendAsync<TRes>("GET", DataManager.Instance.NetworkConfig.BaseUrl + endpoint, null,
                 retryCount: 0, customParser: null, onSuccess, onError);
         }
         catch (Exception ex) { HandleCallbackException("Get", endpoint, onError, ex); }
@@ -60,7 +60,7 @@ public class ApiClient : Singleton<ApiClient>
     {
         try
         {
-            string url = BuildUrl(ApiConfig.BaseUrl + endpoint, query);
+            string url = BuildUrl(DataManager.Instance.NetworkConfig.BaseUrl + endpoint, query);
             await SendAsync<TRes>("GET", url, null,
                 retryCount: 0, customParser: null, onSuccess, onError);
         }
@@ -78,7 +78,7 @@ public class ApiClient : Singleton<ApiClient>
         try
         {
             string json = JsonUtility.ToJson(body);
-            await SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, json,
+            await SendAsync<TRes>("POST", DataManager.Instance.NetworkConfig.BaseUrl + endpoint, json,
                 retryCount: 0, customParser: null, onSuccess, onError);
         }
         catch (Exception ex) { HandleCallbackException("Post", endpoint, onError, ex); }
@@ -90,7 +90,7 @@ public class ApiClient : Singleton<ApiClient>
     {
         try
         {
-            await SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, null,
+            await SendAsync<TRes>("POST", DataManager.Instance.NetworkConfig.BaseUrl + endpoint, null,
                 retryCount: 0, customParser: null, onSuccess, onError);
         }
         catch (Exception ex) { HandleCallbackException("Post", endpoint, onError, ex); }
@@ -107,7 +107,7 @@ public class ApiClient : Singleton<ApiClient>
         try
         {
             string json = JsonUtility.ToJson(body);
-            await SendAsync<TRes>("PUT", ApiConfig.BaseUrl + endpoint, json,
+            await SendAsync<TRes>("PUT", DataManager.Instance.NetworkConfig.BaseUrl + endpoint, json,
                 retryCount: 0, customParser: null, onSuccess, onError);
         }
         catch (Exception ex) { HandleCallbackException("Put", endpoint, onError, ex); }
@@ -123,7 +123,7 @@ public class ApiClient : Singleton<ApiClient>
     {
         try
         {
-            await SendAsync<TRes>("DELETE", ApiConfig.BaseUrl + endpoint, null,
+            await SendAsync<TRes>("DELETE", DataManager.Instance.NetworkConfig.BaseUrl + endpoint, null,
                 retryCount: 0, customParser: null, onSuccess, onError);
         }
         catch (Exception ex) { HandleCallbackException("Delete", endpoint, onError, ex); }
@@ -139,7 +139,7 @@ public class ApiClient : Singleton<ApiClient>
     {
         try
         {
-            await SendAsync<List<T>>("GET", ApiConfig.BaseUrl + endpoint, null,
+            await SendAsync<List<T>>("GET", DataManager.Instance.NetworkConfig.BaseUrl + endpoint, null,
                 retryCount: 0,
                 customParser: body => JsonHelper.FromJsonList<T>(body),
                 onSuccess, onError);
@@ -166,13 +166,13 @@ public class ApiClient : Singleton<ApiClient>
 
     // 쿼리 파라미터 없는 GET — await로 결과 직접 수신
     public Task<ApiResult<TRes>> GetAsync<TRes>(string endpoint)
-        => SendAsync<TRes>("GET", ApiConfig.BaseUrl + endpoint, null,
+        => SendAsync<TRes>("GET", DataManager.Instance.NetworkConfig.BaseUrl + endpoint, null,
             retryCount: 0, customParser: null, onSuccess: null, onError: null);
 
     // 쿼리 파라미터 있는 GET — await로 결과 직접 수신
     public Task<ApiResult<TRes>> GetWithQueryAsync<TRes>(string endpoint, IDictionary<string, string> query)
     {
-        string url = BuildUrl(ApiConfig.BaseUrl + endpoint, query);
+        string url = BuildUrl(DataManager.Instance.NetworkConfig.BaseUrl + endpoint, query);
         return SendAsync<TRes>("GET", url, null,
             retryCount: 0, customParser: null, onSuccess: null, onError: null);
     }
@@ -185,13 +185,13 @@ public class ApiClient : Singleton<ApiClient>
     public Task<ApiResult<TRes>> PostAsync<TReq, TRes>(string endpoint, TReq body)
     {
         string json = JsonUtility.ToJson(body);
-        return SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, json,
+        return SendAsync<TRes>("POST", DataManager.Instance.NetworkConfig.BaseUrl + endpoint, json,
             retryCount: 0, customParser: null, onSuccess: null, onError: null);
     }
 
     // 요청 본문이 없는 POST — await로 결과 직접 수신
     public Task<ApiResult<TRes>> PostAsync<TRes>(string endpoint)
-        => SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, null,
+        => SendAsync<TRes>("POST", DataManager.Instance.NetworkConfig.BaseUrl + endpoint, null,
             retryCount: 0, customParser: null, onSuccess: null, onError: null);
 
     // ====================================================
@@ -202,7 +202,7 @@ public class ApiClient : Singleton<ApiClient>
     public Task<ApiResult<TRes>> PutAsync<TReq, TRes>(string endpoint, TReq body)
     {
         string json = JsonUtility.ToJson(body);
-        return SendAsync<TRes>("PUT", ApiConfig.BaseUrl + endpoint, json,
+        return SendAsync<TRes>("PUT", DataManager.Instance.NetworkConfig.BaseUrl + endpoint, json,
             retryCount: 0, customParser: null, onSuccess: null, onError: null);
     }
 
@@ -212,7 +212,7 @@ public class ApiClient : Singleton<ApiClient>
 
     // DELETE — await로 결과 직접 수신
     public Task<ApiResult<TRes>> DeleteAsync<TRes>(string endpoint)
-        => SendAsync<TRes>("DELETE", ApiConfig.BaseUrl + endpoint, null,
+        => SendAsync<TRes>("DELETE", DataManager.Instance.NetworkConfig.BaseUrl + endpoint, null,
             retryCount: 0, customParser: null, onSuccess: null, onError: null);
 
     // ====================================================
@@ -221,7 +221,7 @@ public class ApiClient : Singleton<ApiClient>
 
     // 최상위 JSON 배열 GET — await로 결과 직접 수신
     public Task<ApiResult<List<T>>> GetListAsync<T>(string endpoint)
-        => SendAsync<List<T>>("GET", ApiConfig.BaseUrl + endpoint, null,
+        => SendAsync<List<T>>("GET", DataManager.Instance.NetworkConfig.BaseUrl + endpoint, null,
             retryCount: 0,
             customParser: body => JsonHelper.FromJsonList<T>(body),
             onSuccess: null, onError: null);
@@ -440,7 +440,7 @@ public class ApiClient : Singleton<ApiClient>
             return false;
         }
 
-        string url      = ApiConfig.BaseUrl + ApiConfig.Auth.Refresh;
+        string url      = DataManager.Instance.NetworkConfig.BaseUrl + ApiConfig.Auth.Refresh;
         var    body     = new RefreshTokenRequest { refreshToken = refreshToken };
         string jsonBody = JsonUtility.ToJson(body);
 

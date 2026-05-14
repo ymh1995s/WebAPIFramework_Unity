@@ -20,6 +20,8 @@ public class DataManager : Singleton<DataManager>
     public LocalizationConfig LocalizationConfig { get; private set; }
     public AdsConfig AdsConfig { get; private set; }
     public IAPConfig IAPConfig { get; private set; }
+    // 환경별 서버 URL 설정 — ApiClient가 이 값을 참조하여 요청 URL 조립
+    public NetworkConfig NetworkConfig { get; private set; }
 
     public Dictionary<string, TextData> TextDict { get; private set; } = new Dictionary<string, TextData>();
     public Dictionary<int, ItemData> ItemDict { get; private set;  } = new Dictionary<int, ItemData>();
@@ -34,6 +36,8 @@ public class DataManager : Singleton<DataManager>
         LocalizationConfig = LoadScriptableObject<LocalizationConfig>("LocalizationConfig");
         AdsConfig = LoadScriptableObject<AdsConfig>("AdsConfig");
         IAPConfig = LoadScriptableObject<IAPConfig>("IAPConfig");
+        // 환경별 서버 URL 설정 로드
+        NetworkConfig = LoadScriptableObject<NetworkConfig>("NetworkConfig");
 
         TextDict = LoadJson<TextDataLoader, string, TextData>("TextData").MakeDict();
         ItemDict = LoadJson<ItemDataLoader, int, ItemData>("ItemData").MakeDict();
