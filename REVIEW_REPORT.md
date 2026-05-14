@@ -13,7 +13,7 @@
 |---|---|
 | 완료 청크 | 9 / 9 |
 | Critical | **3건** (2건 해결, 1건 잔존) |
-| High | **11건** (1건 해결) |
+| High | **11건** (2건 해결) |
 | Medium | **19건** (2건 해결) |
 | Low / Info | **14건** |
 
@@ -24,7 +24,7 @@
 | 1 | ~~Unity Editor 포커스 → csproj 재생성 (빌드 차단 해소)~~ ✅ 해결 | `Assembly-CSharp.csproj` | — |
 | 2 | ~~`BootstrapFlow` 자동 로그인 성공 경로에 `DataManager.LoadData()` 추가~~ ✅ 해결 | `BootstrapFlow.cs:206` | — |
 | 3 | `EventManager.TriggerEvent` null-conditional 적용 (`?.Invoke()`) | `EventManager.cs:27` | 5분 |
-| 4 | `SaveManager.Load()` try-catch 추가 (JSON 손상 시 Reset 복구) | `SaveManager.cs:72` | 30분 |
+| 4 | ~~`SaveManager.Load()` try-catch 추가 (JSON 손상 시 Reset 복구)~~ ✅ 해결 | `SaveManager.cs:72` | — |
 | 5 | Domain Reload 미대응 static 필드 일괄 리셋 (`[RuntimeInitializeOnLoadMethod]`) | ApiClient, BootstrapFlow, AppResumeFlow 외 8개 | 2시간 |
 
 ---
@@ -285,7 +285,7 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 | H9 | S2-1 | `ApiConfig.cs:5` | `http://localhost:5058` 하드코딩 — 프로덕션 MITM | 환경별 URL 분리 + HTTPS 강제 |
 | H10 | S3-3 | `UI_MainGame.cs:253-266` | 로그아웃/탈퇴 시 GoogleSignInProvider.SignOut() 미호출 | `AuthManager.Clear()` 전후에 `SignOut()` 호출 추가 |
 | H11 | S7 | `AdsManager.cs` 전체 | LevelPlay/RewardedAd/InterstitialAd 18개 이벤트 해제 전무 | `OnDestroy()` 추가 + `Init()` `_initialized` 가드 |
-| H12 | S9 | `SaveManager.cs:72` | JSON 역직렬화 예외 미처리 → JSON 손상 시 앱 크래시 | try-catch 추가, 실패 시 `Reset()` 기본 데이터 복구 |
+| ~~H12~~ ✅ | S9 | `SaveManager.cs:72` | ~~JSON 역직렬화 예외 미처리 → JSON 손상 시 앱 크래시~~ | ~~try-catch 추가, 실패 시 `Reset()` 기본 데이터 복구~~ **해결**: 단일 `catch (System.Exception)` + 손상 파일 `.corrupted` 백업 + `DeserializeObject` null 가드 + `Reset()` 복구. QA 승인. |
 
 ---
 
