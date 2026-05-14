@@ -39,8 +39,9 @@ public class DataManager : Singleton<DataManager>
         // 환경별 서버 URL 설정 로드
         NetworkConfig = LoadScriptableObject<NetworkConfig>("NetworkConfig");
 
-        TextDict = LoadJson<TextDataLoader, string, TextData>("TextData").MakeDict();
-        ItemDict = LoadJson<ItemDataLoader, int, ItemData>("ItemData").MakeDict();
+        // LoadJson이 null 반환 시(파일 미존재) 빈 딕셔너리로 안전하게 초기화
+        TextDict = LoadJson<TextDataLoader, string, TextData>("TextData")?.MakeDict() ?? new Dictionary<string, TextData>();
+        ItemDict = LoadJson<ItemDataLoader, int, ItemData>("ItemData")?.MakeDict() ?? new Dictionary<int, ItemData>();
         // TODO
 
         Validate();
@@ -73,6 +74,12 @@ public class DataManager : Singleton<DataManager>
     private Loader LoadJson<Loader, Key, Value>(string path) where Loader : IDataLoader<Key, Value>
     {
         TextAsset textAsset = ResourceManager.Instance.Get<TextAsset>(path);
+        // JSON 파일 미존재 시 NPE 방지 — Resources/PreLoad 하위에 파일이 없으면 발생
+        if (textAsset == null)
+        {
+            Debug.LogError($"[DataManager] JSON 파일을 찾을 수 없습니다: {path}");
+            return default;
+        }
 
         Loader loader = JsonConvert.DeserializeObject<Loader>(textAsset.text);
         _loaders.Add(loader);

@@ -14,7 +14,7 @@
 | 완료 청크 | 9 / 9 |
 | Critical | **3건** (2건 해결, 1건 잔존) |
 | High | **11건** (10건 해결) |
-| Medium | **19건** (3건 해결) |
+| Medium | **19건** (4건 해결) |
 | Low / Info | **14건** |
 
 ### Top 5 즉시 조치
@@ -296,7 +296,7 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 | M1 | A1 | `@Scripts/Bootstrap/` | 규정 외 폴더 — CLAUDE.md 명세 위반 | CLAUDE.md 폴더 목록에 `Bootstrap` 추가 (권고) |
 | M2 | A1, A7 | `Managers/SceneManager.cs:5`, `LoadingScene.cs:39` | `UnityEngine.SceneManagement.SceneManager`와 식별자 충돌 + 우회 주석 박제 | `AppSceneManager`로 개명 |
 | ~~M3~~ ✅ | Q1-01, S9-M3 | `EventManager.cs:27` | TriggerEvent delegate null → NRE | ~~`_events[eventType]?.Invoke()`~~ **해결** |
-| M4 | Q1-05 | `DataManager.cs:53` | LoadJson textAsset null 미체크 | null 체크 + LogError 추가 |
+| ~~M4~~ ✅ | Q1-05 | `DataManager.cs:53` | ~~LoadJson textAsset null 미체크~~ | **해결**: `LoadJson` 내 textAsset null 체크 + `LogError` 추가, 호출부 `?.MakeDict() ?? new Dictionary<>()` 안전 초기화. |
 | M5 ⏸ | Q2-01~03 | `BootstrapFlow.cs:9,12` / `AppResumeFlow.cs:10` / `StageSession.cs` | static 필드 Domain Reload 미대응 (3개) | **보류** — H6와 동일 사유. |
 | M6 | Q4-03 | `ApiClient.cs` 전체 | CancellationToken 미구현 — 씬 전환 MissingRef | `destroyCancellationToken` 또는 호출자 단위 CTS |
 | ~~M7~~ ✅ | Q4-04 | UI 전체 | ~~버튼 중복 클릭 방지 부재~~ **해결** — 3계층 가드(Layer A 글로벌 마스크 7 + Layer B 버튼 비활성 5 + Layer C 재진입 1) + `UI_Base.RunWithBusyAsync`/`GuardReentry` |
