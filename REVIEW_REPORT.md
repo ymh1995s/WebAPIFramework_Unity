@@ -13,8 +13,8 @@
 |---|---|
 | 완료 청크 | 9 / 9 |
 | Critical | **3건** (2건 해결, 1건 잔존) |
-| High | **11건** |
-| Medium | **19건** (1건 해결) |
+| High | **11건** (1건 해결) |
+| Medium | **19건** (2건 해결) |
 | Low / Info | **14건** |
 
 ### Top 5 즉시 조치
@@ -280,7 +280,7 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 | H4 | A4·A6 | `Core/ApiClient.cs:241,342,373,391,420,473` | Core↔Auth·UI 양방향 결합 6건 | `ITokenProvider` 인터페이스 도입 + PopupService 호출 → EventManager 발행 전환 |
 | H5 | Q4-01 | `ApiClient.cs:42,50,63,72,84,97,109` | async void 7개 — 예외 삼킴 | `async Task` 전환 또는 내부 try-catch 래퍼 적용 |
 | H6 | Q4-02 | `ApiClient.cs:27,30,35` | static 3개 Domain Reload 미대응 — 토큰 갱신 데드락 | `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]` 리셋 메서드 추가 |
-| H7 | Q9-01 | `UI_WithdrawPopup.cs:54-67` | 이중 클릭 방지 누락 — 탈퇴/종료 등 파괴적 동작 | `UI_ConfirmPopup`의 `_confirmed` 패턴 적용 |
+| ~~H7~~ ✅ | Q9-01 | `UI_WithdrawPopup.cs:54-67` (→ UI_MainGame.DoWithdraw) | ~~이중 클릭 방지 누락~~ **해결** — `UI_Base.RunWithBusyAsync`(Layer A 글로벌 마스크) 도입, 시각 피드백까지 격상 |
 | H8 | Q9-02 | `UI_MailPopup.cs:29` 외 3건 | async void OnEnable 4건 — 팝업 닫힘 후 비활성 객체 접근 | `gameObject.activeInHierarchy` 가드 또는 CancellationToken 도입 |
 | H9 | S2-1 | `ApiConfig.cs:5` | `http://localhost:5058` 하드코딩 — 프로덕션 MITM | 환경별 URL 분리 + HTTPS 강제 |
 | H10 | S3-3 | `UI_MainGame.cs:253-266` | 로그아웃/탈퇴 시 GoogleSignInProvider.SignOut() 미호출 | `AuthManager.Clear()` 전후에 `SignOut()` 호출 추가 |
@@ -299,7 +299,7 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 | M4 | Q1-05 | `DataManager.cs:53` | LoadJson textAsset null 미체크 | null 체크 + LogError 추가 |
 | M5 | Q2-01~03 | `BootstrapFlow.cs:9,12` / `AppResumeFlow.cs:10` / `StageSession.cs` | static 필드 Domain Reload 미대응 (3개) | `[RuntimeInitializeOnLoadMethod]` 리셋 추가 |
 | M6 | Q4-03 | `ApiClient.cs` 전체 | CancellationToken 미구현 — 씬 전환 MissingRef | `destroyCancellationToken` 또는 호출자 단위 CTS |
-| M7 | Q4-04 | UI 전체 | 버튼 중복 클릭 방지 부재 (구매/사용/문의 등 상태 변경 API) | async 처리 중 `interactable = false` 토글 |
+| ~~M7~~ ✅ | Q4-04 | UI 전체 | ~~버튼 중복 클릭 방지 부재~~ **해결** — 3계층 가드(Layer A 글로벌 마스크 7 + Layer B 버튼 비활성 5 + Layer C 재진입 1) + `UI_Base.RunWithBusyAsync`/`GuardReentry` |
 | M8 | Q4-05 | `ApiClient.cs:342,373,391,420,473` | `AuthManager.Instance` null 미체크 5건 | null-conditional `?.` 적용 |
 | M9 | Q5-02, Q7-02 | `ItemApi.cs:12`, `InventoryModels.cs:5-9` | `UseItemRequest.quantity` 필드 누락 (CLIENT_GUIDE 불일치) | quantity 필드 추가, ItemApi.UseAsync 시그니처 확장 |
 | M10 | Q6-02 | `AuthManager.cs:9,13` | static event 2개 Domain Reload 미대응 | `[RuntimeInitializeOnLoadMethod]` event = null 리셋 |

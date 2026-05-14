@@ -20,8 +20,8 @@ public class UI_LoginScene : UI_UGUI, IUI_Scene
         GetButton((int)Buttons.GoogleLoginBtn).onClick.AddListener(OnClickGoogleLogin);
     }
 
-    // 게스트 로그인 버튼 클릭 처리
-    private async void OnClickGuestLogin()
+    // 게스트 로그인 버튼 클릭 처리 — 전화면 마스크(RunWithBusyAsync)로 이중 클릭 및 입력 차단
+    private void OnClickGuestLogin() => RunWithBusyAsync(async () =>
     {
         string deviceId = SystemInfo.deviceUniqueIdentifier;
         RestLogger.Info($"게스트 로그인 시도 | DeviceId: {deviceId[..8]}...");
@@ -34,10 +34,10 @@ public class UI_LoginScene : UI_UGUI, IUI_Scene
         }
 
         OnLoginSuccess(result.Value);
-    }
+    }, busyLabel: "로그인 중...");
 
-    // 구글 로그인 버튼 클릭 처리
-    private async void OnClickGoogleLogin()
+    // 구글 로그인 버튼 클릭 처리 — 전화면 마스크(RunWithBusyAsync)로 이중 클릭 및 입력 차단
+    private void OnClickGoogleLogin() => RunWithBusyAsync(async () =>
     {
         RestLogger.Info("구글 로그인 시도...");
         try
@@ -85,10 +85,10 @@ public class UI_LoginScene : UI_UGUI, IUI_Scene
                 IsNetworkError = false,
             });
         }
-    }
+    }, busyLabel: "구글 로그인 중...");
 
-    // 409 충돌 해소 — 기존 구글 계정으로 전환 요청
-    private async void OnResolveConflict()
+    // 409 충돌 해소 — 기존 구글 계정으로 전환 요청 — 전화면 마스크(RunWithBusyAsync)로 이중 클릭 및 입력 차단
+    private void OnResolveConflict() => RunWithBusyAsync(async () =>
     {
         var result = await AuthApi.ResolveGoogleConflictAsync(_pendingGoogleIdToken);
         if (!result.IsSuccess)
@@ -98,7 +98,7 @@ public class UI_LoginScene : UI_UGUI, IUI_Scene
         }
 
         OnLoginSuccess(result.Value);
-    }
+    }, busyLabel: "계정 전환 중...");
 
     // 로그인 성공 공통 처리
     private void OnLoginSuccess(TokenResponse response)

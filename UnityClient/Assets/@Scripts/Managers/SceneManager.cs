@@ -35,6 +35,9 @@ public class SceneManager : Singleton<SceneManager>
     // 일반 씬 전환 시 이 메서드만 사용할 것
     public void LoadScene(Define.EScene scene)
     {
+        // 씬 전환 직전 BusyMask 잔존 방지 — 이전 씬에서 BeginBusy가 Dispose 없이 끝난 경우 대비
+        UIManager.Instance?.ForceClearBusy();
+
         PendingScene = scene;
         StartCoroutine(TransitionToLoading());
     }
@@ -52,6 +55,9 @@ public class SceneManager : Singleton<SceneManager>
     // 페이드 없이 즉시 씬 전환 — Bootstrap 부팅, 로딩씬 내부 전환 등에서 사용
     public void LoadSceneImmediate(Define.EScene sceneType)
     {
+        // 씬 전환 직전 BusyMask 잔존 방지 — Clear() 이전에 호출하여 카운트·참조 정리
+        UIManager.Instance?.ForceClearBusy();
+
         // 씬 전환 직전 UI 스택·캐시 정리 — 파괴된 팝업 참조 잔류 방지
         UIManager.Instance.Clear();
         string sceneName = sceneType.ToString();

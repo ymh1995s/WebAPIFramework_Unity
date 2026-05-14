@@ -28,7 +28,8 @@ public class UI_InGame : UI_UGUI
     }
 
     // 클리어 버튼 — 더미 결과 데이터로 서버에 클리어 전송 후 보상 팝업 표시
-    private async void OnClickClear()
+    // 전화면 마스크(RunWithBusyAsync)로 이중 클릭 및 입력 차단
+    private void OnClickClear() => RunWithBusyAsync(async () =>
     {
         var body = new StageClearRequest
         {
@@ -52,7 +53,7 @@ public class UI_InGame : UI_UGUI
         // 보상 팝업 확인 후 StageSelectScene으로 복귀
         PopupService.ShowReward(msg, () =>
             SceneManager.Instance.LoadScene(Define.EScene.StageSelectScene));
-    }
+    }, busyLabel: "결과 전송 중...");
 
     // 실패 버튼 — StageSelectScene으로 즉시 복귀
     private void OnClickFail()

@@ -108,8 +108,8 @@ public class UI_MainGame : UI_UGUI
 
     // ─── 랭킹 ──────────────────────────────────────────────────────────────
 
-    // 내 랭킹 조회 후 공지 팝업으로 표시
-    private async void OnClickRanking()
+    // 내 랭킹 조회 후 공지 팝업으로 표시 — 랭킹 버튼 단위 비활성(Button scope)으로 이중 클릭 방지
+    private void OnClickRanking() => RunWithBusyAsync(async () =>
     {
         var result = await RankingApi.GetMyRankAsync();
         if (!result.IsSuccess)
@@ -121,7 +121,7 @@ public class UI_MainGame : UI_UGUI
         var rank = result.Value;
         string msg = $"현재 순위: {rank.rank}위\n닉네임: {rank.nickname}\n최고 점수: {rank.bestScore}";
         PopupService.ShowAnnouncement(msg);
-    }
+    }, scope: Define.EBusyScope.Button, gateButton: GetButton((int)Buttons.RankingBtn));
 
     // ─── 메일함 ────────────────────────────────────────────────────────────
 
@@ -139,8 +139,8 @@ public class UI_MainGame : UI_UGUI
 
     // ─── 공지 ──────────────────────────────────────────────────────────────
 
-    // 서버에서 최신 공지를 가져와 팝업으로 표시
-    private async void OnClickNotice()
+    // 서버에서 최신 공지를 가져와 팝업으로 표시 — 공지 버튼 단위 비활성(Button scope)으로 이중 클릭 방지
+    private void OnClickNotice() => RunWithBusyAsync(async () =>
     {
         var result = await NoticeApi.GetLatestAsync();
         if (!result.IsSuccess)
@@ -154,7 +154,7 @@ public class UI_MainGame : UI_UGUI
             ? "현재 공지사항이 없습니다."
             : notice.content;
         PopupService.ShowAnnouncement(content);
-    }
+    }, scope: Define.EBusyScope.Button, gateButton: GetButton((int)Buttons.NotinceBtn));
 
     // ─── 인벤토리 ──────────────────────────────────────────────────────────
 
@@ -167,7 +167,8 @@ public class UI_MainGame : UI_UGUI
     // ─── 구글 연동 ─────────────────────────────────────────────────────────
 
     // 미연동 상태이면 구글 로그인 후 계정 연결, 이미 연동이면 안내만 표시
-    private async void OnClickGoogleInterlock()
+    // 전화면 마스크(RunWithBusyAsync)로 이중 클릭 및 입력 차단
+    private void OnClickGoogleInterlock() => RunWithBusyAsync(async () =>
     {
         if (AuthManager.Instance.IsGoogleLinked)
         {
@@ -203,7 +204,7 @@ public class UI_MainGame : UI_UGUI
                 Detail = e.Message,
             });
         }
-    }
+    }, busyLabel: "구글 연동 중...");
 
     // ─── 탈퇴 ──────────────────────────────────────────────────────────────
 
@@ -225,7 +226,8 @@ public class UI_MainGame : UI_UGUI
     }
 
     // 탈퇴 API 호출 후 로컬 토큰 초기화 및 LoginScene 전환
-    private async void DoWithdraw()
+    // 전화면 마스크(RunWithBusyAsync)로 이중 클릭 및 입력 차단
+    private void DoWithdraw() => RunWithBusyAsync(async () =>
     {
         var result = await AuthApi.WithdrawAsync();
         if (!result.IsSuccess)
@@ -236,7 +238,7 @@ public class UI_MainGame : UI_UGUI
 
         AuthManager.Instance.Clear();
         SceneManager.Instance.LoadScene(Define.EScene.LoginScene);
-    }
+    }, busyLabel: "탈퇴 처리 중...");
 
     // ─── 로그아웃 ──────────────────────────────────────────────────────────
 
@@ -250,7 +252,8 @@ public class UI_MainGame : UI_UGUI
     }
 
     // 로그아웃 API 호출 — 서버 실패 시에도 로컬 토큰 삭제 후 LoginScene으로 이동
-    private async void DoLogout()
+    // 전화면 마스크(RunWithBusyAsync)로 이중 클릭 및 입력 차단
+    private void DoLogout() => RunWithBusyAsync(async () =>
     {
         var result = await AuthApi.LogoutAsync(AuthManager.Instance.RefreshToken);
 
@@ -263,7 +266,7 @@ public class UI_MainGame : UI_UGUI
             // 실패 로그만 남기고 LoginScene으로 이동은 위에서 이미 처리
             Debug.LogWarning($"[UI_MainGame] 로그아웃 서버 요청 실패: {result.Error?.UserMessage}");
         }
-    }
+    }, busyLabel: "로그아웃 중...");
 
     // ─── 씬 전환 ───────────────────────────────────────────────────────────
 

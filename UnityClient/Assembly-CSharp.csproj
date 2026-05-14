@@ -130,6 +130,7 @@
     <Compile Include="Assets\Settings\GoogleSignIn\Future.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_InGame.cs" />
     <Compile Include="Assets\@Scripts\Config\AdsConfig.cs" />
+    <Compile Include="Assets\@Scripts\UI\UI_BusyMask.cs" />
     <Compile Include="Assets\@Scripts\Utils\Utils.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\ApiConfig.cs" />
     <Compile Include="Assets\@Scripts\Managers\DataManager.cs" />

@@ -81,8 +81,9 @@ public class UI_InventoryPopup : UI_UGUI, IUI_Popup
         GetText((int)Texts.Text).text = sb.ToString().TrimEnd();
     }
 
-    // 아이템 사용 버튼 클릭 — InputField에서 itemId 파싱 후 유효성 검사 → API 호출
-    private async void OnClickUse()
+    // 아이템 사용 버튼 클릭 — 사용 버튼 단위 비활성(Button scope)으로 이중 클릭 방지
+    // InputField에서 itemId 파싱 후 유효성 검사 → API 호출
+    private void OnClickUse() => RunWithBusyAsync(async () =>
     {
         // InputField가 없으면 안내 후 중단
         if (_itemIdInput == null)
@@ -120,7 +121,7 @@ public class UI_InventoryPopup : UI_UGUI, IUI_Popup
         // 200 성공 — 토스트 안내 후 인벤토리 갱신
         PopupService.ShowToast("아이템을 사용했습니다.");
         await LoadInventoryAsync();
-    }
+    }, scope: Define.EBusyScope.Button, gateButton: GetButton((int)Buttons.UseBtn));
 
     // 아이템 사용 오류 처리 — 상태 코드별 분기
     private async Task HandleUseErrorAsync(ApiError err)

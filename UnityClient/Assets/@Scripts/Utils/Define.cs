@@ -53,6 +53,19 @@ public static class Define
 		Move,
 		Work
 	}
+
+    /// <summary>
+    /// BusyMask 적용 범위 — BeginBusy 호출 시 어떤 수준의 입력 차단을 원하는지 구분
+    /// </summary>
+    public enum EBusyScope
+    {
+        /// <summary>전화면 반투명 마스크로 모든 입력을 차단 (API 호출 등 전역 대기)</summary>
+        Global,
+        /// <summary>개별 버튼만 비활성화 (글로벌 마스크 없이 버튼 단위 차단 — Phase 1에서 활용)</summary>
+        Button,
+        /// <summary>입력 차단 없이 재진입만 방지 (카운터만 증가)</summary>
+        None,
+    }
 }
 
 // PlayerPrefs 키 상수 — 매직 스트링 제거 및 키 중복 방지

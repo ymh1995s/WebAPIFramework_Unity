@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -189,6 +190,118 @@ public class UIManager : Singleton<UIManager>
     }
     #endregion
 
+    #region BusyMask UI
+    // BusyMask 프리팹 이름 — ResourceManager가 PreLoad 폴더에서 탐색
+    private const string BUSY_MASK_PREFAB_NAME = "UI_BusyMask";
+
+    // BusyMask 전용 루트 Transform — 팝업·토스트보다 높은 sortingOrder로 항상 최상단 유지
+    Transform _busyRoot;
+    Transform BusyRoot
+    {
+        get
+        {
+            return Utils.GetRootTransform(ref _busyRoot, "@BusyRoot", Root);
+        }
+    }
+
+    // BusyMask 인스턴스 캐시 — 매 BeginBusy 호출마다 새로 생성하지 않고 재사용
+    UI_BusyMask _busyMask;
+
+    // 현재 중첩된 BeginBusy 호출 횟수 — 0이 되는 순간 마스크를 숨긴다
+    int _busyCount;
+
+    /// <summary>
+    /// BusyMask 표시를 시작하고 IDisposable을 반환한다.
+    /// using 블록 또는 Dispose() 호출로 카운트를 자동 감소시킬 수 있다.
+    /// 중첩 호출 시 카운트가 쌓이며, 마지막 Dispose에서만 마스크가 사라진다.
+    /// </summary>
+    /// <param name="label">마스크 위에 표시할 안내 문구 (null이면 텍스트 미표시)</param>
+    /// <returns>Dispose 시 카운트를 감소시키는 핸들 객체</returns>
+    public IDisposable BeginBusy(string label = null)
+    {
+        _busyCount++;
+
+        // 카운트가 0에서 1로 오를 때만 마스크를 생성·표시
+        if (_busyCount == 1)
+        {
+            EnsureBusyMask();
+            _busyMask?.Show(label); // 프리팹 미발급 상태 NRE 방지 (EnsureBusyMask에서 이미 LogError 출력)
+        }
+
+        return new BusyHandle(this);
+    }
+
+    /// <summary>
+    /// BusyMask 카운트를 강제로 0으로 리셋하고 마스크를 숨긴다.
+    /// 씬 전환 직전 SceneManager가 호출하여 잔존 마스크를 정리한다.
+    /// </summary>
+    public void ForceClearBusy()
+    {
+        _busyCount = 0;
+        _busyMask?.Hide();
+    }
+
+    /// <summary>
+    /// BusyMask 인스턴스가 없거나 씬 전환으로 파괴된 경우 재생성한다.
+    /// ResourceManager 캐시에서 UI_BusyMask 프리팹을 로드하여 BusyRoot에 배치한다.
+    /// </summary>
+    private void EnsureBusyMask()
+    {
+        if (_busyMask != null)
+            return;
+
+        // ResourceManager를 통해 프리팹 인스턴스 생성
+        GameObject go = ResourceManager.Instance.Instantiate(BUSY_MASK_PREFAB_NAME);
+        if (go == null)
+        {
+            Debug.LogError($"[UIManager] 프리팹 키 '{BUSY_MASK_PREFAB_NAME}'를 ResourceManager에서 찾을 수 없습니다. PreLoad 캐시에 등록되어 있는지 확인하세요.");
+            return;
+        }
+
+        _busyMask = go.GetOrAddComponent<UI_BusyMask>();
+        _busyMask.transform.SetParent(BusyRoot, false);
+
+        // 팝업(100+)·토스트(999)보다 높은 sortingOrder로 최상단 보장
+        var canvas = _busyMask.GetComponent<Canvas>();
+        if (canvas != null)
+            canvas.sortingOrder = 1000;
+
+        // 초기 상태는 비활성 — BeginBusy 이후 Show()에서 활성화됨
+        _busyMask.gameObject.SetActive(false);
+    }
+
+    /// <summary>
+    /// BeginBusy의 반환 핸들 — Dispose 시 BusyCount를 감소시킨다.
+    /// using 패턴 또는 try/finally에서 사용한다.
+    /// </summary>
+    private sealed class BusyHandle : IDisposable
+    {
+        readonly UIManager _manager;
+        // 중복 Dispose 방지 플래그
+        bool _disposed;
+
+        internal BusyHandle(UIManager manager)
+        {
+            _manager = manager;
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+
+            _manager._busyCount--;
+
+            // 카운트가 0 이하로 떨어지면 안전하게 클램프 후 마스크 숨김
+            if (_manager._busyCount <= 0)
+            {
+                _manager._busyCount = 0;
+                _manager._busyMask?.Hide();
+            }
+        }
+    }
+    #endregion
+
     public void Clear()
     {
         CloseAllPopupUI();
@@ -200,7 +313,10 @@ public class UIManager : Singleton<UIManager>
 
         _popupRoot = null;     // 팝업 루트 재생성 강제
         _toastRoot = null;     // 토스트 루트 재생성 강제
-        _toast = null;         // 토스트 인스턴스 참조 초기화
+        _busyRoot  = null;     // BusyMask 루트 재생성 강제
+        _toast     = null;     // 토스트 인스턴스 참조 초기화
+        _busyMask  = null;     // BusyMask 인스턴스 참조 초기화
+        _busyCount = 0;        // BusyMask 카운트 초기화
         _popupOrder = 100;     // 정렬 순서 초기화
         _sceneUI = null;
     }

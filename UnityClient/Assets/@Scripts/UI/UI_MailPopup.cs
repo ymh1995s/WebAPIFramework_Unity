@@ -112,8 +112,9 @@ public class UI_MailPopup : UI_UGUI, IUI_Popup
         return string.Join(" / ", parts);
     }
 
-    // 미수령 메일 전부 순차 수령 — 수령 성공 시 즉시 목록에서 제거하고 화면 갱신
-    private async void OnClickReceiveAll()
+    // 미수령 메일 전부 순차 수령 — 전체 수령 버튼 단위 비활성(Button scope)으로 이중 클릭 방지
+    // 수령 성공 시 즉시 목록에서 제거하고 화면 갱신
+    private void OnClickReceiveAll() => RunWithBusyAsync(async () =>
     {
         if (_mails == null) return;
 
@@ -139,7 +140,7 @@ public class UI_MailPopup : UI_UGUI, IUI_Popup
             _mails.Remove(mail);
             RefreshDisplay();
         }
-    }
+    }, scope: Define.EBusyScope.Button, gateButton: GetButton((int)Buttons.ReceiveAllBtn));
 
     private void OnClickExit()
     {

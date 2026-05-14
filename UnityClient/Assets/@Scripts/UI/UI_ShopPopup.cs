@@ -131,8 +131,9 @@ public class UI_ShopPopup : UI_UGUI, IUI_Popup
         GetText((int)Texts.Text).text = sb.ToString().TrimEnd();
     }
 
-    // 구매 버튼 클릭 — ItemIdInput/ItemCountInput 파싱 후 API 호출, 응답 분기 처리
-    private async void OnClickUse()
+    // 구매 버튼 클릭 — 구매 버튼 단위 비활성(Button scope)으로 이중 클릭 방지
+    // ItemIdInput/ItemCountInput 파싱 후 API 호출, 응답 분기 처리
+    private void OnClickUse() => RunWithBusyAsync(async () =>
     {
         // 입력 필드 유효성 확인
         if (_itemIdInput == null)
@@ -174,7 +175,7 @@ public class UI_ShopPopup : UI_UGUI, IUI_Popup
         // 200 성공 — 구매 완료 안내 후 상점 정보 갱신
         PopupService.ShowToast("구매가 완료되었습니다.");
         await LoadShopAsync();
-    }
+    }, scope: Define.EBusyScope.Button, gateButton: GetButton((int)Buttons.BuyBtn));
 
     // 구매 오류 처리 — errorCode 기준 분기 (HTTP 상태 코드만으로는 구분 불가능한 경우 포함)
     private async Task HandleBuyErrorAsync(ApiError err)

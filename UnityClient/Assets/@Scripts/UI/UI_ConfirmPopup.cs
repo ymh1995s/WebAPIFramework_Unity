@@ -12,9 +12,6 @@ public class UI_ConfirmPopup : UI_UGUI, IUI_Popup
     // 프리팹 자식 Button 이름 열거형 — BackGround/ConfirmBtn 과 일치
     enum Buttons { ConfirmBtn }
 
-    // 이중 클릭 방지 플래그 — 확인 버튼을 빠르게 두 번 눌러도 콜백이 1회만 실행되도록 보장
-    bool _confirmed;
-
     // 확인 버튼 클릭 시 실행되는 콜백 — PopupService에서 주입
     public Action OnConfirm { get; set; }
 
@@ -36,9 +33,6 @@ public class UI_ConfirmPopup : UI_UGUI, IUI_Popup
     protected override void OnEnable()
     {
         base.OnEnable();
-
-        // 이중 클릭 방지 플래그 초기화 — 이전 확인 클릭 상태가 다음 팝업에 잔존하는 버그 방지
-        _confirmed = false;
 
         // 버튼 활성 상태 복원 — ShowMaintenance에서 SetButtonActive(false)로 숨긴 채 닫힌 뒤
         // 인스턴스가 재사용될 때 확인 버튼이 없는 상태로 남는 버그 방지
@@ -67,17 +61,13 @@ public class UI_ConfirmPopup : UI_UGUI, IUI_Popup
             tmp.text = label;
     }
 
-    // 확인 버튼 클릭 처리
+    // 확인 버튼 클릭 처리 — UI_Base.GuardReentry로 이중 클릭 방지
     // 팝업을 먼저 닫은 뒤 콜백 실행 — 콜백이 씬 전환/앱 종료를 호출해도 UIManager 스택이 안전하게 유지됨
-    private void OnClickConfirm()
+    private void OnClickConfirm() => GuardReentry(() =>
     {
-        // 이중 클릭 방지
-        if (_confirmed) return;
-        _confirmed = true;
-
         // 콜백을 로컬에 캡처한 뒤 팝업 닫기 → 콜백 실행
         var cb = OnConfirm;
         UIManager.Instance.ClosePopupUI();
         cb?.Invoke();
-    }
+    });
 }

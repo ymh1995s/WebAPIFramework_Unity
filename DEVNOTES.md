@@ -110,6 +110,23 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 
 ---
 
+### ResourceManager 호출 매직 스트링 일괄 정리
+
+`ResourceManager.Instance.Instantiate(...)` / `Get<T>(...)` 호출부에 프리팹·에셋 키가 문자열 리터럴로 박혀 있음. 컨벤션은 `ShoutManager.HUD_PREFAB_NAME` (클래스 내부 `private const string`, UPPER_SNAKE_CASE)이고 `UIManager.BUSY_MASK_PREFAB_NAME`이 같은 형태로 정리됨. 남은 매직 스트링도 동일 패턴으로 흡수.
+
+**잔존 위치**:
+- `UnityClient/Assets/@Scripts/Managers/UIManager.cs:180` — `"UI_Toast"`
+- `UnityClient/Assets/@Scripts/UI/UI_UGUI.cs:16` — `"EventSystem"`
+- 향후 추가될 `ResourceManager` 호출처 동일 원칙
+
+**필요 작업**: 각 사용 클래스 내부에 `private const string XXX_PREFAB_NAME = "..."` 정의 후 치환.
+
+**전역 상수 클래스 금지**: `Utils/PrefabKey` 같은 전역 컨벤션은 이 프로젝트에 없음. 사용처-국지 const가 정식.
+
+**우선순위**: L (기능 무관) / **작업량**: 10분
+
+---
+
 ## 기능 현황
 
 | 기능 | 상태 | 비고 |
