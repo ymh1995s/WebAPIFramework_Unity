@@ -13,7 +13,7 @@
 |---|---|
 | 완료 청크 | 9 / 9 |
 | Critical | **3건** (2건 해결, 1건 잔존) |
-| High | **11건** (7건 해결) |
+| High | **11건** (8건 해결) |
 | Medium | **19건** (2건 해결) |
 | Low / Info | **14건** |
 
@@ -283,7 +283,7 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 | ~~H7~~ ✅ | Q9-01 | `UI_WithdrawPopup.cs:54-67` (→ UI_MainGame.DoWithdraw) | ~~이중 클릭 방지 누락~~ **해결** — `UI_Base.RunWithBusyAsync`(Layer A 글로벌 마스크) 도입, 시각 피드백까지 격상 |
 | ~~H8~~ ✅ | Q9-02 | `UI_MailPopup.cs:29` 외 3건 | ~~async void OnEnable 4건 — 팝업 닫힘 후 비활성 객체 접근~~ | **해결**: `UI_Base`에 `_enableCts`/`EnableToken` CTS 인프라 추가. OnEnable에서 발급, OnDisable에서 Cancel→Dispose. 4개 팝업 OnEnable → try/catch(OCE) 래핑, LoadXxxAsync(CancellationToken) + await 직후 ThrowIfCancellationRequested() 일괄 적용. QA 승인. **후속 수정**: `catch (OperationCanceledException)` 추가 시 `using System;` 누락 → `dotnet build` 실패. Unity 에디터는 암묵적 참조 덕분에 통과했으나 외부 빌드에서 strict 오류. `using System;` 추가로 해결. |
 | ~~H9~~ ✅ | S2-1 | `ApiConfig.cs:5` | ~~`http://localhost:5058` 하드코딩 — 프로덕션 MITM~~ | **해결**: `NetworkConfig` SO 신설(Dev/Staging/Prod URL 필드, `#if` 환경 분기), `ApiConfig.cs`에서 `BaseUrl` 제거, `ApiClient` 15곳 → `DataManager.Instance.NetworkConfig.BaseUrl` 전환. 릴리즈 빌드 `http://` 감지 `LogError`. QA 승인. |
-| H10 | S3-3 | `UI_MainGame.cs:253-266` | 로그아웃/탈퇴 시 GoogleSignInProvider.SignOut() 미호출 | `AuthManager.Clear()` 전후에 `SignOut()` 호출 추가 |
+| ~~H10~~ ✅ | S3-3 | `UI_MainGame.cs:253-266` | ~~로그아웃/탈퇴 시 GoogleSignInProvider.SignOut() 미호출~~ | **해결**: `AuthManager.Clear()` 내부에서 `IsGoogleLinked` 확인 후 `GoogleSignInProvider.SignOut()` 조건부 호출. 게스트 유저는 미호출. `UI_MainGame.cs` 변경 없음. |
 | ~~H11~~ ✅ | S7 | `AdsManager.cs` 전체 | ~~LevelPlay/RewardedAd/InterstitialAd 18개 이벤트 해제 전무~~ | ~~`OnDestroy()` 추가 + `Init()` `_initialized` 가드~~ **해결**: `OnDestroy()` 추가(18개 이벤트 전량 `-=`), `bool _initialized` 가드로 중복 Init 방지, `SdkInitializationCompletedEvent`에 `if (this == null) return;` 경쟁 상태 가드 추가. |
 | ~~H12~~ ✅ | S9 | `SaveManager.cs:72` | ~~JSON 역직렬화 예외 미처리 → JSON 손상 시 앱 크래시~~ | ~~try-catch 추가, 실패 시 `Reset()` 기본 데이터 복구~~ **해결**: 단일 `catch (System.Exception)` + 손상 파일 `.corrupted` 백업 + `DeserializeObject` null 가드 + `Reset()` 복구. QA 승인. |
 

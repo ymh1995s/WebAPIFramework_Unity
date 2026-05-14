@@ -85,6 +85,9 @@ public class AuthManager : Singleton<AuthManager>, ITokenProvider
         PlayerPrefs.DeleteKey(KEY_REFRESH_TOKEN);
         PlayerPrefs.DeleteKey(KEY_PLAYER_ID);
         PlayerPrefs.DeleteKey(KEY_IS_GOOGLE_LINKED);
+        // 구글 계정으로 로그인한 경우 Google SDK 세션도 함께 정리
+        if (IsGoogleLinked)
+            GoogleSignInProvider.SignOut();
         IsGoogleLinked = false;
         PlayerPrefs.Save();
 
