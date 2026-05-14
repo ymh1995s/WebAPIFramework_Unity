@@ -9,6 +9,7 @@ public class AdsManager : Singleton<AdsManager>
     LevelPlayInterstitialAd _interstitialAd;
     LevelPlayRewardedAd _rewardedAd;
     Action _rewardedCallback;
+    bool _initialized; // 중복 Init 방지 플래그
 
     #region 보상 처리
     public void ShowInterstitialAds()
@@ -43,6 +44,10 @@ public class AdsManager : Singleton<AdsManager>
 
     public void Init()
     {
+        // 중복 초기화 방지 — GameManager가 여러 번 호출하더라도 SDK 이벤트가 중복 등록되지 않도록
+        if (_initialized) return;
+        _initialized = true;
+
         Debug.Log("[LevelPlaySample] LevelPlay.ValidateIntegration");
         LevelPlay.ValidateIntegration();
 
@@ -88,9 +93,48 @@ public class AdsManager : Singleton<AdsManager>
         _interstitialAd.OnAdInfoChanged += InterstitialOnAdInfoChangedEvent;
     }
 
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+
+        // Init에서 등록한 SDK 초기화 콜백 해제
+        LevelPlay.OnInitSuccess -= SdkInitializationCompletedEvent;
+        LevelPlay.OnInitFailed -= SdkInitializationFailedEvent;
+
+        // EnableAds에서 등록한 임프레션 콜백 해제
+        LevelPlay.OnImpressionDataReady -= ImpressionDataReadyEvent;
+
+        // 보상형 광고 이벤트 해제 — EnableAds 호출 전 Destroy 시 null 가드
+        if (_rewardedAd != null)
+        {
+            _rewardedAd.OnAdLoaded -= RewardedVideoOnLoadedEvent;
+            _rewardedAd.OnAdLoadFailed -= RewardedVideoOnAdLoadFailedEvent;
+            _rewardedAd.OnAdDisplayed -= RewardedVideoOnAdDisplayedEvent;
+            _rewardedAd.OnAdDisplayFailed -= RewardedVideoOnAdDisplayedFailedEvent;
+            _rewardedAd.OnAdRewarded -= RewardedVideoOnAdRewardedEvent;
+            _rewardedAd.OnAdClicked -= RewardedVideoOnAdClickedEvent;
+            _rewardedAd.OnAdClosed -= RewardedVideoOnAdClosedEvent;
+            _rewardedAd.OnAdInfoChanged -= RewardedVideoOnAdInfoChangedEvent;
+        }
+
+        // 전면 광고 이벤트 해제 — EnableAds 호출 전 Destroy 시 null 가드
+        if (_interstitialAd != null)
+        {
+            _interstitialAd.OnAdLoaded -= InterstitialOnAdLoadedEvent;
+            _interstitialAd.OnAdLoadFailed -= InterstitialOnAdLoadFailedEvent;
+            _interstitialAd.OnAdDisplayed -= InterstitialOnAdDisplayedEvent;
+            _interstitialAd.OnAdDisplayFailed -= InterstitialOnAdDisplayFailedEvent;
+            _interstitialAd.OnAdClicked -= InterstitialOnAdClickedEvent;
+            _interstitialAd.OnAdClosed -= InterstitialOnAdClosedEvent;
+            _interstitialAd.OnAdInfoChanged -= InterstitialOnAdInfoChangedEvent;
+        }
+    }
+
     #region 로그
     void SdkInitializationCompletedEvent(LevelPlayConfiguration config)
     {
+        // OnDestroy 이후 SDK 콜백이 도착하는 경쟁 상태 방지
+        if (this == null) return;
         Debug.Log($"[LevelPlaySample] Received SdkInitializationCompletedEvent with Config: {config}");
         EnableAds();
     }

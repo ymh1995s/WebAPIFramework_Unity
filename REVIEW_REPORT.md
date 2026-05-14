@@ -13,7 +13,7 @@
 |---|---|
 | 완료 청크 | 9 / 9 |
 | Critical | **3건** (2건 해결, 1건 잔존) |
-| High | **11건** (3건 해결) |
+| High | **11건** (4건 해결) |
 | Medium | **19건** (2건 해결) |
 | Low / Info | **14건** |
 
@@ -284,7 +284,7 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 | H8 | Q9-02 | `UI_MailPopup.cs:29` 외 3건 | async void OnEnable 4건 — 팝업 닫힘 후 비활성 객체 접근 | `gameObject.activeInHierarchy` 가드 또는 CancellationToken 도입 |
 | H9 | S2-1 | `ApiConfig.cs:5` | `http://localhost:5058` 하드코딩 — 프로덕션 MITM | 환경별 URL 분리 + HTTPS 강제 |
 | H10 | S3-3 | `UI_MainGame.cs:253-266` | 로그아웃/탈퇴 시 GoogleSignInProvider.SignOut() 미호출 | `AuthManager.Clear()` 전후에 `SignOut()` 호출 추가 |
-| H11 | S7 | `AdsManager.cs` 전체 | LevelPlay/RewardedAd/InterstitialAd 18개 이벤트 해제 전무 | `OnDestroy()` 추가 + `Init()` `_initialized` 가드 |
+| ~~H11~~ ✅ | S7 | `AdsManager.cs` 전체 | ~~LevelPlay/RewardedAd/InterstitialAd 18개 이벤트 해제 전무~~ | ~~`OnDestroy()` 추가 + `Init()` `_initialized` 가드~~ **해결**: `OnDestroy()` 추가(18개 이벤트 전량 `-=`), `bool _initialized` 가드로 중복 Init 방지, `SdkInitializationCompletedEvent`에 `if (this == null) return;` 경쟁 상태 가드 추가. |
 | ~~H12~~ ✅ | S9 | `SaveManager.cs:72` | ~~JSON 역직렬화 예외 미처리 → JSON 손상 시 앱 크래시~~ | ~~try-catch 추가, 실패 시 `Reset()` 기본 데이터 복구~~ **해결**: 단일 `catch (System.Exception)` + 손상 파일 `.corrupted` 백업 + `DeserializeObject` null 가드 + `Reset()` 복구. QA 승인. |
 
 ---
