@@ -14,7 +14,7 @@
 | 완료 청크 | 9 / 9 |
 | Critical | **3건** (2건 해결, 1건 잔존) |
 | High | **11건** (10건 해결) |
-| Medium | **19건** (5건 해결) |
+| Medium | **19건** (8건 해결) |
 | Low / Info | **14건** |
 
 ### Top 5 즉시 조치
@@ -300,10 +300,10 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 | M5 ⏸ | Q2-01~03 | `BootstrapFlow.cs:9,12` / `AppResumeFlow.cs:10` / `StageSession.cs` | static 필드 Domain Reload 미대응 (3개) | **보류** — H6와 동일 사유. |
 | M6 | Q4-03 | `ApiClient.cs` 전체 | CancellationToken 미구현 — 씬 전환 MissingRef | `destroyCancellationToken` 또는 호출자 단위 CTS |
 | ~~M7~~ ✅ | Q4-04 | UI 전체 | ~~버튼 중복 클릭 방지 부재~~ **해결** — 3계층 가드(Layer A 글로벌 마스크 7 + Layer B 버튼 비활성 5 + Layer C 재진입 1) + `UI_Base.RunWithBusyAsync`/`GuardReentry` |
-| M8 | Q4-05 | `ApiClient.cs:342,373,391,420,473` | `AuthManager.Instance` null 미체크 5건 | null-conditional `?.` 적용 |
+| ~~M8~~ ✅ | Q4-05 | `ApiClient.cs:342,373,391,420,473` | ~~`AuthManager.Instance` null 미체크 5건~~ | **해결**: H4 ITokenProvider 전환 시 `TokenProvider?.Clear()` / `TokenProvider?.RefreshToken` / `TokenProvider?.SaveToken()` / `TokenProvider?.AccessToken` 전량 null-conditional 적용 완료. 별도 작업 불필요. |
 | ~~M9~~ ✅ | Q5-02, Q7-02 | `ItemApi.cs:12`, `InventoryModels.cs:5-9` | ~~`UseItemRequest.quantity` 필드 누락 (CLIENT_GUIDE 불일치)~~ | **해결**: `UseItemRequest`에 `public int quantity = 1;` 추가, `ItemApi.UseAsync`에 `int quantity = 1` optional 파라미터 추가. 호출부(`UI_InventoryPopup.cs`) 변경 없음. |
 | M10 ⏸ | Q6-02 | `AuthManager.cs:9,13` | static event 2개 Domain Reload 미대응 | **보류** — H6와 동일 사유. |
-| M11 | Q7-01 | `StageModels.cs:6-28` | StageMasterDto 서버 필드 3개 누락 | `rewardTableCode` 등 누락 필드 추가 |
+| ~~M11~~ ✅ | Q7-01 | `StageModels.cs:6-28` | ~~StageMasterDto 서버 필드 3개 누락~~ | **해결**: `rewardTableCode`, `rePlayRewardTableCode`, `rePlayRewardDecayPercent` 추가. JsonUtility null→"" 한계 주석 박제. |
 | M12 ⏸ | Q9-04,05 | `PopupService.cs:14,65`, `UI_Log.cs:10` | static 필드 Domain Reload 미대응 (2개) | **보류** — H6와 동일 사유. |
 | M13 | Q9-06, S8-M1 | `UIManager.cs:23` | SceneUI getter 매 접근 `FindObjectsByType` — 캐시 무시 | `if (_sceneUI != null) return _sceneUI;` 선행 체크 |
 | M14 | S2-2 | `GoogleSignInProvider.cs:10` | Google Web Client ID 소스 하드코딩 | `Config/AuthConfig.asset` ScriptableObject 분리 |

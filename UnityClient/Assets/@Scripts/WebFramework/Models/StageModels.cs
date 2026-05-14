@@ -13,6 +13,16 @@ public class StageMasterDto
     // 스테이지 표시 이름
     public string name;
 
+    // 클리어 보상 테이블 코드 — 서버 string?(null=보상 없음)
+    // JsonUtility는 null을 ""로 디시리얼라이즈하므로 "보상 없음" 판정은 string.IsNullOrEmpty() 사용
+    public string rewardTableCode;
+
+    // 재도전 보상 테이블 코드 — 서버 string?(null=재도전 보상 없음)
+    public string rePlayRewardTableCode;
+
+    // 재도전 보상 감쇠율 (퍼센트, 0~100) — 누적 클리어마다 보상 감소
+    public int    rePlayRewardDecayPercent;
+
     // 클리어 시 획득 경험치
     public int    expReward;
 
