@@ -14,7 +14,7 @@
 | 완료 청크 | 9 / 9 |
 | Critical | **3건** (2건 해결, 1건 잔존) |
 | High | **11건** (10건 해결) |
-| Medium | **19건** (4건 해결) |
+| Medium | **19건** (5건 해결) |
 | Low / Info | **14건** |
 
 ### Top 5 즉시 조치
@@ -311,7 +311,7 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 | M16 | S3-4 | `GoogleSignInProvider.cs` | 회원 탈퇴 시 Google Disconnect(Revoke) 미호출 | `Disconnect()` wrapper 추가 + 탈퇴 흐름 연결 |
 | ~~M17~~ ✅ | S5 | `AppLifecycleManager.cs:9` vs `Define.cs:25` | ~~`EEventType.SessionExpired` 구독자 없음 — Handle401 세션 만료 시 LoginScene 전환 누락~~ | **해결**: H2 해소 과정에서 `AppLifecycleManager`가 `EventManager.AddEvent(SessionExpired, HandleSessionExpired)`로 구독. `ApiClient` → `EventManager.TriggerEvent(SessionExpired)` → `AppLifecycleManager.HandleSessionExpired()` → `LoadScene(LoginScene)` 흐름 완성. `AppLifecycleManager.OnSessionExpired` 정적 이벤트 및 `NotifySessionExpired()` 헬퍼 제거. |
 | M18 | S5 | `UI_InventoryPopup.cs:126-153` vs `UI_ShopPopup.cs` | 에러 분기 Status 기반 vs ErrorCode 기반 불일치 | ErrorCode 기반으로 통일 |
-| M19 | S7 | `IAPManager.cs` 전체 | StoreController 8개 이벤트 해제 누락 | `OnDestroy()` 추가하여 이벤트 `-=` 해제 |
+| ~~M19~~ ✅ | S7 | `IAPManager.cs` 전체 | ~~StoreController 8개 이벤트 해제 누락~~ | **해결**: `_initialized` 플래그로 중복 초기화 방지. `Connect()` await 후 `if (this == null) return;`로 경쟁 상태 방지. `OnDestroy()` 추가하여 `_storeController != null` 조건 하에 이벤트 8개 전량 `-=` 해제. |
 
 ---
 

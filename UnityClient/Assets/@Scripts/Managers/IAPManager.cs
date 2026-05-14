@@ -10,6 +10,7 @@ public class IAPManager : Singleton<IAPManager>
 {
     StoreController _storeController;
     Action _onPurchaseCallback;
+    bool _initialized; // 중복 초기화 방지 플래그
 
     #region 아이템 구매
     public void Purchase(string productId, Action onPurchaseCallback)
@@ -52,6 +53,10 @@ public class IAPManager : Singleton<IAPManager>
 
     async Task InitializeIAP()
     {
+        // 중복 초기화 방지 — Start()가 여러 번 호출되더라도 이벤트가 중복 등록되지 않도록
+        if (_initialized) return;
+        _initialized = true;
+
         _storeController = UnityIAPServices.StoreController();
 
         // 모든 이벤트 핸들러 연결
@@ -65,6 +70,9 @@ public class IAPManager : Singleton<IAPManager>
         _storeController.OnProductsFetchFailed += OnProductsFetchedFailed;
 
         await _storeController.Connect();
+
+        // Connect() 완료 전 GameObject가 파괴된 경쟁 상태 방지
+        if (this == null) return;
 
         FetchProducts();
     }
@@ -80,6 +88,24 @@ public class IAPManager : Singleton<IAPManager>
 
         List<ProductDefinition> products = iapConfig.GetProductDefinitions();
         _storeController.FetchProducts(products);
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+
+        // InitializeIAP에서 등록한 UnityIAP StoreController 이벤트 전량 해제
+        if (_storeController != null)
+        {
+            _storeController.OnStoreDisconnected   -= OnStoreDisconnected;
+            _storeController.OnPurchasePending     -= OnPurchasePending;
+            _storeController.OnPurchaseConfirmed   -= OnPurchaseConfirmed;
+            _storeController.OnPurchaseFailed      -= OnPurchaseFailed;
+            _storeController.OnPurchaseDeferred    -= OnPurchaseDeferred;
+            _storeController.OnCheckEntitlement    -= OnCheckEntitlement;
+            _storeController.OnProductsFetched     -= OnProductsFetched;
+            _storeController.OnProductsFetchFailed -= OnProductsFetchedFailed;
+        }
     }
 
     #region Event Handlers
