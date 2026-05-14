@@ -213,7 +213,7 @@ public static class BootstrapFlow
     // [4] 약관 동의 여부에 따라 팝업 또는 즉시 LoginScene 진입
     static void ProceedToLogin()
     {
-        if (PlayerPrefs.GetInt("TermsAccepted", 0) == 0)
+        if (PlayerPrefs.GetInt(PlayerPrefsKey.TermsAccepted, 0) == 0)
         {
             // 첫 실행 — 약관 동의 팝업 표시, 동의 시 LoginScene으로 전환
             PopupService.ShowTerms(() =>

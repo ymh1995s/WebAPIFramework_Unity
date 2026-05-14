@@ -190,7 +190,7 @@ public static class PopupService
             onOk: () =>
             {
                 // 약관 동의 여부 로컬 저장 — 재실행 시 팝업 생략용
-                PlayerPrefs.SetInt("TermsAccepted", 1);
+                PlayerPrefs.SetInt(PlayerPrefsKey.TermsAccepted, 1);
                 PlayerPrefs.Save();
                 onConfirm?.Invoke();
             },

@@ -4,6 +4,11 @@ using UnityEngine;
 // 인증 토큰 및 세션 관리 싱글톤
 public class AuthManager : Singleton<AuthManager>
 {
+    // PlayerPrefs 키 — 단일 파일에서만 사용하므로 클래스 내부 const로 정의
+    private const string KEY_REFRESH_TOKEN    = "RefreshToken";
+    private const string KEY_PLAYER_ID        = "PlayerId";
+    private const string KEY_IS_GOOGLE_LINKED = "IsGoogleLinked";
+
     // 로그인 성공 이벤트 — SaveToken 호출 시 PlayerId(string)를 전달
     // CrashReportManager 등이 구독하여 플레이어별 컨텍스트를 갱신한다
     public static event Action<string> OnLoginSuccess;
@@ -33,16 +38,16 @@ public class AuthManager : Singleton<AuthManager>
     // 앱 시작 시 PlayerPrefs에서 저장된 토큰 및 상태 복원
     public void LoadSavedToken()
     {
-        RefreshToken   = PlayerPrefs.GetString("RefreshToken", string.Empty);
-        PlayerId       = PlayerPrefs.GetString("PlayerId", string.Empty);
-        IsGoogleLinked = PlayerPrefs.GetInt("IsGoogleLinked", 0) == 1;
+        RefreshToken   = PlayerPrefs.GetString(KEY_REFRESH_TOKEN, string.Empty);
+        PlayerId       = PlayerPrefs.GetString(KEY_PLAYER_ID, string.Empty);
+        IsGoogleLinked = PlayerPrefs.GetInt(KEY_IS_GOOGLE_LINKED, 0) == 1;
     }
 
     // 구글 계정 연동 상태 갱신 — 연동/해제 흐름에서 호출처가 명시적으로 호출
     public void SetGoogleLinked(bool linked)
     {
         IsGoogleLinked = linked;
-        PlayerPrefs.SetInt("IsGoogleLinked", linked ? 1 : 0);
+        PlayerPrefs.SetInt(KEY_IS_GOOGLE_LINKED, linked ? 1 : 0);
         PlayerPrefs.Save();
     }
 
@@ -55,8 +60,8 @@ public class AuthManager : Singleton<AuthManager>
         IsNewPlayer  = response.isNewPlayer;
 
         // RefreshToken과 PlayerId를 기기에 영구 저장
-        PlayerPrefs.SetString("RefreshToken", RefreshToken);
-        PlayerPrefs.SetString("PlayerId", PlayerId);
+        PlayerPrefs.SetString(KEY_REFRESH_TOKEN, RefreshToken);
+        PlayerPrefs.SetString(KEY_PLAYER_ID, PlayerId);
         PlayerPrefs.Save();
 
         // 로그인 성공을 구독자에게 알림 — PlayerId 기반 컨텍스트 갱신 트리거
@@ -71,9 +76,9 @@ public class AuthManager : Singleton<AuthManager>
         RefreshToken = string.Empty;
         IsNewPlayer  = false;
 
-        PlayerPrefs.DeleteKey("RefreshToken");
-        PlayerPrefs.DeleteKey("PlayerId");
-        PlayerPrefs.DeleteKey("IsGoogleLinked");
+        PlayerPrefs.DeleteKey(KEY_REFRESH_TOKEN);
+        PlayerPrefs.DeleteKey(KEY_PLAYER_ID);
+        PlayerPrefs.DeleteKey(KEY_IS_GOOGLE_LINKED);
         IsGoogleLinked = false;
         PlayerPrefs.Save();
 

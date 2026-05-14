@@ -73,4 +73,18 @@ public static class PlayerPrefsKey
 {
     // 마지막으로 본 공지 ID — 동일 공지 재표시 차단용
     public const string LastSeenNoticeId = "LastSeenNoticeId";
+
+    // 약관 동의 완료 여부 — 1이면 동의 완료, 미설정/0이면 미동의
+    public const string TermsAccepted = "TermsAccepted";
+}
+
+// UI Canvas sortingOrder 계층 — 레이어 충돌 회피를 위해 한 곳에서 관리
+// PopupStart(100) < Hud(500) < Toast(999) = Fade(999) < BusyMask(1000)
+public static class UISortingOrder
+{
+    public const int PopupStart = 100;   // UIManager 팝업 시작 sortingOrder
+    public const int Hud        = 500;   // ShoutManager HUD
+    public const int Fade       = 999;   // FadeManager 페이드 인/아웃
+    public const int Toast      = 999;   // UIManager 토스트 알림
+    public const int BusyMask   = 1000;  // UIManager 전화면 입력 차단 마스크
 }

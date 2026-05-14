@@ -229,10 +229,10 @@ public class ShoutManager : Singleton<ShoutManager>
 
         _hud = go.GetOrAddComponent<UI_HUDShout>();
 
-        // Canvas sortingOrder = 500 (토스트 999 미만, 일반 씬UI 초과)
+        // Canvas sortingOrder — 계층은 Define.UISortingOrder 참조
         var canvas = go.GetComponent<Canvas>();
         if (canvas != null)
-            canvas.sortingOrder = 500;
+            canvas.sortingOrder = UISortingOrder.Hud;
 
         // 초기 숨김 상태
         go.SetActive(false);

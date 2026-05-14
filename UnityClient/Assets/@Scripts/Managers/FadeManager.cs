@@ -24,10 +24,10 @@ public class FadeManager : Singleton<FadeManager>
         GameObject canvasGo = new GameObject("FadeCanvas");
         DontDestroyOnLoad(canvasGo);
 
-        // Canvas 설정 — 최상위 오버레이, sortingOrder 999로 모든 UI 위에 렌더링
+        // Canvas 설정 — 최상위 오버레이, 계층은 Define.UISortingOrder 참조
         Canvas canvas = canvasGo.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 999;
+        canvas.sortingOrder = UISortingOrder.Fade;
 
         // CanvasScaler — 다양한 해상도에서 일관된 비율 유지
         CanvasScaler scaler = canvasGo.AddComponent<CanvasScaler>();

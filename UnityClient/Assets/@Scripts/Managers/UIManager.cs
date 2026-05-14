@@ -5,13 +5,19 @@ using UnityEngine.UIElements;
 
 public class UIManager : Singleton<UIManager>
 {
+    // UIManager가 생성/관리하는 루트 GameObject 이름들
+    private const string UI_ROOT_NAME    = "@UI_Root";
+    private const string POPUP_ROOT_NAME = "@PopupRoot";
+    private const string TOAST_ROOT_NAME = "@ToastRoot";
+    private const string BUSY_ROOT_NAME  = "@BusyRoot";
+
     Transform _root;
     Transform Root
     {
         get
         {
             // UIManager 자식으로 생성 → UIManager가 DDOL이므로 @UI_Root도 DDOL 상속
-            return Utils.GetRootTransform(ref _root, "@UI_Root", this.transform);
+            return Utils.GetRootTransform(ref _root, UI_ROOT_NAME, this.transform);
         }
     }
 
@@ -62,11 +68,11 @@ public class UIManager : Singleton<UIManager>
     {
         get
         {
-            return Utils.GetRootTransform(ref _popupRoot, "@PopupRoot", Root);
+            return Utils.GetRootTransform(ref _popupRoot, POPUP_ROOT_NAME, Root);
         }
     }
 
-    private int _popupOrder = 100;
+    private int _popupOrder = UISortingOrder.PopupStart;
     private Stack<UI_Base> _popupStack = new Stack<UI_Base>();
     private Dictionary<string, UI_Base> _popups = new Dictionary<string, UI_Base>();
 
@@ -153,13 +159,16 @@ public class UIManager : Singleton<UIManager>
     }
 
     #region Toast UI
+    // Toast 프리팹 이름 — ResourceManager가 PreLoad 폴더에서 탐색
+    private const string TOAST_PREFAB_NAME = "UI_Toast";
+
     // 토스트 전용 루트 Transform — PopupRoot와 분리하여 팝업 스택에 영향을 주지 않음
     Transform _toastRoot;
     Transform ToastRoot
     {
         get
         {
-            return Utils.GetRootTransform(ref _toastRoot, "@ToastRoot", Root);
+            return Utils.GetRootTransform(ref _toastRoot, TOAST_ROOT_NAME, Root);
         }
     }
 
@@ -177,13 +186,13 @@ public class UIManager : Singleton<UIManager>
         // 토스트 인스턴스 최초 생성 또는 씬 전환으로 파괴된 경우 재생성
         if (_toast == null)
         {
-            GameObject go = ResourceManager.Instance.Instantiate("UI_Toast");
+            GameObject go = ResourceManager.Instance.Instantiate(TOAST_PREFAB_NAME);
             _toast = go.GetOrAddComponent<UI_Toast>();
             _toast.transform.SetParent(ToastRoot, false);
             // 팝업보다 항상 위에 표시되도록 높은 sortingOrder 설정
             var canvas = _toast.GetComponent<Canvas>();
             if (canvas != null)
-                canvas.sortingOrder = 999;
+                canvas.sortingOrder = UISortingOrder.Toast;
         }
 
         _toast.Show(message, duration);
@@ -200,7 +209,7 @@ public class UIManager : Singleton<UIManager>
     {
         get
         {
-            return Utils.GetRootTransform(ref _busyRoot, "@BusyRoot", Root);
+            return Utils.GetRootTransform(ref _busyRoot, BUSY_ROOT_NAME, Root);
         }
     }
 
@@ -261,10 +270,10 @@ public class UIManager : Singleton<UIManager>
         _busyMask = go.GetOrAddComponent<UI_BusyMask>();
         _busyMask.transform.SetParent(BusyRoot, false);
 
-        // 팝업(100+)·토스트(999)보다 높은 sortingOrder로 최상단 보장
+        // 팝업(100+)·토스트(999)보다 높은 sortingOrder로 최상단 보장 — 계층은 Define.UISortingOrder 참조
         var canvas = _busyMask.GetComponent<Canvas>();
         if (canvas != null)
-            canvas.sortingOrder = 1000;
+            canvas.sortingOrder = UISortingOrder.BusyMask;
 
         // 초기 상태는 비활성 — BeginBusy 이후 Show()에서 활성화됨
         _busyMask.gameObject.SetActive(false);
@@ -317,7 +326,7 @@ public class UIManager : Singleton<UIManager>
         _toast     = null;     // 토스트 인스턴스 참조 초기화
         _busyMask  = null;     // BusyMask 인스턴스 참조 초기화
         _busyCount = 0;        // BusyMask 카운트 초기화
-        _popupOrder = 100;     // 정렬 순서 초기화
+        _popupOrder = UISortingOrder.PopupStart;  // 정렬 순서 초기화
         _sceneUI = null;
     }
 }

@@ -8,12 +8,15 @@ using Object = UnityEngine.Object;
 
 public class UI_UGUI : UI_Base
 {
+    // EventSystem 프리팹 이름 — ResourceManager가 PreLoad 폴더에서 탐색
+    private const string EVENT_SYSTEM_PREFAB_NAME = "EventSystem";
+
     protected Dictionary<Type, Object[]> _objects = new Dictionary<Type, Object[]>();
 
     protected override void Awake()
     {
         if (Object.FindAnyObjectByType<EventSystem>() == null)
-            ResourceManager.Instance.Instantiate("EventSystem");
+            ResourceManager.Instance.Instantiate(EVENT_SYSTEM_PREFAB_NAME);
     }
 
     protected void BindObjects(Type type) { Bind<GameObject>(type); }
