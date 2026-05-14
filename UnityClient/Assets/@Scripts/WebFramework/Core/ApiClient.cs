@@ -9,7 +9,7 @@ using UnityEngine.Networking;
 // HTTP REST 통신 래퍼 싱글톤
 // GET / POST / PUT / DELETE 메서드 제공
 // 401 자동 토큰 갱신, 503 점검 인터셉터, 429 지수 백오프(최대 3회) 포함
-// Task<ApiResult<T>> 반환 오버로드 추가 — 콜백 없이 await로 결과 처리 가능
+// 콜백(Action 기반) / Task<ApiResult<T>> 이중 지원 — 콜백은 fire-and-forget, Task는 await로 직접 수신
 public class ApiClient : Singleton<ApiClient>
 {
     // 요청 타임아웃 — CLIENT_GUIDE 27번 권장 (DB transient retry 최대 50초 고려)
@@ -39,20 +39,28 @@ public class ApiClient : Singleton<ApiClient>
     // ====================================================
 
     // 쿼리 파라미터 없는 GET 요청
-    public async void Get<TRes>(string endpoint,
+    public async Task Get<TRes>(string endpoint,
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
-        await SendAsync<TRes>("GET", ApiConfig.BaseUrl + endpoint, null,
-            retryCount: 0, customParser: null, onSuccess, onError);
+        try
+        {
+            await SendAsync<TRes>("GET", ApiConfig.BaseUrl + endpoint, null,
+                retryCount: 0, customParser: null, onSuccess, onError);
+        }
+        catch (Exception ex) { HandleCallbackException("Get", endpoint, onError, ex); }
     }
 
     // 쿼리 파라미터 있는 GET 요청 — 딕셔너리를 URL에 붙여 조립
-    public async void GetWithQuery<TRes>(string endpoint, IDictionary<string, string> query,
+    public async Task GetWithQuery<TRes>(string endpoint, IDictionary<string, string> query,
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
-        string url = BuildUrl(ApiConfig.BaseUrl + endpoint, query);
-        await SendAsync<TRes>("GET", url, null,
-            retryCount: 0, customParser: null, onSuccess, onError);
+        try
+        {
+            string url = BuildUrl(ApiConfig.BaseUrl + endpoint, query);
+            await SendAsync<TRes>("GET", url, null,
+                retryCount: 0, customParser: null, onSuccess, onError);
+        }
+        catch (Exception ex) { HandleCallbackException("GetWithQuery", endpoint, onError, ex); }
     }
 
     // ====================================================
@@ -60,20 +68,28 @@ public class ApiClient : Singleton<ApiClient>
     // ====================================================
 
     // 요청 본문이 있는 POST
-    public async void Post<TReq, TRes>(string endpoint, TReq body,
+    public async Task Post<TReq, TRes>(string endpoint, TReq body,
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
-        string json = JsonUtility.ToJson(body);
-        await SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, json,
-            retryCount: 0, customParser: null, onSuccess, onError);
+        try
+        {
+            string json = JsonUtility.ToJson(body);
+            await SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, json,
+                retryCount: 0, customParser: null, onSuccess, onError);
+        }
+        catch (Exception ex) { HandleCallbackException("Post", endpoint, onError, ex); }
     }
 
     // 요청 본문이 없는 POST (예: DailyLogin)
-    public async void Post<TRes>(string endpoint,
+    public async Task Post<TRes>(string endpoint,
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
-        await SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, null,
-            retryCount: 0, customParser: null, onSuccess, onError);
+        try
+        {
+            await SendAsync<TRes>("POST", ApiConfig.BaseUrl + endpoint, null,
+                retryCount: 0, customParser: null, onSuccess, onError);
+        }
+        catch (Exception ex) { HandleCallbackException("Post", endpoint, onError, ex); }
     }
 
     // ====================================================
@@ -81,12 +97,16 @@ public class ApiClient : Singleton<ApiClient>
     // ====================================================
 
     // 요청 본문이 있는 PUT
-    public async void Put<TReq, TRes>(string endpoint, TReq body,
+    public async Task Put<TReq, TRes>(string endpoint, TReq body,
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
-        string json = JsonUtility.ToJson(body);
-        await SendAsync<TRes>("PUT", ApiConfig.BaseUrl + endpoint, json,
-            retryCount: 0, customParser: null, onSuccess, onError);
+        try
+        {
+            string json = JsonUtility.ToJson(body);
+            await SendAsync<TRes>("PUT", ApiConfig.BaseUrl + endpoint, json,
+                retryCount: 0, customParser: null, onSuccess, onError);
+        }
+        catch (Exception ex) { HandleCallbackException("Put", endpoint, onError, ex); }
     }
 
     // ====================================================
@@ -94,11 +114,15 @@ public class ApiClient : Singleton<ApiClient>
     // ====================================================
 
     // DELETE 요청
-    public async void Delete<TRes>(string endpoint,
+    public async Task Delete<TRes>(string endpoint,
         Action<TRes> onSuccess, Action<ApiError> onError = null)
     {
-        await SendAsync<TRes>("DELETE", ApiConfig.BaseUrl + endpoint, null,
-            retryCount: 0, customParser: null, onSuccess, onError);
+        try
+        {
+            await SendAsync<TRes>("DELETE", ApiConfig.BaseUrl + endpoint, null,
+                retryCount: 0, customParser: null, onSuccess, onError);
+        }
+        catch (Exception ex) { HandleCallbackException("Delete", endpoint, onError, ex); }
     }
 
     // ====================================================
@@ -106,13 +130,30 @@ public class ApiClient : Singleton<ApiClient>
     // ====================================================
 
     // 백엔드가 최상위 JSON 배열([...])을 반환하는 GET 요청 — JsonHelper로 파싱
-    public async void GetList<T>(string endpoint,
+    public async Task GetList<T>(string endpoint,
         Action<List<T>> onSuccess, Action<ApiError> onError = null)
     {
-        await SendAsync<List<T>>("GET", ApiConfig.BaseUrl + endpoint, null,
-            retryCount: 0,
-            customParser: body => JsonHelper.FromJsonList<T>(body),
-            onSuccess, onError);
+        try
+        {
+            await SendAsync<List<T>>("GET", ApiConfig.BaseUrl + endpoint, null,
+                retryCount: 0,
+                customParser: body => JsonHelper.FromJsonList<T>(body),
+                onSuccess, onError);
+        }
+        catch (Exception ex) { HandleCallbackException("GetList", endpoint, onError, ex); }
+    }
+
+    // ====================================================
+    // 콜백 버전 공통 예외 처리 헬퍼
+    // ====================================================
+
+    // 콜백 버전 공통 예외 처리 — 예외를 onError로 라우팅하고 호출자 전파를 차단한다
+    private static void HandleCallbackException(
+        string methodName, string endpoint, Action<ApiError> onError, Exception ex)
+    {
+        RestLogger.Error($"[ApiClient.{methodName}] 미처리 예외 — {endpoint} | {ex.GetType().Name}: {ex.Message}");
+        try { onError?.Invoke(ApiError.FromHttp(0, null, isNetwork: true)); }
+        catch (Exception cbEx) { RestLogger.Error($"[ApiClient.{methodName}] onError 콜백 실패 — {cbEx.Message}"); }
     }
 
     // ====================================================

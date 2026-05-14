@@ -13,7 +13,7 @@
 |---|---|
 | 완료 청크 | 9 / 9 |
 | Critical | **3건** (2건 해결, 1건 잔존) |
-| High | **11건** (2건 해결) |
+| High | **11건** (3건 해결) |
 | Medium | **19건** (2건 해결) |
 | Low / Info | **14건** |
 
@@ -278,8 +278,8 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 | H2 | A3 | `Managers/AppLifecycleManager.cs:51,72` | Managers→WebFramework/Auth 역방향 의존 | H1과 동일 처리 + `IsLoggedIn` 추상 인터페이스 검토 |
 | H3 | A3 | `Managers/ShoutManager.cs:45,160,179` | Managers→Api/Auth/Core 역방향 다중 결합 | Managers 유지 + PlayerId EventManager 캐싱 + ServerTime 공용 정적 예외 CLAUDE.md 명시 |
 | H4 | A4·A6 | `Core/ApiClient.cs:241,342,373,391,420,473` | Core↔Auth·UI 양방향 결합 6건 | `ITokenProvider` 인터페이스 도입 + PopupService 호출 → EventManager 발행 전환 |
-| H5 | Q4-01 | `ApiClient.cs:42,50,63,72,84,97,109` | async void 7개 — 예외 삼킴 | `async Task` 전환 또는 내부 try-catch 래퍼 적용 |
-| H6 | Q4-02 | `ApiClient.cs:27,30,35` | static 3개 Domain Reload 미대응 — 토큰 갱신 데드락 | `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]` 리셋 메서드 추가 |
+| ~~H5~~ ✅ | Q4-01 | `ApiClient.cs:42,50,63,72,84,97,109` | ~~async void 7개 — 예외 삼킴~~ | **해결**: `async Task` 전환 + 내부 try-catch → `HandleCallbackException` 헬퍼로 중복 제거. QA 승인. |
+| H6 ⏸ | Q4-02 | `ApiClient.cs:27,30,35` | static 3개 Domain Reload 미대응 — 토큰 갱신 데드락 | **보류** — 에디터 전용 현상(빌드·실유저 영향 0%). Domain Reload 기능을 끈 환경에서만 발현. 릴리즈 직전 필요 시 재검토. |
 | ~~H7~~ ✅ | Q9-01 | `UI_WithdrawPopup.cs:54-67` (→ UI_MainGame.DoWithdraw) | ~~이중 클릭 방지 누락~~ **해결** — `UI_Base.RunWithBusyAsync`(Layer A 글로벌 마스크) 도입, 시각 피드백까지 격상 |
 | H8 | Q9-02 | `UI_MailPopup.cs:29` 외 3건 | async void OnEnable 4건 — 팝업 닫힘 후 비활성 객체 접근 | `gameObject.activeInHierarchy` 가드 또는 CancellationToken 도입 |
 | H9 | S2-1 | `ApiConfig.cs:5` | `http://localhost:5058` 하드코딩 — 프로덕션 MITM | 환경별 URL 분리 + HTTPS 강제 |
@@ -297,14 +297,14 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 | M2 | A1, A7 | `Managers/SceneManager.cs:5`, `LoadingScene.cs:39` | `UnityEngine.SceneManagement.SceneManager`와 식별자 충돌 + 우회 주석 박제 | `AppSceneManager`로 개명 |
 | ~~M3~~ ✅ | Q1-01, S9-M3 | `EventManager.cs:27` | TriggerEvent delegate null → NRE | ~~`_events[eventType]?.Invoke()`~~ **해결** |
 | M4 | Q1-05 | `DataManager.cs:53` | LoadJson textAsset null 미체크 | null 체크 + LogError 추가 |
-| M5 | Q2-01~03 | `BootstrapFlow.cs:9,12` / `AppResumeFlow.cs:10` / `StageSession.cs` | static 필드 Domain Reload 미대응 (3개) | `[RuntimeInitializeOnLoadMethod]` 리셋 추가 |
+| M5 ⏸ | Q2-01~03 | `BootstrapFlow.cs:9,12` / `AppResumeFlow.cs:10` / `StageSession.cs` | static 필드 Domain Reload 미대응 (3개) | **보류** — H6와 동일 사유. |
 | M6 | Q4-03 | `ApiClient.cs` 전체 | CancellationToken 미구현 — 씬 전환 MissingRef | `destroyCancellationToken` 또는 호출자 단위 CTS |
 | ~~M7~~ ✅ | Q4-04 | UI 전체 | ~~버튼 중복 클릭 방지 부재~~ **해결** — 3계층 가드(Layer A 글로벌 마스크 7 + Layer B 버튼 비활성 5 + Layer C 재진입 1) + `UI_Base.RunWithBusyAsync`/`GuardReentry` |
 | M8 | Q4-05 | `ApiClient.cs:342,373,391,420,473` | `AuthManager.Instance` null 미체크 5건 | null-conditional `?.` 적용 |
 | M9 | Q5-02, Q7-02 | `ItemApi.cs:12`, `InventoryModels.cs:5-9` | `UseItemRequest.quantity` 필드 누락 (CLIENT_GUIDE 불일치) | quantity 필드 추가, ItemApi.UseAsync 시그니처 확장 |
-| M10 | Q6-02 | `AuthManager.cs:9,13` | static event 2개 Domain Reload 미대응 | `[RuntimeInitializeOnLoadMethod]` event = null 리셋 |
+| M10 ⏸ | Q6-02 | `AuthManager.cs:9,13` | static event 2개 Domain Reload 미대응 | **보류** — H6와 동일 사유. |
 | M11 | Q7-01 | `StageModels.cs:6-28` | StageMasterDto 서버 필드 3개 누락 | `rewardTableCode` 등 누락 필드 추가 |
-| M12 | Q9-04,05 | `PopupService.cs:14,65`, `UI_Log.cs:10` | static 필드 Domain Reload 미대응 (2개) | `[RuntimeInitializeOnLoadMethod]` 리셋 추가 |
+| M12 ⏸ | Q9-04,05 | `PopupService.cs:14,65`, `UI_Log.cs:10` | static 필드 Domain Reload 미대응 (2개) | **보류** — H6와 동일 사유. |
 | M13 | Q9-06, S8-M1 | `UIManager.cs:23` | SceneUI getter 매 접근 `FindObjectsByType` — 캐시 무시 | `if (_sceneUI != null) return _sceneUI;` 선행 체크 |
 | M14 | S2-2 | `GoogleSignInProvider.cs:10` | Google Web Client ID 소스 하드코딩 | `Config/AuthConfig.asset` ScriptableObject 분리 |
 | M15 | S2-4 | `ApiConfig.cs` | dev/staging/prod 환경 분리 없음 | ScriptableObject 또는 #if 전처리 분기 도입 |
