@@ -203,6 +203,9 @@ public static class BootstrapFlow
         AuthManager.Instance.SaveToken(result.Value);
         Debug.Log("[Bootstrap] 자동 로그인 성공");
         UnsubscribeMaintenanceEvent();
+        // LoginScene을 건너뛰므로 데이터 적재를 여기서 보장
+        // 이 시점엔 BootstrapScene.Start()에서 ResourceManager.LoadAll()이 이미 완료된 상태
+        DataManager.Instance.LoadData();
         SceneManager.Instance.LoadScene(Define.EScene.MainScene);
         return true;
     }
