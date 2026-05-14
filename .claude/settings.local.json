@@ -98,7 +98,9 @@
       "Bash(grep -rn \"Item[0-9]\\\\|\\\\$\\\\\"Item\\\\|\\\\\"Item \\\\\"+\\\\\\\\|\\\\\"Item\\\\\"+\" \"C:/Users/user/Documents/WebAPIFramework/GameClient/UnityClient/Assets/@Scripts\" --include=\"*.cs\")",
       "Bash(grep -rn \"\\\\\"Item\\\\\" + \\\\|\\\\$\\\\\"Item{\\\\|'Item' + \\\\|\\\\\"Item\\\\\" \\\\\\\\+ id\\\\\\\\|+ itemId\\\\\\\\|+ ItemId\" \"C:/Users/user/Documents/WebAPIFramework/Framework\" --include=\"*.cs\")",
       "Bash(Select-Object -First 50)",
-      "Bash(Select-Object FullName)"
+      "Bash(Select-Object FullName)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\user\\\\Documents\\\\WebAPIFramework\\\\GameClient\\\\UnityClient\\\\Assets\\\\@Scripts\\\\Utils\\\\PrefabKey.cs\" -Force)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\user\\\\Documents\\\\WebAPIFramework\\\\GameClient\\\\UnityClient\\\\Assets\\\\@Scripts\\\\Utils\\\\PrefabKey.cs.meta\" -Force -ErrorAction SilentlyContinue)"
     ]
   }
 }
