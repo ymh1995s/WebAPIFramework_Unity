@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -17,6 +18,14 @@ public class UI_Base : MonoBehaviour
     // CallerMemberName으로 자동 추출된 메서드 이름을 키로 사용
     private readonly HashSet<string> _inflight = new HashSet<string>(StringComparer.Ordinal);
 
+    // 팝업 활성(OnEnable) ~ 비활성(OnDisable) 구간 취소 토큰 소스
+    // OnDisable 시 Cancel → 비활성 오브젝트에 대한 비동기 접근을 중단시킨다
+    private CancellationTokenSource _enableCts;
+
+    // OnEnable~OnDisable 구간 동안 유효한 CancellationToken
+    // 팝업이 비활성화되면 자동 취소되어 이후 await 지점에서 OperationCanceledException 발생
+    protected CancellationToken EnableToken => _enableCts?.Token ?? CancellationToken.None;
+
     protected virtual void Awake() { }
 
     protected virtual void Start()
@@ -26,6 +35,8 @@ public class UI_Base : MonoBehaviour
 
     protected virtual void OnEnable()
     {
+        // 팝업이 활성화될 때마다 새 취소 토큰 소스를 발급 — 이전 소스는 OnDisable에서 정리됨
+        _enableCts = new CancellationTokenSource();
         // 팝업 풀링(SetActive 재사용) 시 이전 진행 상태 초기화
         _inflight.Clear();
         // 앱 종료 중 Instance가 null을 반환할 수 있으므로 null-conditional 사용
@@ -34,6 +45,10 @@ public class UI_Base : MonoBehaviour
 
     protected virtual void OnDisable()
     {
+        // 팝업 비활성화 시 진행 중인 비동기 작업을 취소하여 비활성 오브젝트 접근 방지
+        _enableCts?.Cancel();
+        _enableCts?.Dispose();
+        _enableCts = null;
         // 앱 종료 시 _applicationIsQuitting=true → Instance null 반환 → NPE 방지
         EventManager.Instance?.RemoveEvent(Define.EEventType.LanguageChanged, RefreshUI);
     }
@@ -82,6 +97,11 @@ public class UI_Base : MonoBehaviour
         try
         {
             await action();
+        }
+        catch (OperationCanceledException)
+        {
+            // 팝업 비활성(OnDisable)으로 인한 정상 취소 — 오류가 아니므로 Log 레벨 출력 후 조용히 종료
+            Debug.Log($"[UI_Base] {reentryKey} 작업이 팝업 비활성화로 취소되었습니다.");
         }
         catch (Exception e)
         {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -40,15 +41,27 @@ public class UI_InventoryPopup : UI_UGUI, IUI_Popup
     {
         base.OnEnable();
         // 팝업이 활성화될 때마다 최신 인벤토리 로드 (재오픈 시에도 갱신)
-        await LoadInventoryAsync();
+        // 팝업 비활성화(OnDisable) 시 EnableToken이 취소되어 비활성 오브젝트 접근을 차단
+        try
+        {
+            await LoadInventoryAsync(EnableToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // 팝업 비활성화로 인한 정상 취소 — 무시
+        }
     }
 
     // 인벤토리 API 호출 및 텍스트 갱신
-    private async Task LoadInventoryAsync()
+    // ct: OnEnable~OnDisable 구간 취소 토큰 — 비활성화 시 UI 갱신 코드 진입 전 중단
+    private async Task LoadInventoryAsync(CancellationToken ct = default)
     {
         GetText((int)Texts.Text).text = "인벤토리 불러오는 중...";
 
         var result = await ItemApi.GetInventoryAsync();
+        // API 응답 후 팝업이 이미 비활성화됐다면 UI 갱신 없이 중단
+        ct.ThrowIfCancellationRequested();
+
         if (!result.IsSuccess)
         {
             GetText((int)Texts.Text).text = "인벤토리 불러오기 실패";
@@ -119,11 +132,13 @@ public class UI_InventoryPopup : UI_UGUI, IUI_Popup
         }
 
         // 200 성공 — 토스트 안내 후 인벤토리 갱신
+        // 버튼 클릭 경로는 OnEnable 취소 범위 밖이므로 CancellationToken.None 전달
         PopupService.ShowToast("아이템을 사용했습니다.");
-        await LoadInventoryAsync();
+        await LoadInventoryAsync(CancellationToken.None);
     }, scope: Define.EBusyScope.Button, gateButton: GetButton((int)Buttons.UseBtn));
 
     // 아이템 사용 오류 처리 — 상태 코드별 분기
+    // 버튼 클릭 경로에서 호출되므로 CancellationToken.None으로 인벤토리 갱신 (취소 불필요)
     private async Task HandleUseErrorAsync(ApiError err)
     {
         switch (err.Status)
@@ -131,25 +146,25 @@ public class UI_InventoryPopup : UI_UGUI, IUI_Popup
             case 400:
                 // 수량 부족 또는 아이템 없음
                 PopupService.ShowError(err);
-                await LoadInventoryAsync();
+                await LoadInventoryAsync(CancellationToken.None);
                 break;
 
             case 409:
                 // 멱등 충돌 — 사용자 비노출, 로그만 기록 후 인벤토리 갱신
                 Debug.LogWarning("[Item] 멱등 충돌 - 중복 요청");
-                await LoadInventoryAsync();
+                await LoadInventoryAsync(CancellationToken.None);
                 break;
 
             case 422:
                 // 보상 테이블 오류
                 PopupService.ShowError(err);
-                await LoadInventoryAsync();
+                await LoadInventoryAsync(CancellationToken.None);
                 break;
 
             default:
                 // 500 및 기타 오류
                 PopupService.ShowError(err);
-                await LoadInventoryAsync();
+                await LoadInventoryAsync(CancellationToken.None);
                 break;
         }
     }

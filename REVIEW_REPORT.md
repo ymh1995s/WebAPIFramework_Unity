@@ -13,7 +13,7 @@
 |---|---|
 | 완료 청크 | 9 / 9 |
 | Critical | **3건** (2건 해결, 1건 잔존) |
-| High | **11건** (6건 해결) |
+| High | **11건** (7건 해결) |
 | Medium | **19건** (2건 해결) |
 | Low / Info | **14건** |
 
@@ -281,7 +281,7 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 | ~~H5~~ ✅ | Q4-01 | `ApiClient.cs:42,50,63,72,84,97,109` | ~~async void 7개 — 예외 삼킴~~ | **해결**: `async Task` 전환 + 내부 try-catch → `HandleCallbackException` 헬퍼로 중복 제거. QA 승인. |
 | H6 ⏸ | Q4-02 | `ApiClient.cs:27,30,35` | static 3개 Domain Reload 미대응 — 토큰 갱신 데드락 | **보류** — 에디터 전용 현상(빌드·실유저 영향 0%). Domain Reload 기능을 끈 환경에서만 발현. 릴리즈 직전 필요 시 재검토. |
 | ~~H7~~ ✅ | Q9-01 | `UI_WithdrawPopup.cs:54-67` (→ UI_MainGame.DoWithdraw) | ~~이중 클릭 방지 누락~~ **해결** — `UI_Base.RunWithBusyAsync`(Layer A 글로벌 마스크) 도입, 시각 피드백까지 격상 |
-| H8 | Q9-02 | `UI_MailPopup.cs:29` 외 3건 | async void OnEnable 4건 — 팝업 닫힘 후 비활성 객체 접근 | `gameObject.activeInHierarchy` 가드 또는 CancellationToken 도입 |
+| ~~H8~~ ✅ | Q9-02 | `UI_MailPopup.cs:29` 외 3건 | ~~async void OnEnable 4건 — 팝업 닫힘 후 비활성 객체 접근~~ | **해결**: `UI_Base`에 `_enableCts`/`EnableToken` CTS 인프라 추가. OnEnable에서 발급, OnDisable에서 Cancel→Dispose. 4개 팝업 OnEnable → try/catch(OCE) 래핑, LoadXxxAsync(CancellationToken) + await 직후 ThrowIfCancellationRequested() 일괄 적용. QA 승인. |
 | ~~H9~~ ✅ | S2-1 | `ApiConfig.cs:5` | ~~`http://localhost:5058` 하드코딩 — 프로덕션 MITM~~ | **해결**: `NetworkConfig` SO 신설(Dev/Staging/Prod URL 필드, `#if` 환경 분기), `ApiConfig.cs`에서 `BaseUrl` 제거, `ApiClient` 15곳 → `DataManager.Instance.NetworkConfig.BaseUrl` 전환. 릴리즈 빌드 `http://` 감지 `LogError`. QA 승인. |
 | H10 | S3-3 | `UI_MainGame.cs:253-266` | 로그아웃/탈퇴 시 GoogleSignInProvider.SignOut() 미호출 | `AuthManager.Clear()` 전후에 `SignOut()` 호출 추가 |
 | ~~H11~~ ✅ | S7 | `AdsManager.cs` 전체 | ~~LevelPlay/RewardedAd/InterstitialAd 18개 이벤트 해제 전무~~ | ~~`OnDestroy()` 추가 + `Init()` `_initialized` 가드~~ **해결**: `OnDestroy()` 추가(18개 이벤트 전량 `-=`), `bool _initialized` 가드로 중복 Init 방지, `SdkInitializationCompletedEvent`에 `if (this == null) return;` 경쟁 상태 가드 추가. |

@@ -68,6 +68,7 @@
     <Compile Include="Assets\@Scripts\WebFramework\Models\DebugModels.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\GoogleSignInUser.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_ShopPopup.cs" />
+    <Compile Include="Assets\@Scripts\Config\NetworkConfig.cs" />
     <Compile Include="Assets\@Scripts\Data\ItemData.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\ItemApi.cs" />
     <Compile Include="Assets\@Scripts\Managers\SoundManager.cs" />
@@ -119,6 +120,7 @@
     <Compile Include="Assets\@Scripts\Managers\IAPManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\LocalizationManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\UIManager.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Core\ITokenProvider.cs" />
     <Compile Include="Assets\@Scripts\Managers\ShoutManager.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\DebugApi.cs" />
     <Compile Include="Assets\@Scripts\Managers\Singleton.cs" />

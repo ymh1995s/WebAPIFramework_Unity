@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -26,15 +28,27 @@ public class UI_InquiryPopup : UI_UGUI, IUI_Popup
     {
         base.OnEnable();
         // 팝업이 활성화될 때마다 최신 문의 목록 로드 (재오픈 시에도 갱신)
-        await LoadInquiriesAsync();
+        // 팝업 비활성화(OnDisable) 시 EnableToken이 취소되어 비활성 오브젝트 접근을 차단
+        try
+        {
+            await LoadInquiriesAsync(EnableToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // 팝업 비활성화로 인한 정상 취소 — 무시
+        }
     }
 
     // 문의 목록 API 호출 및 텍스트 갱신
-    private async Task LoadInquiriesAsync()
+    // ct: OnEnable~OnDisable 구간 취소 토큰 — 비활성화 시 UI 갱신 코드 진입 전 중단
+    private async Task LoadInquiriesAsync(CancellationToken ct = default)
     {
         GetText((int)Texts.Text).text = "문의 내역 불러오는 중...";
 
         var result = await InquiryApi.GetListAsync();
+        // API 응답 후 팝업이 이미 비활성화됐다면 UI 갱신 없이 중단
+        ct.ThrowIfCancellationRequested();
+
         if (!result.IsSuccess)
         {
             GetText((int)Texts.Text).text = "문의 내역 불러오기 실패";
@@ -84,8 +98,9 @@ public class UI_InquiryPopup : UI_UGUI, IUI_Popup
         }
 
         // 제출 성공 — 공지 표시 후 목록 갱신
+        // 버튼 클릭 경로는 OnEnable 취소 범위 밖이므로 CancellationToken.None 전달
         PopupService.ShowAnnouncement("문의가 접수되었습니다.");
-        await LoadInquiriesAsync();
+        await LoadInquiriesAsync(CancellationToken.None);
     }
 
     private void OnClickExit()

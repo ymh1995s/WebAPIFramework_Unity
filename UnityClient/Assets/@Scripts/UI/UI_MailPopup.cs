@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -29,15 +31,27 @@ public class UI_MailPopup : UI_UGUI, IUI_Popup
     {
         base.OnEnable();
         // 팝업이 활성화될 때마다 최신 메일 목록 로드 (재오픈 시에도 갱신)
-        await LoadMailsAsync();
+        // 팝업 비활성화(OnDisable) 시 EnableToken이 취소되어 비활성 오브젝트 접근을 차단
+        try
+        {
+            await LoadMailsAsync(EnableToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // 팝업 비활성화로 인한 정상 취소 — 무시
+        }
     }
 
     // 메일 목록 API 호출 및 텍스트 갱신
-    private async Task LoadMailsAsync()
+    // ct: OnEnable~OnDisable 구간 취소 토큰 — 비활성화 시 UI 갱신 코드 진입 전 중단
+    private async Task LoadMailsAsync(CancellationToken ct = default)
     {
         GetText((int)Texts.Text).text = "메일 불러오는 중...";
 
         var result = await MailApi.GetListAsync();
+        // API 응답 후 팝업이 이미 비활성화됐다면 UI 갱신 없이 중단
+        ct.ThrowIfCancellationRequested();
+
         if (!result.IsSuccess)
         {
             GetText((int)Texts.Text).text = "메일 불러오기 실패";

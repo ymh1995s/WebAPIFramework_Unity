@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -59,11 +60,20 @@ public class UI_ShopPopup : UI_UGUI, IUI_Popup
     {
         base.OnEnable();
         // 팝업 활성화 시마다 상점 정보 로드 (재오픈 시에도 갱신)
-        await LoadShopAsync();
+        // 팝업 비활성화(OnDisable) 시 EnableToken이 취소되어 비활성 오브젝트 접근을 차단
+        try
+        {
+            await LoadShopAsync(EnableToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // 팝업 비활성화로 인한 정상 취소 — 무시
+        }
     }
 
     // 상점 상품 목록 + 인벤토리를 병렬 조회 후 화면 갱신
-    private async Task LoadShopAsync()
+    // ct: OnEnable~OnDisable 구간 취소 토큰 — WhenAll 완료 후 팝업이 비활성이면 UI 갱신 없이 중단
+    private async Task LoadShopAsync(CancellationToken ct = default)
     {
         GetText((int)Texts.Text).text = "상점 정보 불러오는 중...";
 
@@ -71,6 +81,8 @@ public class UI_ShopPopup : UI_UGUI, IUI_Popup
         var productsTask  = ShopApi.GetListAsync();
         var inventoryTask = ItemApi.GetInventoryAsync();
         await Task.WhenAll(productsTask, inventoryTask);
+        // 병렬 조회 완료 후 팝업이 이미 비활성화됐다면 UI 갱신 없이 중단
+        ct.ThrowIfCancellationRequested();
 
         var productsResult  = productsTask.Result;
         var inventoryResult = inventoryTask.Result;
@@ -173,11 +185,13 @@ public class UI_ShopPopup : UI_UGUI, IUI_Popup
         }
 
         // 200 성공 — 구매 완료 안내 후 상점 정보 갱신
+        // 버튼 클릭 경로는 OnEnable 취소 범위 밖이므로 CancellationToken.None 전달
         PopupService.ShowToast("구매가 완료되었습니다.");
-        await LoadShopAsync();
+        await LoadShopAsync(CancellationToken.None);
     }, scope: Define.EBusyScope.Button, gateButton: GetButton((int)Buttons.BuyBtn));
 
     // 구매 오류 처리 — errorCode 기준 분기 (HTTP 상태 코드만으로는 구분 불가능한 경우 포함)
+    // 버튼 클릭 경로에서 호출되므로 CancellationToken.None으로 상점 갱신 (취소 불필요)
     private async Task HandleBuyErrorAsync(ApiError err)
     {
         switch (err.ErrorCode)
@@ -185,7 +199,7 @@ public class UI_ShopPopup : UI_UGUI, IUI_Popup
             case "SHOP_PRODUCT_NOT_FOUND":
                 // 404 — 존재하지 않는 상품
                 PopupService.ShowToast("존재하지 않는 상품입니다.");
-                await LoadShopAsync();
+                await LoadShopAsync(CancellationToken.None);
                 break;
 
             case "SHOP_NOT_ENOUGH_CURRENCY":
@@ -199,7 +213,7 @@ public class UI_ShopPopup : UI_UGUI, IUI_Popup
                 // 잔여 수량이 0이면 "(잔여: 0개)" 부분을 숨겨 사용자 혼란 방지
                 string suffix = remaining > 0 ? $" (잔여: {remaining}개)" : "";
                 PopupService.ShowToast($"구매 한도 초과{suffix}");
-                await LoadShopAsync();
+                await LoadShopAsync(CancellationToken.None);
                 break;
 
             case "SHOP_MAX_PER_CALL_EXCEEDED":
@@ -208,9 +222,9 @@ public class UI_ShopPopup : UI_UGUI, IUI_Popup
                 break;
 
             case "SHOP_DUPLICATE_REQUEST":
-                // 409 — 멱등 충돌 — 사용자 비노출, 로그만 기록 후 인벤토리 갱신
+                // 409 — 멱등 충돌 — 사용자 비노출, 로그만 기록 후 상점 갱신
                 Debug.LogWarning("[Shop] 멱등 충돌");
-                await LoadShopAsync();
+                await LoadShopAsync(CancellationToken.None);
                 break;
 
             default:
@@ -275,7 +289,8 @@ public class UI_ShopPopup : UI_UGUI, IUI_Popup
         }
 
         // _items, _products 모두 갱신 후 itemName 동적 추출 — 추출 실패 시 itemId 폴백
-        await LoadShopAsync();
+        // 디버그 핸들러 경로는 OnEnable 취소 범위 밖이므로 CancellationToken.None 전달
+        await LoadShopAsync(CancellationToken.None);
         string label = $"itemId={itemId}";
         var added = _items?.Find(i => i.itemId == itemId);
         if (added != null && !string.IsNullOrEmpty(added.itemName))
