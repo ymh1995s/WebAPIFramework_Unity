@@ -8,9 +8,9 @@ public static class ItemApi
     public static Task<ApiResult<List<PlayerItemDto>>> GetInventoryAsync()
         => ApiClient.Instance.GetListAsync<PlayerItemDto>(ApiConfig.Item.GetInventory);
 
-    // 아이템 사용 비동기 버전 — itemId 경로 바인딩, clientRequestId로 멱등성 보장
-    public static Task<ApiResult<EmptyResponse>> UseAsync(int itemId, string clientRequestId)
+    // 아이템 사용 비동기 버전 — itemId 경로 바인딩, clientRequestId로 멱등성 보장, quantity 기본값 1
+    public static Task<ApiResult<EmptyResponse>> UseAsync(int itemId, string clientRequestId, int quantity = 1)
         => ApiClient.Instance.PostAsync<UseItemRequest, EmptyResponse>(
             string.Format(ApiConfig.Item.Use, itemId),
-            new UseItemRequest { clientRequestId = clientRequestId });
+            new UseItemRequest { clientRequestId = clientRequestId, quantity = quantity });
 }

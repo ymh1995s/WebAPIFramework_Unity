@@ -6,6 +6,8 @@ public class UseItemRequest
 {
     // 멱등성 키 — 동일 요청 중복 처리 방지용. 호출 시 Guid.NewGuid().ToString() 으로 생성
     public string clientRequestId;
+    // 사용 수량 — 기본값 1 (서버 [Range(1, int.MaxValue)] 제약 준수)
+    public int quantity = 1;
 }
 
 // 플레이어 보유 아이템 단건 DTO — GET /api/items/inventory 응답 항목 단위
