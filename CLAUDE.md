@@ -193,6 +193,7 @@ GameObject go = ResourceManager.Instance.Instantiate(HUD_PREFAB_NAME);
 - 새 매니저 필요 시 `Singleton<T>` 상속 (`AuthManager`가 표본)
 - 401/429/503 인터셉터는 `ApiClient` 내부 자동 처리 — 호출부에서 별도 처리 금지
 - 토큰 상태는 `AuthManager.Instance.AccessToken` 단일 경로
+- `Api/*` 정적 서비스와 `Core/*` 정적 유틸(`ServerTime`, `JsonHelper` 등)은 어느 레이어에서든 직접 호출 가능. 단, `AuthManager` 등 도메인 상태를 가진 구체 매니저는 직접 참조하지 말고 `EventManager` 경유
 
 > 개발 가이드:
 > - Api 호출 패턴 / 신규 도메인 추가 절차 → `DEVELOPER_GUIDE.md`
