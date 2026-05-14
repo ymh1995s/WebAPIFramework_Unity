@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 // 인증 토큰 및 세션 관리 싱글톤 — ITokenProvider를 구현하여 ApiClient에 자가 등록
@@ -8,14 +7,6 @@ public class AuthManager : Singleton<AuthManager>, ITokenProvider
     private const string KEY_REFRESH_TOKEN    = "RefreshToken";
     private const string KEY_PLAYER_ID        = "PlayerId";
     private const string KEY_IS_GOOGLE_LINKED = "IsGoogleLinked";
-
-    // 로그인 성공 이벤트 — SaveToken 호출 시 PlayerId(string)를 전달
-    // CrashReportManager 등이 구독하여 플레이어별 컨텍스트를 갱신한다
-    public static event Action<string> OnLoginSuccess;
-
-    // 로그아웃 이벤트 — Clear 호출 시 발행
-    // 구독자가 플레이어별 상태를 초기화할 수 있도록 알린다
-    public static event Action OnLogout;
 
     // 현재 로그인한 플레이어 PublicId (Guid 문자열 — 내부 int Id 아님)
     public string PlayerId     { get; private set; }
@@ -35,10 +26,19 @@ public class AuthManager : Singleton<AuthManager>, ITokenProvider
     // 로그인 상태 여부 - RefreshToken 존재로 판단
     public bool IsLoggedIn => !string.IsNullOrEmpty(RefreshToken);
 
-    // 초기화 시 ApiClient에 자신을 ITokenProvider로 등록 — 결합을 인터페이스로 역전
+    // 초기화 시 ApiClient에 자신을 ITokenProvider로 등록하고 SessionExpired 이벤트 구독
     protected virtual void Awake()
     {
         ApiClient.Instance.TokenProvider = this;
+        // 세션 만료 이벤트 구독 — ApiClient가 발행하면 토큰 초기화를 스스로 수행
+        EventManager.Instance.AddEvent(Define.EEventType.SessionExpired, OnSessionExpired);
+    }
+
+    // 오브젝트 파괴 시 이벤트 구독 해제
+    protected override void OnDestroy()
+    {
+        EventManager.Instance.RemoveEvent(Define.EEventType.SessionExpired, OnSessionExpired);
+        base.OnDestroy();
     }
 
     // 앱 시작 시 PlayerPrefs에서 저장된 토큰 및 상태 복원
@@ -70,8 +70,8 @@ public class AuthManager : Singleton<AuthManager>, ITokenProvider
         PlayerPrefs.SetString(KEY_PLAYER_ID, PlayerId);
         PlayerPrefs.Save();
 
-        // 로그인 성공을 구독자에게 알림 — PlayerId 기반 컨텍스트 갱신 트리거
-        OnLoginSuccess?.Invoke(response.playerId);
+        // 로그인 성공을 EventManager 경유로 발행 — PlayerId를 페이로드로 전달
+        EventManager.Instance.TriggerEvent(Define.EEventType.LoginSuccess, response.playerId);
     }
 
     // 로그아웃 - 모든 토큰 초기화
@@ -88,7 +88,14 @@ public class AuthManager : Singleton<AuthManager>, ITokenProvider
         IsGoogleLinked = false;
         PlayerPrefs.Save();
 
-        // 로그아웃을 구독자에게 알림 — 플레이어별 상태 초기화 트리거
-        OnLogout?.Invoke();
+        // 로그아웃을 EventManager 경유로 발행
+        EventManager.Instance.TriggerEvent(Define.EEventType.Logout);
+    }
+
+    // 세션 만료 이벤트 핸들러 — 토큰 초기화를 스스로 수행하여 외부 직접 호출 제거
+    // ApiClient가 이미 TokenProvider?.Clear()를 호출하므로 Clear()는 멱등 설계
+    private void OnSessionExpired()
+    {
+        Clear();
     }
 }

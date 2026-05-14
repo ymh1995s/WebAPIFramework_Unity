@@ -21,6 +21,7 @@ public static class Define
         GoldChanged,
         LanguageChanged,
         LoginSuccess,            // 로그인 성공 시 발행
+        Logout,                  // 로그아웃/세션 초기화 시 발행
         MaintenanceDetected,     // 503 점검 응답 감지 시 발행
         SessionExpired,          // 401 토큰 갱신 실패 시 발행 (강제 로그아웃)
     }

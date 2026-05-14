@@ -274,14 +274,14 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 
 | # | 점검 ID | 파일·라인 | 이슈 | 권고 |
 |---|---|---|---|---|
-| H1 | A3 | `Managers/CrashReportManager.cs:37,38,77,78` | Managers→WebFramework/Auth 역방향 의존 | `AuthManager.OnLoginSuccess/OnLogout`을 `EEventType.LoginSuccess/Logout`으로 EventManager 통합 |
-| H2 | A3 | `Managers/AppLifecycleManager.cs:51,72` | Managers→WebFramework/Auth 역방향 의존 | H1과 동일 처리 + `IsLoggedIn` 추상 인터페이스 검토 |
+| ~~H1~~ ✅ | A3 | `Managers/CrashReportManager.cs:37,38,77,78` | ~~Managers→WebFramework/Auth 역방향 의존~~ | **해결**: `AuthManager.OnLoginSuccess/OnLogout` 정적 이벤트 제거 → `EventManager.TriggerEvent(LoginSuccess, playerId)` / `TriggerEvent(Logout)` 경유 전환. `EventManager`에 `Action<object>` 페이로드 오버로드 3종 신규 추가. `CrashReportManager` 구독 대상 EventManager로 교체, `OnLoginSuccess(object)` 시그니처 변경. |
+| ~~H2~~ ✅ | A3 | `Managers/AppLifecycleManager.cs:51,72` | ~~Managers→WebFramework/Auth 역방향 의존~~ | **해결**: `AuthManager.Instance.IsLoggedIn` → `_isLoggedIn` 로컬 캐시(`LoginSuccess`/`Logout` 이벤트 동기화)로 대체. `AuthManager.Instance.Clear()` 직접 호출 → `AuthManager`가 `SessionExpired` 자가 구독하여 `Clear()` 수행(책임 이관). `AppLifecycleManager.OnSessionExpired` 정적 이벤트·`NotifySessionExpired()` 제거. |
 | H3 | A3 | `Managers/ShoutManager.cs:45,160,179` | Managers→Api/Auth/Core 역방향 다중 결합 | Managers 유지 + PlayerId EventManager 캐싱 + ServerTime 공용 정적 예외 CLAUDE.md 명시 |
 | ~~H4~~ ✅ | A4·A6 | `Core/ApiClient.cs:241,342,373,391,420,473` | ~~Core↔Auth·UI 양방향 결합 6건~~ | **해결**: `ITokenProvider` 인터페이스 신규(`Core/`) + `AuthManager : ITokenProvider` 구현 + Awake 자가 등록. `ApiClient` 내 `AuthManager` 직접 참조 5곳 → `TokenProvider?.` 치환. QA 승인. |
 | ~~H5~~ ✅ | Q4-01 | `ApiClient.cs:42,50,63,72,84,97,109` | ~~async void 7개 — 예외 삼킴~~ | **해결**: `async Task` 전환 + 내부 try-catch → `HandleCallbackException` 헬퍼로 중복 제거. QA 승인. |
 | H6 ⏸ | Q4-02 | `ApiClient.cs:27,30,35` | static 3개 Domain Reload 미대응 — 토큰 갱신 데드락 | **보류** — 에디터 전용 현상(빌드·실유저 영향 0%). Domain Reload 기능을 끈 환경에서만 발현. 릴리즈 직전 필요 시 재검토. |
 | ~~H7~~ ✅ | Q9-01 | `UI_WithdrawPopup.cs:54-67` (→ UI_MainGame.DoWithdraw) | ~~이중 클릭 방지 누락~~ **해결** — `UI_Base.RunWithBusyAsync`(Layer A 글로벌 마스크) 도입, 시각 피드백까지 격상 |
-| ~~H8~~ ✅ | Q9-02 | `UI_MailPopup.cs:29` 외 3건 | ~~async void OnEnable 4건 — 팝업 닫힘 후 비활성 객체 접근~~ | **해결**: `UI_Base`에 `_enableCts`/`EnableToken` CTS 인프라 추가. OnEnable에서 발급, OnDisable에서 Cancel→Dispose. 4개 팝업 OnEnable → try/catch(OCE) 래핑, LoadXxxAsync(CancellationToken) + await 직후 ThrowIfCancellationRequested() 일괄 적용. QA 승인. |
+| ~~H8~~ ✅ | Q9-02 | `UI_MailPopup.cs:29` 외 3건 | ~~async void OnEnable 4건 — 팝업 닫힘 후 비활성 객체 접근~~ | **해결**: `UI_Base`에 `_enableCts`/`EnableToken` CTS 인프라 추가. OnEnable에서 발급, OnDisable에서 Cancel→Dispose. 4개 팝업 OnEnable → try/catch(OCE) 래핑, LoadXxxAsync(CancellationToken) + await 직후 ThrowIfCancellationRequested() 일괄 적용. QA 승인. **후속 수정**: `catch (OperationCanceledException)` 추가 시 `using System;` 누락 → `dotnet build` 실패. Unity 에디터는 암묵적 참조 덕분에 통과했으나 외부 빌드에서 strict 오류. `using System;` 추가로 해결. |
 | ~~H9~~ ✅ | S2-1 | `ApiConfig.cs:5` | ~~`http://localhost:5058` 하드코딩 — 프로덕션 MITM~~ | **해결**: `NetworkConfig` SO 신설(Dev/Staging/Prod URL 필드, `#if` 환경 분기), `ApiConfig.cs`에서 `BaseUrl` 제거, `ApiClient` 15곳 → `DataManager.Instance.NetworkConfig.BaseUrl` 전환. 릴리즈 빌드 `http://` 감지 `LogError`. QA 승인. |
 | H10 | S3-3 | `UI_MainGame.cs:253-266` | 로그아웃/탈퇴 시 GoogleSignInProvider.SignOut() 미호출 | `AuthManager.Clear()` 전후에 `SignOut()` 호출 추가 |
 | ~~H11~~ ✅ | S7 | `AdsManager.cs` 전체 | ~~LevelPlay/RewardedAd/InterstitialAd 18개 이벤트 해제 전무~~ | ~~`OnDestroy()` 추가 + `Init()` `_initialized` 가드~~ **해결**: `OnDestroy()` 추가(18개 이벤트 전량 `-=`), `bool _initialized` 가드로 중복 Init 방지, `SdkInitializationCompletedEvent`에 `if (this == null) return;` 경쟁 상태 가드 추가. |
@@ -309,7 +309,7 @@ CrashReportHandler 기반 Unity Cloud 전송, 이벤트 구독/해제 짝, AppRe
 | M14 | S2-2 | `GoogleSignInProvider.cs:10` | Google Web Client ID 소스 하드코딩 | `Config/AuthConfig.asset` ScriptableObject 분리 |
 | M15 | S2-4 | `ApiConfig.cs` | dev/staging/prod 환경 분리 없음 | ScriptableObject 또는 #if 전처리 분기 도입 |
 | M16 | S3-4 | `GoogleSignInProvider.cs` | 회원 탈퇴 시 Google Disconnect(Revoke) 미호출 | `Disconnect()` wrapper 추가 + 탈퇴 흐름 연결 |
-| M17 | S5 | `AppLifecycleManager.cs:9` vs `Define.cs:25` | `EEventType.SessionExpired` 구독자 없음 — Handle401 세션 만료 시 LoginScene 전환 누락 | ApiClient `TriggerEvent(SessionExpired)` → AppLifecycleManager가 EventManager로 수신 |
+| ~~M17~~ ✅ | S5 | `AppLifecycleManager.cs:9` vs `Define.cs:25` | ~~`EEventType.SessionExpired` 구독자 없음 — Handle401 세션 만료 시 LoginScene 전환 누락~~ | **해결**: H2 해소 과정에서 `AppLifecycleManager`가 `EventManager.AddEvent(SessionExpired, HandleSessionExpired)`로 구독. `ApiClient` → `EventManager.TriggerEvent(SessionExpired)` → `AppLifecycleManager.HandleSessionExpired()` → `LoadScene(LoginScene)` 흐름 완성. `AppLifecycleManager.OnSessionExpired` 정적 이벤트 및 `NotifySessionExpired()` 헬퍼 제거. |
 | M18 | S5 | `UI_InventoryPopup.cs:126-153` vs `UI_ShopPopup.cs` | 에러 분기 Status 기반 vs ErrorCode 기반 불일치 | ErrorCode 기반으로 통일 |
 | M19 | S7 | `IAPManager.cs` 전체 | StoreController 8개 이벤트 해제 누락 | `OnDestroy()` 추가하여 이벤트 `-=` 해제 |
 

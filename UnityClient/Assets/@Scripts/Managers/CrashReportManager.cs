@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.Diagnostics;
 
@@ -33,9 +32,9 @@ public class CrashReportManager : Singleton<CrashReportManager>
         SetUserMetadata("deviceId",     SystemInfo.deviceUniqueIdentifier);
         SetUserMetadata("installMode",  Application.installMode.ToString());
 
-        // 로그인/로그아웃 이벤트 구독 — PlayerId 메타데이터를 실시간으로 갱신
-        AuthManager.OnLoginSuccess += OnLoginSuccess;
-        AuthManager.OnLogout       += OnLogout;
+        // 로그인/로그아웃 이벤트 구독 — EventManager 경유로 PlayerId 메타데이터를 실시간으로 갱신
+        EventManager.Instance.AddEvent(Define.EEventType.LoginSuccess, OnLoginSuccess);
+        EventManager.Instance.AddEvent(Define.EEventType.Logout, OnLogout);
 
         // Unity Cloud 프로젝트가 연결되지 않으면 크래시 보고서가 전송되지 않는다
         // — 로컬 빌드 테스트 시 흔히 빠뜨리는 설정이므로 빠른 발견을 위해 경고 출력
@@ -60,8 +59,9 @@ public class CrashReportManager : Singleton<CrashReportManager>
 
     // 로그인 성공 핸들러 — PlayerId를 크래시 보고서에 첨부
     // 크래시 발생 시 어느 플레이어 계정에서 발생했는지 즉시 확인할 수 있다
-    void OnLoginSuccess(string playerId)
+    void OnLoginSuccess(object payload)
     {
+        string playerId = (string)payload;
         SetUserMetadata("playerId", playerId);
     }
 
@@ -74,8 +74,8 @@ public class CrashReportManager : Singleton<CrashReportManager>
     // 오브젝트 파괴 시 이벤트 구독 해제 — 좀비 핸들러로 인한 NullReferenceException 방지
     protected override void OnDestroy()
     {
-        AuthManager.OnLoginSuccess -= OnLoginSuccess;
-        AuthManager.OnLogout       -= OnLogout;
+        EventManager.Instance.RemoveEvent(Define.EEventType.LoginSuccess, OnLoginSuccess);
+        EventManager.Instance.RemoveEvent(Define.EEventType.Logout, OnLogout);
         base.OnDestroy();
     }
 }
