@@ -268,10 +268,10 @@ public class ApiClient : Singleton<ApiClient>
 
         // ---- 상태 코드별 분기 ----
 
-        // 503 점검 인터셉터
+        // 503 점검 인터셉터 — IAP 전용 503은 별도 처리 (body 전달)
         if (statusCode == 503)
         {
-            var maintErr = Handle503(onError);
+            var maintErr = Handle503(body, onError);
             return ApiResult<TRes>.Fail(maintErr);
         }
 
@@ -481,9 +481,21 @@ public class ApiClient : Singleton<ApiClient>
     // 503 점검 인터셉터
     // ====================================================
 
-    // 점검 응답 처리 — 최초 1회만 이벤트 발행하여 팝업 폭주 방지, ApiError 반환
-    private ApiError Handle503(Action<ApiError> onError)
+    // 점검 응답 처리 — IAP 전용 503은 점검 인터셉터를 건너뛰고 ApiError로 직접 반환
+    // IAP errorCode(IAP_* 접두사)가 감지되면 점검 이벤트 없이 호출부에 에러를 위임한다
+    // 그 외 503은 최초 1회만 이벤트 발행하여 팝업 폭주 방지
+    private ApiError Handle503(string body, Action<ApiError> onError)
     {
+        // IAP 전용 503 판별 — errorCode가 "IAP_" 접두사로 시작하면 점검 처리 건너뜀
+        var parsed = ApiError.FromHttp(503, body, isNetwork: false);
+        if (!string.IsNullOrEmpty(parsed.ErrorCode) && parsed.ErrorCode.StartsWith("IAP_"))
+        {
+            RestLogger.Warn($"[503] IAP 전용 오류 — 점검 인터셉터 건너뜀: {parsed.ErrorCode}");
+            onError?.Invoke(parsed);
+            return parsed;
+        }
+
+        // 일반 503 — 점검 이벤트 발행 (최초 1회)
         RestLogger.Error("[503] 서버 점검 감지");
 
         if (!_maintenanceShown)

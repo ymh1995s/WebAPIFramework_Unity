@@ -41,15 +41,12 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 
 ## [TODO] 미구현 핵심 항목 — 출시 차단 수준
 
-### IAP 영수증 검증 호출 부재
+### IAP 영수증 검증
 
-`IAPManager.OnPurchaseConfirmed`가 결제 성공만 처리하고 백엔드 `POST /api/iap/google/verify` 호출이 없음. 결과: **결제는 성공해도 서버 보상 미지급**. 코드 전체에서 `iap/google/verify` / `IapApi` / `purchaseToken` / `orderId` 키워드 0건, `WebFramework/Api/IapApi.cs` 파일도 부재.
-
-**필요 작업**
-- `WebFramework/Api/IapApi.cs` 신설 — `POST /api/iap/google/verify`
-- `IAPManager.OnPurchaseConfirmed`에서 productId / purchaseToken / orderId 추출 → IapApi 호출
-- 502/503 멱등 재시도 (최대 5회, 30초~5분 백오프)
-- 403(RequireLinkedAccount) 시 게스트 결제 차단 안내 + 구글 연동 유도
+클라이언트 코드 완성 (`IapApi`, `IapModels`, `IAPManager` 검증 흐름). **Google Play Console 작업만 남음**:
+- Google Play Console 상품 ID 등록 (`com.rookiss.s2.100gold` 등)
+- Google 서비스 계정 생성 + 백엔드 연동
+- 실기기 E2E 테스트
 
 **근거**: `../CLIENT_GUIDE.md` 19/20번
 
@@ -82,12 +79,12 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 
 ### 광고 제거 IAP 처리
 
-**현재**: `IAPManager.cs:129` `OnCheckEntitlement` `FullyEntitled` 분기에 TODO 주석만.
-**필요 작업**
-- 광고 제거 상품 ID 정의 (예: `noads.lifetime`) — `IAPConfig`에 등록
-- Entitled일 때 `AdsManager`에 광고 비활성 플래그 set + PlayerPrefs 캐싱(앱 재시작 시 즉시 반영)
-- `ShowInterstitialAds`만 차단, `ShowRewardedAds`는 유지 (보상 광고는 사용자 자발적)
-- `RestorePurchases` 후 재트리거 확인 (기기 변경 복구)
+클라이언트 코드 완성 (`OnCheckEntitlement` → `ApplyNoAdsEntitlement()`, `AdsManager.IsAdsRemoved` 가드). **LevelPlay SDK 인프라 설정 후 즉시 동작 가능**.
+
+남은 인프라 작업:
+- LevelPlay 대시보드 App Key 등록 + `AdsConfig` 실제 값 입력
+- 전면 광고 / 보상형 광고 유닛 ID 등록
+- 실기기 E2E 테스트 (광고 표시 → noads 구매 → 광고 차단 확인)
 
 ---
 
@@ -107,6 +104,73 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 보내려면 정보통신망법 §50 사전 동의 + §50의5 야간(21~08) 동의 + 백엔드 동의 컬럼 추가 필요.
 
 **우선순위**: M (가성비 큼) / **작업량**: 1일
+
+---
+
+### GoogleSignIn WEB_CLIENT_ID 하드코딩
+
+`GoogleSignInProvider.cs:10` 에 OAuth 클라이언트 ID가 문자열 리터럴로 박혀 있음. Dev/Staging/Prod 빌드별 분기 불가.
+
+**중요도**: 낮음 — Dev/Prod OAuth 클라이언트 ID를 분리할 계획이 없으면 그냥 놔둬도 무방. 환경이 하나라면 현재 코드로 기능상 문제 없음.
+
+**필요 작업**
+- `Config/` 하위에 `AuthConfig.cs` ScriptableObject 신설 (또는 `GameConfig`에 필드 추가)
+- `GoogleSignInProvider`가 `DataManager.Instance.AuthConfig.WebClientId` 로 읽도록 교체
+- CLAUDE.md 원칙: "빌드 환경별 값은 `Config/` SO에 집중"
+
+**근거**: CLAUDE.md Config/ 카탈로그 원칙
+
+---
+
+### IsGoogleLinked 다기기 불일치
+
+`AuthManager.cs:23-24` — `IsGoogleLinked` 를 PlayerPrefs 로컬로만 추적. 재설치 / 다기기 / 자동 로그인 시 구글 연동 여부가 false 로 잘못 표시될 수 있음 → IAP 흐름에서 불필요한 구글 연동 안내가 뜰 가능성.
+
+**중요도**: 낮음 — 실제 연동 여부는 서버가 기준이므로 기능 자체는 정상 동작. 최악의 경우 재설치 직후 불필요한 "구글 연동 필요" UI가 뜨는 UX 이슈 수준.
+
+**필요 작업**
+- 토큰 갱신(`POST /api/auth/refresh`) 응답 또는 자동 로그인 직후 서버 상태 기준으로 동기화
+- 백엔드 TokenResponse에 `isGoogleLinked` 필드 추가가 어려우면: 로그인 직후 별도 상태 조회 (백엔드 제약 있으면 우선 우회책으로 Refresh 응답 파싱 시 Google IdToken 존재 여부 추론)
+
+---
+
+### 퀘스트 API 클라이언트 미작성
+
+서버 구현 완료(`GET /api/quests`, `POST /api/quests/{questId}/claim`), 클라이언트 Api 클래스·DTO·UI 전무.
+
+**필요 작업**
+- `WebFramework/Api/QuestApi.cs` (static class)
+- `WebFramework/Models/QuestModels.cs` (`QuestDto`, `QuestClaimResponse`)
+- `ApiConfig`에 퀘스트 경로 상수 추가
+- UI: 퀘스트 목록 팝업 or MainScene 퀘스트 탭
+
+**근거**: `../CLIENT_GUIDE.md` 부록 B
+
+---
+
+### 튜토리얼 API 클라이언트 미작성
+
+서버 구현 완료(`GET /api/tutorial`, `PUT /api/tutorial/{key}`), 클라이언트 미연동.
+
+**필요 작업**
+- `WebFramework/Api/TutorialApi.cs`
+- `WebFramework/Models/TutorialModels.cs` (`TutorialStateDto`)
+- 튜토리얼 흐름 연동 (씬/UI TBD)
+
+**근거**: `../CLIENT_GUIDE.md` 부록 B
+
+---
+
+### 리모트 설정 API 클라이언트 미작성
+
+서버 구현 완료(`GET /api/remoteconfig`, key-value 사전 반환), 클라이언트 미연동.
+
+**필요 작업**
+- `WebFramework/Api/RemoteConfigApi.cs`
+- `WebFramework/Models/RemoteConfigModels.cs`
+- 캐시 정책 결정 (앱 시작 1회 조회 vs 주기 갱신)
+
+**근거**: `../CLIENT_GUIDE.md` 부록 B
 
 ---
 
@@ -145,6 +209,8 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 | 점검/업데이트/보상/안내/에러/약관 팝업 | 완료 | 전용 프리팹 없음 — **`UI_ConfirmPopup` 단일 프리팹을 `PopupService` 헬퍼로 재사용** |
 | 에러 팝업 OK 동작 | 완료 | OK 시 `RestartGame` — 에디터는 PlayMode 종료, 빌드는 `BootstrapScene` 재진입 (`PopupService.RestartGame`) |
 | 광고 / IAP 버튼 | 미구현(의도) | 버튼 존재, 클릭 시 `"준비 중입니다."` 토스트 (`UI_MainGame.OnClickInAppPurchase` / `OnClickAds`) |
+| IAP 영수증 검증 | 코드완료/인프라미준비 | `IapApi` + `IapModels` 신설, `IAPManager` 검증 흐름 완성. Google Play Console 상품 등록 후 즉시 동작 |
+| 광고 제거 IAP | 코드완료/인프라미준비 | `OnCheckEntitlement` → `AdsManager.DisableInterstitial()` + `PlayerPrefs` 캐싱. LevelPlay SDK 설정 후 동작 |
 | 랭킹 조회 | 완료 | 요구사항(디버그 로그)보다 확장 — `PopupService.ShowAnnouncement`로 순위 / 닉네임 / 최고점수 표시 |
 | 스테이지 선택 프레임워크 | 완료 | `StageApi.GetProgress` — `sortOrder` 정렬, `isLocked` 잠금, `StageSession.StageId` 정적 전달 |
 | 구글 계정 충돌 해소 | 완료 | 로그인 시 409 `GOOGLE_ACCOUNT_CONFLICT` → 전환 확인 팝업 → `ResolveGoogleConflict` (`UI_LoginScene`) |
@@ -153,6 +219,10 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 | 서버 시간 동기화 | 완료 | `ServerTime` static class — HTTP 응답 `Date` 헤더로 오프셋 보정. `ApiClient.SendAsync`/`DoRefresh` 삽입, `UI_HUDShout`·`ShoutManager` 호출부 치환 |
 | 429 Rate Limit 재시도 | 완료 | `bool isRetry` → `int retryCount`. 지수 백오프 5s/10s/20s, 최대 3회, 초과 시 토스트 안내. Retry-After 헤더 우선. 401/429 파라미터 독립 분리 |
 | 크래시 수집 (CrashReportManager) | 코드완료/Cloud미연결 | Unity Engine Diagnostics 빌트인. 상세 내용은 하단 별도 섹션 참고 |
+| 퀘스트 | 미구현 | 서버 API 완료. 클라 `QuestApi` + DTO + UI 미작성 — TODO 섹션 참고 |
+| 튜토리얼 | 미구현 | 서버 API 완료. 클라 `TutorialApi` + DTO 미작성 — TODO 섹션 참고 |
+| 리모트 설정 | 미구현 | 서버 API 완료. 클라 `RemoteConfigApi` + DTO 미작성 — TODO 섹션 참고 |
+| IsGoogleLinked 동기화 | 부족 | PlayerPrefs 로컬 추적만 — 다기기/재설치 시 불일치 가능. TODO 섹션 참고 |
 
 ---
 

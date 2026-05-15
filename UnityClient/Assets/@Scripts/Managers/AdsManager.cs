@@ -11,10 +11,22 @@ public class AdsManager : Singleton<AdsManager>
     Action _rewardedCallback;
     bool _initialized; // 중복 Init 방지 플래그
 
+    // 광고 제거 상품 보유 여부 — IAPManager.ApplyNoAdsEntitlement에서 설정
+    public bool IsAdsRemoved { get; private set; }
+
     #region 보상 처리
     public void ShowInterstitialAds()
     {
+        // 광고 제거 상품 보유 시 전면 광고 건너뜀 — 사용자가 결제한 경우 광고 표시 안 함
+        if (IsAdsRemoved) return;
+
         _interstitialAd.LoadAd();
+    }
+
+    // 광고 제거 상태로 전환 — IAPManager가 보유 확인 후 호출 (PlayerPrefs 캐시는 호출부가 책임)
+    public void DisableInterstitial()
+    {
+        IsAdsRemoved = true;
     }
 
     private void ShowInterstitialAds_AfterLoading()
@@ -47,6 +59,9 @@ public class AdsManager : Singleton<AdsManager>
         // 중복 초기화 방지 — GameManager가 여러 번 호출하더라도 SDK 이벤트가 중복 등록되지 않도록
         if (_initialized) return;
         _initialized = true;
+
+        // PlayerPrefs 캐시 복원 — 앱 재시작 시 광고 제거 상품 보유 여부를 즉시 반영
+        IsAdsRemoved = PlayerPrefs.GetInt(PlayerPrefsKey.AdsRemoved, 0) == 1;
 
         Debug.Log("[LevelPlaySample] LevelPlay.ValidateIntegration");
         LevelPlay.ValidateIntegration();

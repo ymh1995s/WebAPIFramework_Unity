@@ -71,8 +71,10 @@
     <Compile Include="Assets\@Scripts\Config\NetworkConfig.cs" />
     <Compile Include="Assets\@Scripts\Data\ItemData.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\ItemApi.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Api\IapApi.cs" />
     <Compile Include="Assets\@Scripts\Managers\SoundManager.cs" />
     <Compile Include="Assets\@Scripts\Controllers\ObjectBase.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\IapModels.cs" />
     <Compile Include="Assets\@Scripts\Managers\GameManager.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\JsonHelper.cs" />
     <Compile Include="Assets\Settings\GoogleSignIn\Impl\BaseObject.cs" />

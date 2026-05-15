@@ -85,6 +85,13 @@ public static class ApiConfig
         public const string Buy  = "/api/shop/{0}/buy";
     }
 
+    // IAP 영수증 검증 엔드포인트
+    public static class Iap
+    {
+        // 구글 플레이 영수증 서버 검증 — POST
+        public const string VerifyGoogle = "/api/iap/google/verify";
+    }
+
 #if DEBUG
     // 디버그 전용 엔드포인트 — 개발/QA 빌드 한정. 릴리즈에서 컴파일 제외됨
     public static class Debug

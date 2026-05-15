@@ -77,6 +77,9 @@ public static class PlayerPrefsKey
 
     // 약관 동의 완료 여부 — 1이면 동의 완료, 미설정/0이면 미동의
     public const string TermsAccepted = "TermsAccepted";
+
+    // 광고 제거 상품 보유 여부 캐시 — 앱 재시작 시 즉시 반영용 (0=미보유, 1=보유)
+    public const string AdsRemoved = "AdsRemoved";
 }
 
 // UI Canvas sortingOrder 계층 — 레이어 충돌 회피를 위해 한 곳에서 관리
