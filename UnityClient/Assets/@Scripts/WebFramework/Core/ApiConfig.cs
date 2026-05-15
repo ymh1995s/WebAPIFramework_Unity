@@ -92,6 +92,13 @@ public static class ApiConfig
         public const string VerifyGoogle = "/api/iap/google/verify";
     }
 
+    // 원격 설정 엔드포인트
+    public static class RemoteConfig
+    {
+        // 서버 원격 설정 전체 조회 — GET, AllowAnonymous (인증 불필요)
+        public const string Get = "/api/remoteconfig";
+    }
+
 #if DEBUG
     // 디버그 전용 엔드포인트 — 개발/QA 빌드 한정. 릴리즈에서 컴파일 제외됨
     public static class Debug

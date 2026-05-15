@@ -169,6 +169,14 @@ public class ApiClient : Singleton<ApiClient>
         => SendAsync<TRes>("GET", DataManager.Instance.NetworkConfig.BaseUrl + endpoint, null,
             retryCount: 0, customParser: null, onSuccess: null, onError: null);
 
+    // Newtonsoft.Json 파서 전용 GET — Dictionary<,> 등 JsonUtility 비지원 타입 대응
+    // customParser에 Newtonsoft 역직렬화 람다를 전달하여 기존 SendAsync 흐름 재사용
+    public Task<ApiResult<TRes>> GetAsyncNewtonsoft<TRes>(string endpoint)
+        => SendAsync<TRes>("GET", DataManager.Instance.NetworkConfig.BaseUrl + endpoint, null,
+            retryCount: 0,
+            customParser: json => Newtonsoft.Json.JsonConvert.DeserializeObject<TRes>(json),
+            onSuccess: null, onError: null);
+
     // 쿼리 파라미터 있는 GET — await로 결과 직접 수신
     public Task<ApiResult<TRes>> GetWithQueryAsync<TRes>(string endpoint, IDictionary<string, string> query)
     {

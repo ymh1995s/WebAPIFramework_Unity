@@ -98,6 +98,8 @@
     <Compile Include="Assets\@Scripts\Controllers\Player.cs" />
     <Compile Include="Assets\@Scripts\Bootstrap\AppResumeFlow.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\ApiError.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Models\RemoteConfigModels.cs" />
+    <Compile Include="Assets\@Scripts\WebFramework\Api\RemoteConfigApi.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Api\RankingApi.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_InquiryPopup.cs" />
     <Compile Include="Assets\@Scripts\Utils\Extension.cs" />
@@ -111,6 +113,7 @@
     <Compile Include="Assets\@Scripts\WebFramework\Core\ApiClient.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_MainGame.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\NoticeModels.cs" />
+    <Compile Include="Assets\@Scripts\Managers\RemoteConfigManager.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\InventoryModels.cs" />
     <Compile Include="Assets\@Scripts\UI\UI_LoadingScene.cs" />
     <Compile Include="Assets\@Scripts\Utils\PriorityQueue.cs" />

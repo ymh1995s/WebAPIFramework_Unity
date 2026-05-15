@@ -148,6 +148,7 @@ _friends = result.Value;
 | GET | — | `GetAsync<TRes>(endpoint)` |
 | GET (쿼리) | — | `GetWithQueryAsync<TRes>(endpoint, Dictionary<string,string>)` |
 | GET (최상위 배열) | — | `GetListAsync<T>(endpoint)` |
+| GET (`Dictionary` 등 복합 타입) | — | `GetAsyncNewtonsoft<TRes>(endpoint)` — Newtonsoft.Json 파서 사용 |
 | POST | 있음 | `PostAsync<TReq, TRes>(endpoint, body)` |
 | POST | 없음 | `PostAsync<TRes>(endpoint)` |
 | PUT | 있음 | `PutAsync<TReq, TRes>(endpoint, body)` |
@@ -177,13 +178,14 @@ _friends = result.Value;
 `BootstrapScene.Start()` → `ResourceManager.LoadAll` 콜백에서 호출. (`UnityClient/Assets/@Scripts/Bootstrap/BootstrapFlow.cs`)
 
 ```
-[1] VersionApi.CheckAsync      503 점검 → 자동 재시도 폴링 / isForceUpdate → 스토어 이동 + Quit
-[2] NoticeApi.GetLatestAsync   신규 공지 팝업 (실패 무시)
-[3] AuthApi.RefreshAsync       저장된 RefreshToken으로 자동 로그인
+[1] VersionApi.CheckAsync            503 점검 → 자동 재시도 폴링 / isForceUpdate → 스토어 이동 + Quit
+[2] RemoteConfigManager.FetchAsync   원격 설정 캐시 (실패 무시 — defaultValue 폴백)
+[3] NoticeApi.GetLatestAsync         신규 공지 팝업 (실패 무시)
+[4] AuthApi.RefreshAsync             저장된 RefreshToken으로 자동 로그인
         ├ 성공             → MainScene
         ├ AUTH_BANNED      → 밴 팝업 후 재시작
         └ 실패/토큰 없음    → 다음 단계
-[4] 약관 동의 확인              → LoginScene
+[5] 약관 동의 확인                    → LoginScene
 ```
 
 ### 일반 씬 전환 — `SceneManager.Instance.LoadScene()`

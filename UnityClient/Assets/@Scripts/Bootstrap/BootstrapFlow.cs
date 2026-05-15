@@ -27,6 +27,9 @@ public static class BootstrapFlow
         bool versionOk = await CheckVersionAsync();
         if (!versionOk) return;
 
+        // [1.5] 원격 설정 선제 로드 — 인증 불필요, 실패해도 진행 (defaultValue 폴백)
+        await RemoteConfigManager.Instance.FetchAsync();
+
         // [2] 최신 공지 확인 — 실패해도 무시하고 계속 진행
         await CheckNoticeAsync();
 

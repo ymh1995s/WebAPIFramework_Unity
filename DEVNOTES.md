@@ -56,31 +56,6 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 
 ---
 
-## [TODO] 미구현 핵심 항목 — 출시 차단 수준
-
-### IAP 영수증 검증
-
-클라이언트 코드 완성 (`IapApi`, `IapModels`, `IAPManager` 검증 흐름). **Google Play Console 작업만 남음**:
-- Google Play Console 상품 ID 등록 (`com.rookiss.s2.100gold` 등)
-- Google 서비스 계정 생성 + 백엔드 연동
-- 실기기 E2E 테스트
-
-**근거**: `../CLIENT_GUIDE.md` 19/20번
-
----
-
-### 광고 SDK PlayerId 미전달 (SSV 매핑 불가)
-
-클라이언트 흐름 코드 완성 (`TryApplyDynamicUserId` + 케이스 A/B 분기 + Logout 리셋). **LevelPlay SDK 인프라 설정 후 주석 해제만 하면 동작**.
-
-남은 작업:
-- LevelPlay 대시보드 App Key / 광고 유닛 ID 등록 후 `AdsManager.cs:169` 주석 해제 (`IronSource.Agent.setDynamicUserId(playerId)`)
-- 실기기 E2E 테스트 (광고 시청 → SSV → 우편 보상 수령)
-
-**근거**: `../CLIENT_GUIDE.md` 21번
-
----
-
 ## [TODO] 출시 전 보강 항목
 
 ### RefreshToken 보안 저장 (Keystore / Keychain)
@@ -91,17 +66,6 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 - 1차: AES 래퍼로 30분 투자 (키 바이너리에 박히지만 평문보단 100배 안전)
 - 2차: 네이티브 플러그인 — Android `EncryptedSharedPreferences`(Jetpack Security) + iOS `Keychain Services`
 **근거**: `../CLIENT_GUIDE.md` 부록 C
-
----
-
-### 광고 제거 IAP 처리
-
-클라이언트 코드 완성 (`OnCheckEntitlement` → `ApplyNoAdsEntitlement()`, `AdsManager.IsAdsRemoved` 가드). **LevelPlay SDK 인프라 설정 후 즉시 동작 가능**.
-
-남은 인프라 작업:
-- LevelPlay 대시보드 App Key 등록 + `AdsConfig` 실제 값 입력
-- 전면 광고 / 보상형 광고 유닛 ID 등록
-- 실기기 E2E 테스트 (광고 표시 → noads 구매 → 광고 차단 확인)
 
 ---
 
@@ -124,15 +88,18 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 
 ---
 
-### IsGoogleLinked 다기기 불일치
+### IsGoogleLinked 다기기 불일치 — 방치 확정 (P3)
 
-`AuthManager.cs:23-24` — `IsGoogleLinked` 를 PlayerPrefs 로컬로만 추적. 재설치 / 다기기 / 자동 로그인 시 구글 연동 여부가 false 로 잘못 표시될 수 있음 → IAP 흐름에서 불필요한 구글 연동 안내가 뜰 가능성.
+`AuthManager.cs:23-24` — `IsGoogleLinked`를 PlayerPrefs 로컬로만 추적. 재설치 / 다기기 시 구글 연동 여부가 false로 잘못 표시될 수 있음.
 
-**중요도**: 낮음 — 실제 연동 여부는 서버가 기준이므로 기능 자체는 정상 동작. 최악의 경우 재설치 직후 불필요한 "구글 연동 필요" UI가 뜨는 UX 이슈 수준.
+**실제 영향 범위**: 메인 화면 `[게스트]/[구글 연동]` 라벨 표기 오류에 한정. **IAP 코드에 `IsGoogleLinked` 참조 없음** (데이터 무결성 영향 0).
 
-**필요 작업**
-- 토큰 갱신(`POST /api/auth/refresh`) 응답 또는 자동 로그인 직후 서버 상태 기준으로 동기화
-- 백엔드 TokenResponse에 `isGoogleLinked` 필드 추가가 어려우면: 로그인 직후 별도 상태 조회 (백엔드 제약 있으면 우선 우회책으로 Refresh 응답 파싱 시 Google IdToken 존재 여부 추론)
+**방치 근거**
+- 백엔드 READ-ONLY 제약상 근본 해결(`TokenResponseDto`에 `isGoogleLinked` 추가)이 현 프로젝트에서 불가
+- 클라이언트 단독 해결책은 모두 부분 해결 — 재설치 후 자동 로그인 케이스는 추론 불가
+- UX 영향: 재설치 직후 라벨이 `[게스트]`로 잠깐 표시됨 수준
+
+**재검토 트리거**: IAP/결제 흐름에서 `IsGoogleLinked`를 조건 분기에 실제 사용하기 시작할 때. 또는 신규 게임 백엔드 설계 시 → 그때는 `TokenResponseDto`에 `isGoogleLinked` 필드 추가가 정공법.
 
 ---
 
@@ -158,19 +125,6 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 - `WebFramework/Api/TutorialApi.cs`
 - `WebFramework/Models/TutorialModels.cs` (`TutorialStateDto`)
 - 튜토리얼 흐름 연동 (씬/UI TBD)
-
-**근거**: `../CLIENT_GUIDE.md` 부록 B
-
----
-
-### 리모트 설정 API 클라이언트 미작성
-
-서버 구현 완료(`GET /api/remoteconfig`, key-value 사전 반환), 클라이언트 미연동.
-
-**필요 작업**
-- `WebFramework/Api/RemoteConfigApi.cs`
-- `WebFramework/Models/RemoteConfigModels.cs`
-- 캐시 정책 결정 (앱 시작 1회 조회 vs 주기 갱신)
 
 **근거**: `../CLIENT_GUIDE.md` 부록 B
 
@@ -224,7 +178,7 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 | 크래시 수집 (CrashReportManager) | 코드완료/Cloud미연결 | Unity Engine Diagnostics 빌트인. 상세 내용은 하단 별도 섹션 참고 |
 | 퀘스트 | 미구현 | 서버 API 완료. 클라 `QuestApi` + DTO + UI 미작성 — TODO 섹션 참고 |
 | 튜토리얼 | 미구현 | 서버 API 완료. 클라 `TutorialApi` + DTO 미작성 — TODO 섹션 참고 |
-| 리모트 설정 | 미구현 | 서버 API 완료. 클라 `RemoteConfigApi` + DTO 미작성 — TODO 섹션 참고 |
+| 리모트 설정 | 코드완료 | `RemoteConfigManager` + `RemoteConfigApi` 구현 완료 |
 | IsGoogleLinked 동기화 | 부족 | PlayerPrefs 로컬 추적만 — 다기기/재설치 시 불일치 가능. TODO 섹션 참고 |
 
 ---
