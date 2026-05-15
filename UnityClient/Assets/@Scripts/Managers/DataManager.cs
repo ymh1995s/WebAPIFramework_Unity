@@ -22,6 +22,8 @@ public class DataManager : Singleton<DataManager>
     public IAPConfig IAPConfig { get; private set; }
     // 환경별 서버 URL 설정 — ApiClient가 이 값을 참조하여 요청 URL 조립
     public NetworkConfig NetworkConfig { get; private set; }
+    // 인증 관련 설정 (Google Sign-In Web Client ID 등)
+    public AuthConfig AuthConfig { get; private set; }
 
     public Dictionary<string, TextData> TextDict { get; private set; } = new Dictionary<string, TextData>();
     public Dictionary<int, ItemData> ItemDict { get; private set;  } = new Dictionary<int, ItemData>();
@@ -38,6 +40,8 @@ public class DataManager : Singleton<DataManager>
         IAPConfig = LoadScriptableObject<IAPConfig>("IAPConfig");
         // 환경별 서버 URL 설정 로드
         NetworkConfig = LoadScriptableObject<NetworkConfig>("NetworkConfig");
+        // 인증 설정 로드 — GoogleSignInProvider가 WebClientId 참조
+        AuthConfig = LoadScriptableObject<AuthConfig>("AuthConfig");
 
         // LoadJson이 null 반환 시(파일 미존재) 빈 딕셔너리로 안전하게 초기화
         TextDict = LoadJson<TextDataLoader, string, TextData>("TextData")?.MakeDict() ?? new Dictionary<string, TextData>();

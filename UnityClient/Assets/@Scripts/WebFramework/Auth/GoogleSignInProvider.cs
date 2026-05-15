@@ -6,9 +6,6 @@ using UnityEngine;
 // Google Sign-In SDK 래퍼 - IdToken 획득 담당
 public static class GoogleSignInProvider
 {
-    // Google Cloud Console에서 발급받은 Web Client ID
-    private const string WEB_CLIENT_ID = "1080787057808-g3elodns8j77qk67hoh67hm8nbess0r9.apps.googleusercontent.com";
-
     // 구글 SDK 에러 코드 → 사용자 친화적 메시지 변환
     // GoogleSignInStatusCode 기준: Canceled=2, InvalidAccount=4, InternalError=7, NetworkError=8
     private static string NormalizeError(Exception e)
@@ -38,11 +35,19 @@ public static class GoogleSignInProvider
     }
 
     // 구성 초기화 — Platform 빌드 전용, 중복 설정 방지
+    // Web Client ID는 AuthConfig ScriptableObject에서 읽어 하드코딩을 회피한다
     private static void Configure()
     {
+        // AuthConfig.asset 미생성 시 NullReferenceException 방지 — 명확한 에러 로그 후 중단
+        if (DataManager.Instance.AuthConfig == null)
+        {
+            Debug.LogError("[GoogleSignInProvider] AuthConfig.asset이 없습니다. " +
+                           "Unity Editor에서 Resources/PreLoad/Config/AuthConfig.asset을 생성하고 WebClientId를 입력하세요.");
+            return;
+        }
         GoogleSignIn.Configuration = new GoogleSignInConfiguration
         {
-            WebClientId    = WEB_CLIENT_ID,
+            WebClientId    = DataManager.Instance.AuthConfig.WebClientId,
             RequestIdToken = true
         };
     }

@@ -132,9 +132,11 @@ public static class BootstrapFlow
             {
                 Debug.Log($"[Bootstrap] 강제 업데이트 — 스토어 이동: {res.latestVersion}");
 #if UNITY_ANDROID
-                Application.OpenURL(GameConfig.ANDROID_STORE_URL);
+                // 안드로이드 — GameConfig ScriptableObject에서 스토어 URL 읽기
+                Application.OpenURL(DataManager.Instance.GameConfig.AndroidStoreUrl);
 #elif UNITY_IOS
-                Application.OpenURL(GameConfig.IOS_STORE_URL);
+                // iOS — GameConfig ScriptableObject에서 스토어 URL 읽기
+                Application.OpenURL(DataManager.Instance.GameConfig.IosStoreUrl);
 #endif
                 Application.Quit();
             });

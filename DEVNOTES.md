@@ -2,6 +2,23 @@
 
 ## [주의] 배포 전 교체 항목
 
+### Config ScriptableObject 에셋 생성 (Unity Editor 필수)
+
+코드와 로직은 완성되어 있으나, Unity Editor에서 아래 `.asset` 파일을 직접 생성하고 값을 입력해야 런타임에 정상 동작한다.
+`.asset`은 CLAUDE.md 규칙상 에이전트가 직접 생성 불가 — **반드시 Unity Editor 수동 작업**.
+
+**생성 방법**: Unity Editor → `Assets/Resources/PreLoad/Config/` 폴더 우클릭 → Create → Config → {에셋명}
+
+| 에셋 파일 | 입력 필드 | 값 / 참고 |
+|---|---|---|
+| `AuthConfig.asset` | `Web Client Id` | `1080787057808-g3elodns8j77qk67hoh67hm8nbess0r9.apps.googleusercontent.com`<br>(Google Cloud Console → 사용자 인증 정보 → OAuth 2.0 클라이언트 ID에서 확인) |
+| `NetworkConfig.asset` | `Dev Base Url` / `Staging Base Url` / `Prod Base Url` | 운영 서버 URL 확정 후 입력 |
+| `GameConfig.asset` | `Android Store Url` / `Ios Store Url` | 출시 후 Google Play / App Store URL 입력 (기존 에셋 열고 신규 노출 필드에 입력) |
+
+> **`AdsConfig` / `IAPConfig` / `LocalizationConfig`** — 에셋 이미 존재. 값만 환경에 맞게 교체.
+
+---
+
 ### Google OAuth - Android 서명 키 등록
 
 현재 Google Cloud Console에 **debug.keystore**의 SHA-1 지문으로 Android OAuth 클라이언트 ID가 등록되어 있음.
@@ -104,21 +121,6 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 보내려면 정보통신망법 §50 사전 동의 + §50의5 야간(21~08) 동의 + 백엔드 동의 컬럼 추가 필요.
 
 **우선순위**: M (가성비 큼) / **작업량**: 1일
-
----
-
-### GoogleSignIn WEB_CLIENT_ID 하드코딩
-
-`GoogleSignInProvider.cs:10` 에 OAuth 클라이언트 ID가 문자열 리터럴로 박혀 있음. Dev/Staging/Prod 빌드별 분기 불가.
-
-**중요도**: 낮음 — Dev/Prod OAuth 클라이언트 ID를 분리할 계획이 없으면 그냥 놔둬도 무방. 환경이 하나라면 현재 코드로 기능상 문제 없음.
-
-**필요 작업**
-- `Config/` 하위에 `AuthConfig.cs` ScriptableObject 신설 (또는 `GameConfig`에 필드 추가)
-- `GoogleSignInProvider`가 `DataManager.Instance.AuthConfig.WebClientId` 로 읽도록 교체
-- CLAUDE.md 원칙: "빌드 환경별 값은 `Config/` SO에 집중"
-
-**근거**: CLAUDE.md Config/ 카탈로그 원칙
 
 ---
 

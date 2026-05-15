@@ -60,10 +60,12 @@ public class AppLifecycleManager : Singleton<AppLifecycleManager>
         if (!_isLoggedIn) return;
 
         // 백그라운드 경과 시간이 임계값 미만이면 갱신을 생략한다
+        // 임계값은 GameConfig ScriptableObject에서 읽어 Inspector에서 조정 가능
         double elapsedSec = (DateTime.UtcNow - _pausedAtUtc).TotalSeconds;
-        if (elapsedSec < GameConfig.ResumeThresholdSec)
+        int threshold = DataManager.Instance.GameConfig.ResumeThresholdSec;
+        if (elapsedSec < threshold)
         {
-            Debug.Log($"[AppLifecycleManager] 백그라운드 경과 {elapsedSec:F0}초 — 임계값({GameConfig.ResumeThresholdSec}초) 미만, 갱신 생략");
+            Debug.Log($"[AppLifecycleManager] 백그라운드 경과 {elapsedSec:F0}초 — 임계값({threshold}초) 미만, 갱신 생략");
             return;
         }
 

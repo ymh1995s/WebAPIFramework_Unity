@@ -120,6 +120,7 @@
     <Compile Include="Assets\@Scripts\WebFramework\Api\StageApi.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Models\StageModels.cs" />
     <Compile Include="Assets\@Scripts\Managers\IAPManager.cs" />
+    <Compile Include="Assets\@Scripts\Config\AuthConfig.cs" />
     <Compile Include="Assets\@Scripts\Managers\LocalizationManager.cs" />
     <Compile Include="Assets\@Scripts\Managers\UIManager.cs" />
     <Compile Include="Assets\@Scripts\WebFramework\Core\ITokenProvider.cs" />

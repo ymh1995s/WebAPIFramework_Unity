@@ -62,6 +62,24 @@ private async void OnClickStart()
 
 ---
 
+## 인증 설정 (AuthConfig)
+
+Google Sign-In WebClientId 등 인증 관련 환경값은 `Config/AuthConfig.cs` ScriptableObject에서 관리한다.
+
+**접근 방법**: `DataManager.Instance.AuthConfig.WebClientId` — `GoogleSignInProvider.Configure()` 내부에서 자동 참조. 호출부에서 직접 문자열을 다루지 말 것.
+
+**에셋 최초 생성 (클론 후 1회만)**:
+1. Unity Editor Project 창에서 `Assets/Resources/PreLoad/Config/` 폴더 우클릭
+2. `Create > Config > AuthConfig` 선택 → `AuthConfig.asset` 파일 생성됨
+3. 생성된 파일 선택 → Inspector에서 필드 입력:
+   - **Web Client Id**: `1080787057808-g3elodns8j77qk67hoh67hm8nbess0r9.apps.googleusercontent.com`
+     (Google Cloud Console → 사용자 인증 정보 → OAuth 2.0 클라이언트 ID에서 확인)
+4. `AuthConfig.asset`은 git에 커밋해도 됨 (OAuth2 Web Client ID는 공개값)
+
+> **[CreateAssetMenu]란?** `AuthConfig.cs`에 붙은 어트리뷰트로, Unity Editor 우클릭 메뉴에 항목을 등록해 주는 것. 위 2번 단계에서 `Create > Config > AuthConfig` 메뉴가 나타나는 이유.
+
+---
+
 ## 신규 도메인 추가 절차 (예: `Friend`)
 
 작업 위치 3 + 옵션 1.
