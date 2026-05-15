@@ -54,11 +54,11 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 
 ### 광고 SDK PlayerId 미전달 (SSV 매핑 불가)
 
-`AdsManager.EnableAds`가 LevelPlay 광고만 로드하고 `setDynamicUserId(PlayerId)` 호출이 없음. SSV 콜백에서 플레이어 식별 불가 → **광고 보상 우편 미발송**. 코드 전체에서 `setDynamicUserId` / `setUserId` / `userMetadata` 키워드 0건.
+클라이언트 흐름 코드 완성 (`TryApplyDynamicUserId` + 케이스 A/B 분기 + Logout 리셋). **LevelPlay SDK 인프라 설정 후 주석 해제만 하면 동작**.
 
-**필요 작업**
-- `LevelPlay.Init` 성공 콜백 또는 `EnableAds()` 시작부에서 `IronSource.Agent.setDynamicUserId(AuthManager.Instance.PlayerId)` 호출
-- 로그인 직후 / 토큰 갱신 시점에도 재호출 (PlayerId 변경 가능성)
+남은 작업:
+- LevelPlay 대시보드 App Key / 광고 유닛 ID 등록 후 `AdsManager.cs:169` 주석 해제 (`IronSource.Agent.setDynamicUserId(playerId)`)
+- 실기기 E2E 테스트 (광고 시청 → SSV → 우편 보상 수령)
 
 **근거**: `../CLIENT_GUIDE.md` 21번
 
@@ -211,6 +211,7 @@ keytool -list -v -keystore <keystore경로> -alias <alias> -storepass <password>
 | 광고 / IAP 버튼 | 미구현(의도) | 버튼 존재, 클릭 시 `"준비 중입니다."` 토스트 (`UI_MainGame.OnClickInAppPurchase` / `OnClickAds`) |
 | IAP 영수증 검증 | 코드완료/인프라미준비 | `IapApi` + `IapModels` 신설, `IAPManager` 검증 흐름 완성. Google Play Console 상품 등록 후 즉시 동작 |
 | 광고 제거 IAP | 코드완료/인프라미준비 | `OnCheckEntitlement` → `AdsManager.DisableInterstitial()` + `PlayerPrefs` 캐싱. LevelPlay SDK 설정 후 동작 |
+| 광고 SSV PlayerId 전달 | 코드완료/인프라미준비 | `TryApplyDynamicUserId` 케이스 A/B 구현. SDK 설정 후 `AdsManager.cs:169` 주석 해제로 활성화 |
 | 랭킹 조회 | 완료 | 요구사항(디버그 로그)보다 확장 — `PopupService.ShowAnnouncement`로 순위 / 닉네임 / 최고점수 표시 |
 | 스테이지 선택 프레임워크 | 완료 | `StageApi.GetProgress` — `sortOrder` 정렬, `isLocked` 잠금, `StageSession.StageId` 정적 전달 |
 | 구글 계정 충돌 해소 | 완료 | 로그인 시 409 `GOOGLE_ACCOUNT_CONFLICT` → 전환 확인 팝업 → `ResolveGoogleConflict` (`UI_LoginScene`) |

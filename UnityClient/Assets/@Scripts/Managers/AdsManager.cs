@@ -9,7 +9,9 @@ public class AdsManager : Singleton<AdsManager>
     LevelPlayInterstitialAd _interstitialAd;
     LevelPlayRewardedAd _rewardedAd;
     Action _rewardedCallback;
-    bool _initialized; // 중복 Init 방지 플래그
+    bool _initialized;     // 중복 Init 방지 플래그
+    bool _sdkReady;        // LevelPlay SDK 초기화 완료 여부
+    bool _userIdApplied;   // setDynamicUserId 중복 호출 방지 가드
 
     // 광고 제거 상품 보유 여부 — IAPManager.ApplyNoAdsEntitlement에서 설정
     public bool IsAdsRemoved { get; private set; }
@@ -63,6 +65,11 @@ public class AdsManager : Singleton<AdsManager>
         // PlayerPrefs 캐시 복원 — 앱 재시작 시 광고 제거 상품 보유 여부를 즉시 반영
         IsAdsRemoved = PlayerPrefs.GetInt(PlayerPrefsKey.AdsRemoved, 0) == 1;
 
+        // 로그인/로그아웃 이벤트 구독 — SDK 준비 후 PlayerId 전달 시점 조율용
+        // LoginSuccess: 페이로드(playerId) 있음, Logout: 페이로드 없음 — 오버로드 구분 필수
+        EventManager.Instance.AddEvent(Define.EEventType.LoginSuccess, OnLoginSuccess);
+        EventManager.Instance.AddEvent(Define.EEventType.Logout, OnLogout);
+
         Debug.Log("[LevelPlaySample] LevelPlay.ValidateIntegration");
         LevelPlay.ValidateIntegration();
 
@@ -112,6 +119,10 @@ public class AdsManager : Singleton<AdsManager>
     {
         base.OnDestroy();
 
+        // 로그인/로그아웃 이벤트 구독 해제 — Init에서 등록한 EventManager 핸들러 정리
+        EventManager.Instance.RemoveEvent(Define.EEventType.LoginSuccess, OnLoginSuccess);
+        EventManager.Instance.RemoveEvent(Define.EEventType.Logout, OnLogout);
+
         // Init에서 등록한 SDK 초기화 콜백 해제
         LevelPlay.OnInitSuccess -= SdkInitializationCompletedEvent;
         LevelPlay.OnInitFailed -= SdkInitializationFailedEvent;
@@ -145,6 +156,36 @@ public class AdsManager : Singleton<AdsManager>
         }
     }
 
+    // LevelPlay SDK에 PlayerId 전달 — SSV 콜백에서 플레이어 식별에 사용됨
+    // id가 null이면 AuthManager.Instance.PlayerId 조회 (케이스 A 자동로그인 경로)
+    private void TryApplyDynamicUserId(string id = null)
+    {
+        if (_userIdApplied) return;
+
+        string playerId = id ?? AuthManager.Instance.PlayerId;
+        if (string.IsNullOrEmpty(playerId)) return;
+
+        // LevelPlay SDK PlayerId 전달 — SSV 콜백이 이 값으로 플레이어를 특정함
+        // TODO: LevelPlay SDK 인프라 설정 완료 후 아래 주석 해제
+        // IronSource.Agent.setDynamicUserId(playerId);
+        _userIdApplied = true;
+        Debug.Log($"[AdsManager] setDynamicUserId 예약 (SDK 미연결): {playerId}");
+    }
+
+    // 로그인 성공 이벤트 핸들러 — SDK 준비 완료 후 PlayerId 전달 (케이스 B: 신규/재로그인)
+    private void OnLoginSuccess(object payload)
+    {
+        if (!_sdkReady) return;
+        string playerId = payload as string;
+        TryApplyDynamicUserId(playerId);
+    }
+
+    // 로그아웃 이벤트 핸들러 — 다음 로그인 시 PlayerId 재전달 허용
+    private void OnLogout()
+    {
+        _userIdApplied = false;
+    }
+
     #region 로그
     void SdkInitializationCompletedEvent(LevelPlayConfiguration config)
     {
@@ -152,6 +193,8 @@ public class AdsManager : Singleton<AdsManager>
         if (this == null) return;
         Debug.Log($"[LevelPlaySample] Received SdkInitializationCompletedEvent with Config: {config}");
         EnableAds();
+        _sdkReady = true;
+        TryApplyDynamicUserId();  // 케이스 A: 자동 로그인 후 SDK 초기화 완료 시
     }
 
     void SdkInitializationFailedEvent(LevelPlayInitError error)
