@@ -197,7 +197,7 @@ _friends = result.Value;
 SceneManager.Instance.LoadScene(Define.EScene.GameScene);
 ```
 
-내부 시퀀스 (`SceneManager.cs:36-50` + `LoadingScene.cs:19-64`):
+내부 시퀀스 (`SceneManager.cs:36-53` + `LoadingScene.cs:19-64`):
 
 ```
 1. FadeOut 0.15s                                    검정 화면
@@ -242,14 +242,14 @@ public class StageSelectScene : BaseScene
 
 | From | To | 트리거 / 호출 위치 |
 |---|---|---|
-| `BootstrapScene` | `MainScene` | 자동 로그인 성공 — `BootstrapFlow.cs:199` |
-| `BootstrapScene` | `LoginScene` | 약관 동의 후 / 자동 로그인 실패 — `BootstrapFlow.cs:212,219` |
-| 어디서나 | `LoginScene` | 세션 만료 감지 — `AppLifecycleManager.cs:70` |
+| `BootstrapScene` | `MainScene` | 자동 로그인 성공 — `BootstrapFlow.cs:214` |
+| `BootstrapScene` | `LoginScene` | 약관 동의 후 / 자동 로그인 실패 — `BootstrapFlow.cs:227,234` |
+| 어디서나 | `LoginScene` | 세션 만료 감지 — `AppLifecycleManager.cs:83` |
 | 어디서나 | `BootstrapScene` | 재시작 트리거 (밴 OK 등) — `PopupService.cs:270` |
 | `LoginScene` | `MainScene` | 로그인 성공 — `UI_LoginScene.cs:111` |
-| `MainScene` | `LoginScene` / `StageSelectScene` | 로그아웃 / 스테이지 진입 — `UI_MainGame.cs:206,227,240` |
+| `MainScene` | `LoginScene` / `StageSelectScene` | 로그아웃·탈퇴 / 스테이지 진입 — `UI_MainGame.cs:240,262,275` |
 | `StageSelectScene` | `GameScene` / `MainScene` | 스테이지 선택 / 뒤로가기 — `UI_StageSelect.cs:76,82` |
-| `GameScene` | `StageSelectScene` | 인게임 종료 — `GameScene.cs:17`, `UI_InGame.cs:54,60` |
+| `GameScene` | `StageSelectScene` | 인게임 종료 — `GameScene.cs:17`, `UI_InGame.cs:55,61` |
 
 ### 신규 씬 추가 체크리스트
 

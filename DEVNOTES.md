@@ -16,6 +16,7 @@
 | `GameConfig.asset` | `Android Store Url` / `Ios Store Url` | 출시 후 Google Play / App Store URL 입력 (기존 에셋 열고 신규 노출 필드에 입력) |
 
 > **`AdsConfig` / `IAPConfig` / `LocalizationConfig`** — 에셋 이미 존재. 값만 환경에 맞게 교체.
+> **주의** — `AdsConfig`의 `android_app_id` / `*_interstitial_id` / `*_rewarded_id` 등 6개 직렬화 필드는 코드 기본값이 없어, `.asset`에서 미입력 시 빈 문자열이 되어 `GetAppKey()`가 빈값 반환(광고 미동작). 배포 전 LevelPlay 키 입력 필수.
 
 ---
 

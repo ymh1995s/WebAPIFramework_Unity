@@ -90,6 +90,7 @@
 | `CrashReportManager` | Unity Engine Diagnostics 크래시 수집 | Unity Cloud 연결 시 자동 동작 |
 | `LocalizationManager` | 다국어 텍스트·폰트 (`Define.ELanguage`) | TMP_Text.SetLocalizedText 확장 사용 |
 | `ShoutManager` | HUD 외침 표시 | 프리팹 키 컨벤션 표본: `HUD_PREFAB_NAME` (클래스 내부 `private const string`) |
+| `RemoteConfigManager` | 서버 원격 설정 부팅 1회 페치 후 인메모리 캐시 (`GetString/GetBool/GetInt/GetFloat`) | 서버 주도 설정값 조회 시 여기. `BootstrapFlow`가 부팅 시 `FetchAsync` 1회 호출 |
 | `GameManager` | 게임 전체 부트스트랩 컨텍스트 | 매니저 등록 위치 |
 
 ### Config/ 카탈로그 — 환경설정값은 반드시 여기
@@ -99,8 +100,9 @@
 | 파일 | 내용 | 추가 시 |
 |---|---|---|
 | `NetworkConfig.cs` | **환경별 API 서버 URL** — Dev/Staging/Prod 3개 필드, `BaseUrl` 게터(`#if UNITY_EDITOR\|DEVELOPMENT_BUILD` → Dev, `#elif STAGING` → Staging, `else` → Prod). `ApiClient`가 `DataManager.Instance.NetworkConfig.BaseUrl`로 조회 | 새 서버 URL·엔드포인트 호스트 변경 시 여기 필드 추가 |
-| `AdsConfig.cs` | LevelPlay AppKey, 광고 UnitId (Dev/Prod 분리) | 광고 SDK 키 변경 시 |
-| `GameConfig.cs` | 게임 수치 설정 (에너지 최대값 등) | 게임 밸런스 수치 |
+| `AdsConfig.cs` | LevelPlay AppKey, 광고 UnitId (Android/iOS 플랫폼 분리) | 광고 SDK 키 변경 시 |
+| `AuthConfig.cs` | 구글 로그인 OAuth2 Web Client ID (`webClientId`, 배포 전 교체 필요) | 인증 SDK 키 변경 시 |
+| `GameConfig.cs` | 게임 수치 설정 (스토어 URL, 복귀 임계초, 초기 골드/레벨) | 게임 밸런스 수치 |
 | `IAPConfig.cs` | IAP 상품 ID | 상품 추가 시 |
 | `LocalizationConfig.cs` | 언어별 폰트·로케일 매핑 | 언어 추가 시 |
 
@@ -182,7 +184,7 @@ GameObject go = ResourceManager.Instance.Instantiate(HUD_PREFAB_NAME);
 ```
 @Scripts/WebFramework/
 ├── Core/    UnityWebRequest 래퍼 (ApiClient), ApiResult<T>, ApiError, JsonHelper, RestLogger, ServerTime
-├── Api/     엔드포인트별 정적 서비스 (AuthApi, ItemApi, ShopApi, ... 12개) — 모두 static class
+├── Api/     엔드포인트별 정적 서비스 (AuthApi, ItemApi, ShopApi, ... 14개) — 모두 static class
 ├── Models/  DTO — 요청/응답 데이터 모델
 └── Auth/    토큰·세션 관리 (AuthManager, GoogleSignInProvider)
 ```

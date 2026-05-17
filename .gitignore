@@ -19,6 +19,9 @@ GameClient/
 # fullreview 라운드 산출물 (로컬 전용)
 review/
 
+# doc-sync 라운드 산출물 (로컬 전용)
+doc-sync/
+
 
 # By default unity supports Blender asset imports, *.blend1 blender files do not need to be commited to version control.
 *.blend1
